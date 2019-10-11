@@ -1,5 +1,6 @@
 .virtualenvs
 .vscode
+pybook-assignments
 
 
 @@ -1,104 +1,2 @@
