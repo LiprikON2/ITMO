@@ -146,8 +146,3 @@ if __name__ == '__main__':
     print("Decrypting message with public key ", public, " . . .")
     print("Your message is:")
     print(decrypt(public, encrypted_msg))
-
-# print(gcd(12, 15) , 'this')
-# print(generate_keypair(2, 3), 'that')
-# print(is_prime(7))
-# print(multiplicative_inverse(7, 40))
