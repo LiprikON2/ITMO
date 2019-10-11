@@ -9,12 +9,11 @@ def encrypt_vigenere(plaintext, keyword):
     >>> encrypt_vigenere("ATTACKATDAWN", "LEMON")
     'LXFOPVEFRNHR'
     """
-    
+
     # PUT YOUR CODE HERE
     ciphertext = ''
     keyword_len = len(keyword)
-    for i in range(len(plaintext)):
-        letter = plaintext[i]
+    for i, letter in enumerate(plaintext):
         # Adds cycling abillity
         key_id = keyword[i % keyword_len]
         if 'a' <= key_id <= 'z':
@@ -50,8 +49,7 @@ def decrypt_vigenere(ciphertext, keyword):
     # PUT YOUR CODE HERE
     plaintext = ''
     keyword_len = len(keyword)
-    for i in range(len(ciphertext)):
-        letter = ciphertext[i]
+    for i, letter in enumerate(ciphertext):
         # Adds cycling abillity
         key_id = keyword[i % keyword_len]
         if 'a' <= key_id <= 'z':

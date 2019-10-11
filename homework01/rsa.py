@@ -13,6 +13,18 @@ def is_prime(n):
     False
     """
     # PUT YOUR CODE HERE
+    
+    if n <= 3:
+        return n > 1
+    elif (n % 2 == 0) or (n % 3 == 0):
+        return False
+    i = 5
+    while i * i <= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i += 6
+    return True
+    
     pass
 
 
@@ -89,17 +101,19 @@ def decrypt(pk, ciphertext):
     return ''.join(plain)
 
 
-if __name__ == '__main__':
-    print("RSA Encrypter/ Decrypter")
-    p = int(input("Enter a prime number (17, 19, 23, etc): "))
-    q = int(input("Enter another prime number (Not one you entered above): "))
-    print("Generating your public/private keypairs now . . .")
-    public, private = generate_keypair(p, q)
-    print("Your public key is ", public, " and your private key is ", private)
-    message = input("Enter a message to encrypt with your private key: ")
-    encrypted_msg = encrypt(private, message)
-    print("Your encrypted message is: ")
-    print(''.join(map(lambda x: str(x), encrypted_msg)))
-    print("Decrypting message with public key ", public, " . . .")
-    print("Your message is:")
-    print(decrypt(public, encrypted_msg))
+# if __name__ == '__main__':
+#     print("RSA Encrypter/ Decrypter")
+#     p = int(input("Enter a prime number (17, 19, 23, etc): "))
+#     q = int(input("Enter another prime number (Not one you entered above): "))
+#     print("Generating your public/private keypairs now . . .")
+#     public, private = generate_keypair(p, q)
+#     print("Your public key is ", public, " and your private key is ", private)
+#     message = input("Enter a message to encrypt with your private key: ")
+#     encrypted_msg = encrypt(private, message)
+#     print("Your encrypted message is: ")
+#     print(''.join(map(lambda x: str(x), encrypted_msg)))
+#     print("Decrypting message with public key ", public, " . . .")
+#     print("Your message is:")
+#     print(decrypt(public, encrypted_msg))
+
+print(is_prime())
