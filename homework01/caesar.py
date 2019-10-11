@@ -41,7 +41,6 @@ def decrypt_caesar(ciphertext):
     ''
     """
 
-    # PUT YOUR CODE HERE
     plaintext = ''
     for letter in ciphertext:
         new_letter = ''

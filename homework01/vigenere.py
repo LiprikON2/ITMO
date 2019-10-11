@@ -46,7 +46,6 @@ def decrypt_vigenere(ciphertext, keyword):
     >>> decrypt_vigenere("LXFOPVEFRNHR", "LEMON")
     'ATTACKATDAWN'
     """
-    # PUT YOUR CODE HERE
     plaintext = ''
     keyword_len = len(keyword)
     for i, letter in enumerate(ciphertext):
