@@ -9,7 +9,30 @@ def encrypt_vigenere(plaintext, keyword):
     >>> encrypt_vigenere("ATTACKATDAWN", "LEMON")
     'LXFOPVEFRNHR'
     """
+    
     # PUT YOUR CODE HERE
+    ciphertext = ''
+    keyword_len = len(keyword)
+    for i in range(len(plaintext)):
+        letter = plaintext[i]
+        # Adds cycling abillity
+        key_id = keyword[i % keyword_len]
+        if 'a' <= key_id <= 'z':
+            key = ord(key_id) - 97
+        elif 'A' <= key_id <= 'Z':
+            key = ord(key_id) - 65
+        else:
+            key = ord(key_id)
+
+        new_letter = ''
+        if 'a' <= letter <= 'z':
+            new_letter = chr((ord(letter) + key - 97) % 26 + 97)
+        elif 'A' <= letter <= 'Z':
+            new_letter = chr((ord(letter) + key - 65) % 26 + 65)
+        else:
+            new_letter = letter
+        ciphertext = ciphertext + new_letter
+
     return ciphertext
 
 
@@ -25,4 +48,26 @@ def decrypt_vigenere(ciphertext, keyword):
     'ATTACKATDAWN'
     """
     # PUT YOUR CODE HERE
+    plaintext = ''
+    keyword_len = len(keyword)
+    for i in range(len(ciphertext)):
+        letter = ciphertext[i]
+        # Adds cycling abillity
+        key_id = keyword[i % keyword_len]
+        if 'a' <= key_id <= 'z':
+            key = ord(key_id) - 97
+        elif 'A' <= key_id <= 'Z':
+            key = ord(key_id) - 65
+        else:
+            key = ord(key_id)
+
+        new_letter = ''
+        if 'a' <= letter <= 'z':
+            new_letter = chr((ord(letter) - key - 97) % 26 + 97)
+        elif 'A' <= letter <= 'Z':
+            new_letter = chr((ord(letter) - key - 65) % 26 + 65)
+        else:
+            new_letter = letter
+        plaintext = plaintext + new_letter
+
     return plaintext

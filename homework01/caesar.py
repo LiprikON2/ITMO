@@ -15,12 +15,11 @@ def encrypt_caesar(plaintext):
     # PUT YOUR CODE HERE
     ciphertext = ''
     for letter in plaintext:
-        if 'a' <= letter <= 'z' or 'A' <= letter <= 'Z':
-            new_letter = ''
-            if 'a' <= letter <= 'z':
-                new_letter = chr((ord(letter) + 3 - 97) % 26 + 97)
-            else:
-                new_letter = chr((ord(letter) + 3 - 65) % 26 + 65)
+        new_letter = ''
+        if 'a' <= letter <= 'z':
+            new_letter = chr((ord(letter) + 3 - 97) % 26 + 97)
+        elif 'A' <= letter <= 'Z':
+            new_letter = chr((ord(letter) + 3 - 65) % 26 + 65)
         else:
             new_letter = letter
         ciphertext = ciphertext + new_letter
@@ -45,12 +44,11 @@ def decrypt_caesar(ciphertext):
     # PUT YOUR CODE HERE
     plaintext = ''
     for letter in ciphertext:
-        if 'a' <= letter <= 'z' or 'A' <= letter <= 'Z':
-            new_letter = ''
-            if 'a' <= letter <= 'z':
-                new_letter = chr((ord(letter) - 3 - 97) % 26 + 97)
-            else:
-                new_letter = chr((ord(letter) - 3 - 65) % 26 + 65)
+        new_letter = ''
+        if 'a' <= letter <= 'z':
+            new_letter = chr((ord(letter) - 3 - 97) % 26 + 97)
+        elif 'A' <= letter <= 'Z':
+            new_letter = chr((ord(letter) - 3 - 65) % 26 + 65)
         else:
             new_letter = letter
         plaintext = plaintext + new_letter
