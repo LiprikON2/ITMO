@@ -1,10 +1,11 @@
 from typing import Tuple, List, Set, Optional
-
+import math
 
 def read_sudoku(filename: str) -> List[List[str]]:
     """ Прочитать Судоку из указанного файла """
     digits = [c for c in open(filename).read() if c in '123456789.']
     grid = group(digits, 9)
+    # print(grid)
     return grid
 
 
@@ -28,11 +29,10 @@ def group(values: List[str], n: int) -> List[List[str]]:
     >>> group([1,2,3,4,5,6,7,8,9], 3)
     [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     """
-    listK = []
-    for i in range(n):
-        listK.append(values[n*i: n*i+n])
-    print(listK)    
-    
+    grouped_l = []
+    for i in range(int(math.ceil(len(values) / n))):
+        grouped_l.append(values[n*i: n*i+n])
+    return grouped_l
 
 
 def get_row(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
@@ -45,7 +45,11 @@ def get_row(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     >>> get_row([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (2, 0))
     ['.', '8', '9']
     """
-    pass
+    row, col = pos
+    r_pos = []
+    r_pos.append(grid[row])
+        
+    return r_pos
 
 
 def get_col(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
@@ -58,7 +62,12 @@ def get_col(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     >>> get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
     ['3', '6', '9']
     """
-    pass
+    row, col = pos
+    c_pos = []
+    for i in range(len(grid)):
+        c_pos.append(grid[i][col])
+    
+    return c_pos
 
 
 def get_block(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
@@ -72,7 +81,28 @@ def get_block(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     >>> get_block(grid, (8, 8))
     ['2', '8', '.', '.', '.', '5', '.', '7', '9']
     """
-    pass
+    row, col = pos
+    sq_pos = []
+    # Which square?
+    if int(math.ceil((row+1) / 3)) == 1:
+        square_x = 0
+    elif int(math.ceil((row+1) / 3)) == 2:
+        square_x = 1
+    elif int(math.ceil((row+1) / 3)) == 3:
+        square_x = 2
+        
+    if int(math.ceil((col+1) / 3)) == 1:
+        square_y = [0, 1, 2]
+    elif int(math.ceil((col+1) / 3)) == 2:
+        square_y = [3, 4, 5]
+    elif int(math.ceil((col+1) / 3)) == 3:
+        square_y = [6, 7, 8]
+
+# check group()
+    
+    for i in range(len(grid) // 3):
+        
+        sq_pos.append(group(grid, 3)[square_x +])
 
 
 def find_empty_positions(grid: List[List[str]]) -> Optional[Tuple[int, int]]:
@@ -149,14 +179,21 @@ def generate_sudoku(N: int) -> List[List[str]]:
     pass
 
 
-# if __name__ == '__main__':
-#     for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
-#         grid = read_sudoku(fname)
-#         display(grid)
-#         solution = solve(grid)
-#         if not solution:
-#             print(f"Puzzle {fname} can't be solved")
-#         else:
-#             display(solution)
+if __name__ == '__main__':
+    for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
+        grid = read_sudoku(fname)
+        display(grid)
+        solution = solve(grid)
+        if not solution:
+            print(f"Puzzle {fname} can't be solved")
+        else:
+            display(solution)
 
-group([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
+
+get_col([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
+get_col([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']], (0, 1))
+get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
+
+
+# print(int(math.ceil((row+1) / 3)))
+ # 1,2,3 = 1; 4,5,6 = 2; 7,8,9 = 3
