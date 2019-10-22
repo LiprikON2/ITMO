@@ -31,7 +31,7 @@ def group(values: List[str], n: int) -> List[List[str]]:
     """
     grouped_l = []
     for i in range(int(math.ceil(len(values) / n))):
-        grouped_l.append(values[n*i: n*i+n])
+        grouped_l.append(values[n * i: n * i + n])
     return grouped_l
 
 
@@ -84,25 +84,30 @@ def get_block(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     row, col = pos
     sq_pos = []
     # Which square?
-    if int(math.ceil((row+1) / 3)) == 1:
+    # square_y = int(math.ceil((col + 1) / 3)) - 1
+    if int(math.ceil((row + 1) / 3)) == 1:
         square_x = 0
-    elif int(math.ceil((row+1) / 3)) == 2:
+    elif int(math.ceil((row + 1) / 3)) == 2:
         square_x = 1
-    elif int(math.ceil((row+1) / 3)) == 3:
+    elif int(math.ceil((row + 1) / 3)) == 3:
         square_x = 2
         
-    if int(math.ceil((col+1) / 3)) == 1:
-        square_y = [0, 1, 2]
-    elif int(math.ceil((col+1) / 3)) == 2:
-        square_y = [3, 4, 5]
-    elif int(math.ceil((col+1) / 3)) == 3:
-        square_y = [6, 7, 8]
+    if int(math.ceil((col + 1) / 3)) == 1:
+        square_y = 0
+    elif int(math.ceil((col + 1) / 3)) == 2:
+        square_y = 1
+    elif int(math.ceil((col + 1) / 3)) == 3:
+        square_y = 2
 
-# check group()
+    # 3 for 3x3 sudoku
+    # 1 for 1x1 sudoku
+    dimentions = len(grid) // 3
     
-    for i in range(len(grid) // 3):
-        
-        sq_pos.append(group(grid, 3)[square_x +])
+    for i in range(dimentions):
+        triple = group(grid[square_y * 3 + i], 3)[(square_x)]
+        sq_pos.extend(triple)
+    
+    return sq_pos
 
 
 def find_empty_positions(grid: List[List[str]]) -> Optional[Tuple[int, int]]:
@@ -194,6 +199,6 @@ get_col([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
 get_col([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']], (0, 1))
 get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
 
-
-# print(int(math.ceil((row+1) / 3)))
- # 1,2,3 = 1; 4,5,6 = 2; 7,8,9 = 3
+grid = read_sudoku('puzzle1.txt')
+print(get_block(grid, (8, 8)))
+    # ['2', '8', '.', '.', '.', '5', '.', '7', '9']
