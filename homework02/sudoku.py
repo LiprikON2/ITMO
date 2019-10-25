@@ -14,8 +14,8 @@ def display(grid: List[List[str]]) -> None:
     """Вывод Судоку """
     width = 2
     line = '+'.join(['-' * (width * 3)] * 3)
-    for row in range(len(grid)):
-        print(''.join(grid[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(len(grid))))
+    for row in range(9):
+        print(''.join(grid[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(9)))
         if str(row) in '25':
             print(line)
     print()
@@ -163,7 +163,7 @@ def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
     possible_vals = find_possible_values(grid, empty_pos)
     row, col = empty_pos
     
-    for val in find_possible_values(grid, empty_pos):
+    for val in possible_vals:
         grid[row][col] = val
         new_grid = solve(grid)
         if new_grid:
@@ -182,6 +182,7 @@ def check_solution(solution: List[List[str]]) -> bool:
     # False
     # """
     # TODO: Add doctests with bad puzzles
+    
     for i in range(len(grid)):
         for j in range(len(grid)):
             row = get_row(solution, (i, j))
@@ -215,12 +216,25 @@ def generate_sudoku(N: int) -> List[List[str]]:
     >>> check_solution(solution)
     True
     """
-    pass
+    
+    N = 81 - sorted([0, N, 81])[1]
+    
+    # Generate empty 9x9 grid
+    grid = solve([['.' for col in range(9)] for row in range(9)])
+    while N > 0:
+        row = random.randint(0, 8)
+        col = random.randint(0, 8)
+        pos = (row, col)
+    
+        if grid[row][col] != '.':
+            grid[row][col] = '.'
+            N -= 1
+    return grid
 
 
 if __name__ == '__main__':
-    # for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
-    for fname in ['puzzle1.txt']:
+    for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
+    # for fname in ['puzzle1.txt']:
         grid = read_sudoku(fname)
         display(grid)
         solution = solve(grid)
@@ -229,20 +243,3 @@ if __name__ == '__main__':
         else:
             display(solution)
             
-        # print(check_solution(solution))
-
-# # print(grid)
-# grid = read_sudoku('puzzle1.txt')
-# # print(get_block(grid, (3, 2)))
-# # display(grid)
-# # display([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']])
-
-# # print({'1', '2', '3', '4', '5', '6', '7', '8', '9'}.difference({'1', '2', '3', '4', '5', '6', '7', '8', '9'})
-# # )
-# display(solve(grid))
-# print('solved!') 
-
-# print('sssssssssssssssssss__')
-# grid = [['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']]
-# display(grid)
-print(check_solution(grid))
