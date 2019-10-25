@@ -132,12 +132,14 @@ def find_possible_values(grid: List[List[str]], pos: Tuple[int, int]) -> Set[str
     column_arr = get_col(grid, pos)
     block_arr = get_block(grid, pos)
     
-    values = set()
+    taken_vals = set()
     for i in range(len(grid)):
-        values.add(row_arr[i])
-        values.add(column_arr[i])
-        values.add(block_arr[i])
-        
+        taken_vals.add(row_arr[i])
+        taken_vals.add(column_arr[i])
+        taken_vals.add(block_arr[i])
+    # 'inversing' set to get non taken values
+    values = {'1', '2', '3', '4', '5', '6', '7', '8', '9'}.difference(taken_vals)
+    
     return values
 
 def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
@@ -153,8 +155,33 @@ def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
     >>> solve(grid)
     [['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']]
     """
-    pass
+    empty_pos = find_empty_positions(grid)
+    possible_vals = find_possible_values(grid, empty_pos)
+    
+    row, col = empty_pos
+    # Check if solving is done
+    if not empty_pos:
+        return grid
+    
+    for val in possible_vals:
+        grid[row][col] = val
+        new_grid = solve(grid)
+        if new_grid:
+            return new_grid
+    grid[row][col] = '.'
+    return None 
+    
+    # for find_empty_positions(grid) != set():
+    #     empty_pos = find_empty_positions(grid)
+    #     possible_vals = find_possible_values(grid, empty_pos)
 
+    #     row, col = empty_pos
+
+    #     if possible_vals:
+    #         grid[row][col] = possible_vals.pop()
+        
+    # print('FIN')
+    # display(grid)
 
 def check_solution(solution: List[List[str]]) -> bool:
     """ Если решение solution верно, то вернуть True, в противном случае False """
@@ -187,24 +214,23 @@ def generate_sudoku(N: int) -> List[List[str]]:
     pass
 
 
-if __name__ == '__main__':
-    for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
-        grid = read_sudoku(fname)
-        display(grid)
-        solution = solve(grid)
-        if not solution:
-            print(f"Puzzle {fname} can't be solved")
-        else:
-            display(solution)
+# if __name__ == '__main__':
+#     for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
+#         grid = read_sudoku(fname)
+#         display(grid)
+#         solution = solve(grid)
+#         if not solution:
+#             print(f"Puzzle {fname} can't be solved")
+#         else:
+#             display(solution)
 
-grid = read_sudoku('puzzle1.txt')
 # print(grid)
-# grid = read_sudoku('custom_6x6.txt')
+grid = read_sudoku('puzzle1.txt')
 # print(get_block(grid, (3, 2)))
-
-find_possible_values(grid, (0,2))
-
-
-
 # display(grid)
 # display([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']])
+
+# print({'1', '2', '3', '4', '5', '6', '7', '8', '9'}.difference({'1', '2', '3', '4', '5', '6', '7', '8', '9'})
+# )
+display(solve(grid))
+print('solved!') 
