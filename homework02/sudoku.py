@@ -1,20 +1,26 @@
 from typing import Tuple, List, Set, Optional
 import math
 
+
 def read_sudoku(filename: str) -> List[List[str]]:
     """ Прочитать Судоку из указанного файла """
     digits = [c for c in open(filename).read() if c in '123456789.']
-    grid = group(digits, 9)
-    # print(grid)
+    
+    # Find grid dimentions of sudoku 
+    # (3 for 3x3 sudoku, 9 for 9x9, etc)
+    global grid_dimention
+    grid_dimention = int(math.sqrt(len(digits)))
+    grid = group(digits, grid_dimention)
     return grid
+
 
 
 def display(grid: List[List[str]]) -> None:
     """Вывод Судоку """
     width = 2
     line = '+'.join(['-' * (width * 3)] * 3)
-    for row in range(9):
-        print(''.join(grid[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(9)))
+    for row in range(grid_dimention):
+        print(''.join(grid[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(grid_dimention)))
         if str(row) in '25':
             print(line)
     print()
@@ -31,7 +37,7 @@ def group(values: List[str], n: int) -> List[List[str]]:
     """
     grouped_l = []
     for i in range(int(math.ceil(len(values) / n))):
-        grouped_l.append(values[n * i: n * i + n])
+        grouped_l.append(values[n*i: n*i + n])
     return grouped_l
 
 
@@ -46,10 +52,10 @@ def get_row(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     ['.', '8', '9']
     """
     row, col = pos
-    r_pos = []
-    r_pos.append(grid[row])
+    row_arr = []
+    row_arr.extend(grid[row])
         
-    return r_pos
+    return row_arr
 
 
 def get_col(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
@@ -63,11 +69,12 @@ def get_col(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     ['3', '6', '9']
     """
     row, col = pos
-    c_pos = []
-    for i in range(len(grid)):
-        c_pos.append(grid[i][col])
+    column_arr = []
     
-    return c_pos
+    for i in range(len(grid)):
+        column_arr.append(grid[i][col])
+    
+    return column_arr
 
 
 def get_block(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
@@ -82,32 +89,21 @@ def get_block(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     ['2', '8', '.', '.', '.', '5', '.', '7', '9']
     """
     row, col = pos
-    sq_pos = []
-    # Which square?
-    # square_y = int(math.ceil((col + 1) / 3)) - 1
-    if int(math.ceil((row + 1) / 3)) == 1:
-        square_x = 0
-    elif int(math.ceil((row + 1) / 3)) == 2:
-        square_x = 1
-    elif int(math.ceil((row + 1) / 3)) == 3:
-        square_x = 2
-        
-    if int(math.ceil((col + 1) / 3)) == 1:
-        square_y = 0
-    elif int(math.ceil((col + 1) / 3)) == 2:
-        square_y = 1
-    elif int(math.ceil((col + 1) / 3)) == 3:
-        square_y = 2
+    block_arr = []
+    
+    # Find block dimentions of sudoku 
+    # (1 for 3x3 sudoku, 3 for 9x9, etc)
+    block_dimention = int(math.sqrt(grid_dimention))
+    
+    # Find square coordinates
+    block_x = int(math.ceil((row + 1) / 3)) - 1
+    block_y = int(math.ceil((col + 1) / 3)) - 1
 
-    # 3 for 3x3 sudoku
-    # 1 for 1x1 sudoku
-    dimentions = len(grid) // 3
+    for i in range(len(grid) // 3):
+        triple = group(grid[block_x * block_dimention + i], 3)[(block_y)]
+        block_arr.extend(triple)
     
-    for i in range(dimentions):
-        triple = group(grid[square_y * 3 + i], 3)[(square_x)]
-        sq_pos.extend(triple)
-    
-    return sq_pos
+    return block_arr
 
 
 def find_empty_positions(grid: List[List[str]]) -> Optional[Tuple[int, int]]:
@@ -194,11 +190,7 @@ if __name__ == '__main__':
         else:
             display(solution)
 
-
-get_col([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
-get_col([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']], (0, 1))
-get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
-
 grid = read_sudoku('puzzle1.txt')
-print(get_block(grid, (8, 8)))
-    # ['2', '8', '.', '.', '.', '5', '.', '7', '9']
+# grid = read_sudoku('custom_81x81.txt')
+display(grid)
+print(get_block(grid, (3, 2)))
