@@ -5,12 +5,7 @@ import math
 def read_sudoku(filename: str) -> List[List[str]]:
     """ Прочитать Судоку из указанного файла """
     digits = [c for c in open(filename).read() if c in '123456789.']
-    
-    # Find grid dimentions of sudoku 
-    # (3 for 3x3 sudoku, 9 for 9x9, etc)
-    global grid_dimention
-    grid_dimention = int(math.sqrt(len(digits)))
-    grid = group(digits, grid_dimention)
+    grid = group(digits, int(math.sqrt(len(digits))))
     return grid
 
 
@@ -19,8 +14,8 @@ def display(grid: List[List[str]]) -> None:
     """Вывод Судоку """
     width = 2
     line = '+'.join(['-' * (width * 3)] * 3)
-    for row in range(grid_dimention):
-        print(''.join(grid[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(grid_dimention)))
+    for row in range(len(grid)):
+        print(''.join(grid[row][col].center(width) + ('|' if str(col) in '25' else '') for col in range(len(grid))))
         if str(row) in '25':
             print(line)
     print()
@@ -93,7 +88,7 @@ def get_block(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
     
     # Find block dimentions of sudoku 
     # (1 for 3x3 sudoku, 3 for 9x9, etc)
-    block_dimention = int(math.sqrt(grid_dimention))
+    block_dimention = int(math.sqrt(len(grid)))
     
     # Find square coordinates
     block_x = int(math.ceil((row + 1) / 3)) - 1
@@ -116,7 +111,10 @@ def find_empty_positions(grid: List[List[str]]) -> Optional[Tuple[int, int]]:
     >>> find_empty_positions([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']])
     (2, 0)
     """
-    pass
+    for i in range(len(grid)):
+        for j in range(len(grid)):
+            if grid[i][j] == '.':
+                return (i, j)
 
 
 def find_possible_values(grid: List[List[str]], pos: Tuple[int, int]) -> Set[str]:
@@ -130,8 +128,17 @@ def find_possible_values(grid: List[List[str]], pos: Tuple[int, int]) -> Set[str
     >>> values == {'2', '5', '9'}
     True
     """
-    pass
-
+    row_arr = get_row(grid, pos)
+    column_arr = get_col(grid, pos)
+    block_arr = get_block(grid, pos)
+    
+    values = set()
+    for i in range(len(grid)):
+        values.add(row_arr[i])
+        values.add(column_arr[i])
+        values.add(block_arr[i])
+        
+    return values
 
 def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
     """ Решение пазла, заданного в grid """
@@ -191,6 +198,13 @@ if __name__ == '__main__':
             display(solution)
 
 grid = read_sudoku('puzzle1.txt')
-# grid = read_sudoku('custom_81x81.txt')
-display(grid)
-print(get_block(grid, (3, 2)))
+# print(grid)
+# grid = read_sudoku('custom_6x6.txt')
+# print(get_block(grid, (3, 2)))
+
+find_possible_values(grid, (0,2))
+
+
+
+# display(grid)
+# display([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']])
