@@ -173,9 +173,26 @@ def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
 
 
 def check_solution(solution: List[List[str]]) -> bool:
-    """ Если решение solution верно, то вернуть True, в противном случае False """
+    """ Если решение solution верно, то вернуть True, в противном случае False
+    
+    >>> check_solution([['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']])
+    True
+    >>> check_solution([['1', '1', '1', '6', '1', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']])
+    False
+    >>> check_solution([['1', '2', '3'], ['1', '2', '3'], ['1', '2', '3']])
+    False
+    """
     # TODO: Add doctests with bad puzzles
-    pass
+    for i in range(len(grid)):
+        for j in range(len(grid)):
+            row = get_row(solution, (i, j))
+            # print(get_block(solution, (i, j))) == len(set(get_block(solution, (i, j))))
+            # Check if row, column and block values are unique
+            if not (len(get_row(solution, (i, j))) == len(set(get_row(solution, (i, j)))) and
+                    len(get_col(solution, (i, j))) == len(set(get_col(solution, (i, j)))) and
+                        len(get_block(solution, (i, j))) == len(set(get_block(solution, (i, j))))):
+                return False
+    return True
 
 
 def generate_sudoku(N: int) -> List[List[str]]:
@@ -204,7 +221,8 @@ def generate_sudoku(N: int) -> List[List[str]]:
 
 
 if __name__ == '__main__':
-    for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
+    # for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
+    for fname in ['puzzle1.txt']:
         grid = read_sudoku(fname)
         display(grid)
         solution = solve(grid)
@@ -212,6 +230,8 @@ if __name__ == '__main__':
             print(f"Puzzle {fname} can't be solved")
         else:
             display(solution)
+            
+        # check_solution(solution)
 
 # # print(grid)
 # grid = read_sudoku('puzzle1.txt')
@@ -223,3 +243,7 @@ if __name__ == '__main__':
 # # )
 # display(solve(grid))
 # print('solved!') 
+print('sssssssssssssssssss__')
+grid = [['5', '3', '4', '6', '7', '8', '.', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']]
+display(grid)
+print(check_solution(grid))
