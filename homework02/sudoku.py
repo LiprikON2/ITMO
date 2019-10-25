@@ -174,7 +174,6 @@ def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
     # for find_empty_positions(grid) != set():
     #     empty_pos = find_empty_positions(grid)
     #     possible_vals = find_possible_values(grid, empty_pos)
-
     #     row, col = empty_pos
 
     #     if possible_vals:
