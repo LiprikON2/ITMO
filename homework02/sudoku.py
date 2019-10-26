@@ -141,7 +141,6 @@ def find_possible_values(grid: List[List[str]], pos: Tuple[int, int]) -> Set[str
     # 'inversing' set to get non taken values
     values = {'1', '2', '3', '4', '5', '6',
               '7', '8', '9'}.difference(taken_vals)
-
     return values
 
 
@@ -220,10 +219,10 @@ def generate_sudoku(N: int) -> List[List[str]]:
         row = random.randint(0, 8)
         col = random.randint(0, 8)
 
-        if grid[row][col] != '.':
-            grid[row][col] = '.'
+        if grid[row][col] != '.':  # type: ignore
+            grid[row][col] = '.'  # type: ignore
             N -= 1
-    return grid
+    return grid  # type: ignore
 
 
 if __name__ == '__main__':
