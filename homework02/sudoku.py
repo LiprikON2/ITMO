@@ -30,10 +30,10 @@ def group(values: List[str], n: int) -> List[List[str]]:
     >>> group([1,2,3,4,5,6,7,8,9], 3)
     [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
     """
-    grouped_l = []
+    grouped_vals = []
     for i in range(int(math.ceil(len(values) / n))):
-        grouped_l.append(values[n*i: n*i + n])
-    return grouped_l
+        grouped_vals.append(values[n*i: n*i + n])
+    return grouped_vals
 
 
 def get_row(grid: List[List[str]], pos: Tuple[int, int]) -> List[str]:
@@ -174,18 +174,16 @@ def solve(grid: List[List[str]]) -> Optional[List[List[str]]]:
 
 def check_solution(solution: List[List[str]]) -> bool:
     """ Если решение solution верно, то вернуть True, в противном случае False """
-    
     # """
     # >>> check_solution([['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']])
     # True
-    # >>> check_solution([['1', '1', '1', '6', '1', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']])
+    # >>> check_solution([['2', '1', '1', '6', '1', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']])
     # False
     # """
     # TODO: Add doctests with bad puzzles
     
     for i in range(len(grid)):
         for j in range(len(grid)):
-            row = get_row(solution, (i, j))
             # Check if row, column and block values are unique
             if not (len(get_row(solution, (i, j))) == len(set(get_row(solution, (i, j)))) and
                     len(get_col(solution, (i, j))) == len(set(get_col(solution, (i, j)))) and
@@ -224,7 +222,6 @@ def generate_sudoku(N: int) -> List[List[str]]:
     while N > 0:
         row = random.randint(0, 8)
         col = random.randint(0, 8)
-        pos = (row, col)
     
         if grid[row][col] != '.':
             grid[row][col] = '.'
@@ -234,7 +231,6 @@ def generate_sudoku(N: int) -> List[List[str]]:
 
 if __name__ == '__main__':
     for fname in ['puzzle1.txt', 'puzzle2.txt', 'puzzle3.txt']:
-    # for fname in ['puzzle1.txt']:
         grid = read_sudoku(fname)
         display(grid)
         solution = solve(grid)
