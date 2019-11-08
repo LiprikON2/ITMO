@@ -47,6 +47,7 @@ class GameOfLife:
 
         # Создание списка клеток
         self.create_grid(randomize=True)
+        
         running = True
         while running:
             for event in pygame.event.get():
@@ -57,9 +58,6 @@ class GameOfLife:
             self.draw_grid()
             # Выполнение одного шага игры (обновление состояния ячеек)
             self.get_next_generation()
-            # print(self.get_neighbours((0, 0)))
-            
-            
             
             self.draw_lines()
             pygame.display.flip()
@@ -102,10 +100,7 @@ class GameOfLife:
                     pygame.draw.rect(self.screen, pygame.Color('Red'), 
                                      ((x * self.cell_size, y * self.cell_size), 
                                       (self.cell_size, self.cell_size)))
-                else: 
-                    pygame.draw.rect(self.screen, pygame.Color('White'), 
-                                     ((x * self.cell_size, y * self.cell_size), 
-                                      (self.cell_size, self.cell_size)))
+
     def get_neighbours(self, cell: Cell) -> Cells:
         """
         Вернуть список соседних клеток для клетки `cell`.
@@ -125,11 +120,10 @@ class GameOfLife:
             Список соседних клеток.
         """
         x, y = cell
-        neighbours_arr = []
+        Cells = []
         
-        # x=1 y=0
-        # dimentions 4x4
         try:
+<<<<<<< HEAD
             # -┙
             if (x + 1 < self.cell_width) and (y + 1 < self.cell_height):
                 neighbours_arr.append((x + 1, y + 1))
@@ -157,87 +151,31 @@ class GameOfLife:
             # __
             if (y + 1 < self.cell_height):
                 neighbours_arr.append((x, y + 1))
+=======
+            if self.grid[x + 1][y + 1]:
+                Cells.append((x + 1, y + 1))
+            if self.grid[x + 1][y]:
+                Cells.append((x + 1, y))
+            
+            if self.grid[x - 1][y - 1]:
+                Cells.append((x - 1, y - 1))
+            if self.grid[x - 1][y]:
+                Cells.append((x - 1, y))
                 
+            if self.grid[x + 1][y - 1]:                
+                Cells.append((x + 1, y - 1))
+            if self.grid[x][y - 1]:
+                Cells.append((x, y - 1))
+>>>>>>> parent of fd82513... save
+                
+            if self.grid[x - 1][y + 1]:
+                Cells.append((x - 1, y + 1))
+            if self.grid[x][y + 1]:
+                Cells.append((x, y + 1))
         except IndexError:
             pass
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        # x, y = cell
-        # neighbours_arr = []
-        
-        # if x+1 > self.cell_width - 1:
-        #     x_max = x
-        # else:
-        #     x_max = x+1
-        # if y+1 > self.cell_height - 1:
-        #     y_max = y
-        # else:
-        #     y_max = y+1
-        
-        # if x-1 < 0:
-        #     x_min = x
-        # else:
-        #     x_min = x-1
-        # if y-1 < 0:
-        #     y_min = y
-        # else:
-        #     y_min = y-1
-            
-        #     # print('dimentions {}x{}'.format(self.cell_width, self.cell_height))
-        #     # print("X Получилось минимум - {} макс - {}".format(x_min, x_max))
-        #     # print("Y Получилось минимум - макс - {}".format(y_max))
-            
-        # try:
-        #     for i in range(x_min, x_max+1):
-        #         for j in range(y_min, y_max+1):
-        #             if self.grid[i][j] and x != i and y != j:
-        #                 neighbours_arr.append((i, j))
-        #                 print("Sooo... x={} y={} but".format(x, y), range(x_min, x_max+1), range(y_min, y_max+1))
-        # except IndexError:
-        #     print("thats not supposed to happen")
-            
-        # print(self.grid)
-        # range(-1, 1) is equal -1, 0
-            
-        # for i in range(4, 6+1): - 4, 5, 6
-        #     print(i)
-            
-                    
-        
-        # return [(1, 1), (0, 1), (1, 0)]
-        # try:
-        #     if self.grid[x + 1][y + 1]:
-        #         neighbours_arr.append((x + 1, y + 1))
-        #     if self.grid[x + 1][y]:
-        #         neighbours_arr.append((x + 1, y))
-            
-        #     if self.grid[x - 1][y - 1] and x + y > 2:
-        #         neighbours_arr.append((x - 1, y - 1))
-        #     if self.grid[x - 1][y] and x > 1:
-        #         neighbours_arr.append((x - 1, y))
-                
-        #     if self.grid[x + 1][y - 1] and y > 1:                
-        #         neighbours_arr.append((x + 1, y - 1))
-        #     if self.grid[x][y - 1]  and y > 1:
-        #         neighbours_arr.append((x, y - 1))
-                
-        #     if self.grid[x - 1][y + 1] and x > 1:
-        #         neighbours_arr.append((x - 1, y + 1))
-        #     if self.grid[x][y + 1]:
-        #         neighbours_arr.append((x, y + 1))
-        # except IndexError:
-        #     pass
-        
-        return neighbours_arr
+        return Cells
 
     def get_next_generation(self) -> Grid:
         """
@@ -248,9 +186,10 @@ class GameOfLife:
         out : Grid
             Новое поколение клеток.
         """
-        grid_copy = self.grid
+        Grid = self.create_grid()
         for x in range(self.cell_width):
             for y in range(self.cell_height):
+<<<<<<< HEAD
                 neighbours = self.get_neighbours((x, y))
                 neighbour_count = 0
                 
@@ -273,10 +212,20 @@ class GameOfLife:
                     grid_copy[x][y] = 0
                     
         self.grid = grid_copy
+=======
+                neighbour_count = len(self.get_neighbours((x, y)))
+                # Determine if cell stays
+                if neighbour_count >= 2 and neighbour_count <= 3 and self.grid[x][y]:
+                    Grid[x][y] = 1
+                # Determine if cell appears
+                if neighbour_count == 3:
+                    Grid[x][y] = 1
+>>>>>>> parent of fd82513... save
         
+        self.grid = Grid
                     
                     
 
 if __name__ == '__main__':
-    game = GameOfLife(200, 200, 40, 0.05)
+    game = GameOfLife(320, 240, 40, 1)
     game.run()
