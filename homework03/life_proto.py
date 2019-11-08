@@ -124,6 +124,7 @@ class GameOfLife:
         
         try:
 <<<<<<< HEAD
+<<<<<<< HEAD
             # -┙
             if (x + 1 < self.cell_width) and (y + 1 < self.cell_height):
                 neighbours_arr.append((x + 1, y + 1))
@@ -162,10 +163,25 @@ class GameOfLife:
             if self.grid[x - 1][y]:
                 Cells.append((x - 1, y))
                 
+=======
+            if self.grid[x + 1][y + 1]:
+                Cells.append((x + 1, y + 1))
+            if self.grid[x + 1][y]:
+                Cells.append((x + 1, y))
+            
+            if self.grid[x - 1][y - 1]:
+                Cells.append((x - 1, y - 1))
+            if self.grid[x - 1][y]:
+                Cells.append((x - 1, y))
+                
+>>>>>>> parent of fd82513... save
             if self.grid[x + 1][y - 1]:                
                 Cells.append((x + 1, y - 1))
             if self.grid[x][y - 1]:
                 Cells.append((x, y - 1))
+<<<<<<< HEAD
+>>>>>>> parent of fd82513... save
+=======
 >>>>>>> parent of fd82513... save
                 
             if self.grid[x - 1][y + 1]:
@@ -190,6 +206,7 @@ class GameOfLife:
         for x in range(self.cell_width):
             for y in range(self.cell_height):
 <<<<<<< HEAD
+<<<<<<< HEAD
                 neighbours = self.get_neighbours((x, y))
                 neighbour_count = 0
                 
@@ -212,6 +229,15 @@ class GameOfLife:
                     grid_copy[x][y] = 0
                     
         self.grid = grid_copy
+=======
+                neighbour_count = len(self.get_neighbours((x, y)))
+                # Determine if cell stays
+                if neighbour_count >= 2 and neighbour_count <= 3 and self.grid[x][y]:
+                    Grid[x][y] = 1
+                # Determine if cell appears
+                if neighbour_count == 3:
+                    Grid[x][y] = 1
+>>>>>>> parent of fd82513... save
 =======
                 neighbour_count = len(self.get_neighbours((x, y)))
                 # Determine if cell stays
