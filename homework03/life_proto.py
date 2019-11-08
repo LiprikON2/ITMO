@@ -131,31 +131,31 @@ class GameOfLife:
         # dimentions 4x4
         try:
             # -┙
-            if self.grid[x + 1][y + 1] and (x + 1 < self.cell_width) and (y + 1 < self.cell_height):
+            if (x + 1 < self.cell_width) and (y + 1 < self.cell_height):
                 neighbours_arr.append((x + 1, y + 1))
             # *|
-            if self.grid[x + 1][y] and (x + 1 < self.cell_width):
+            if (x + 1 < self.cell_width):
                 neighbours_arr.append((x + 1, y))
                 
             # ┍-
-            if self.grid[x - 1][y - 1] and (x - 1 >= 0) and (y - 1 >= 0):
+            if (x - 1 >= 0) and (y - 1 >= 0):
                 neighbours_arr.append((x - 1, y - 1))
             # |* (-)
-            if self.grid[x - 1][y] and (x - 1 >= 0):
+            if (x - 1 >= 0):
                 neighbours_arr.append((x - 1, y))
                 
             # -┐   
-            if self.grid[x + 1][y - 1] and (x + 1 < self.cell_width) and (y - 1 >= 0):                
+            if (x + 1 < self.cell_width) and (y - 1 >= 0):                
                 neighbours_arr.append((x + 1, y - 1))
             # ^^
-            if self.grid[x][y - 1] and (y - 1 >= 0):
+            if (y - 1 >= 0):
                 neighbours_arr.append((x, y - 1))
                 
             # └-
-            if self.grid[x - 1][y + 1] and (x - 1>= 0) and (y + 1 < self.cell_height):
+            if (x - 1>= 0) and (y + 1 < self.cell_height):
                 neighbours_arr.append((x - 1, y + 1))
             # __
-            if self.grid[x][y + 1] and (y + 1 < self.cell_height):
+            if (y + 1 < self.cell_height):
                 neighbours_arr.append((x, y + 1))
                 
         except IndexError:
@@ -251,7 +251,13 @@ class GameOfLife:
         grid_copy = self.grid
         for x in range(self.cell_width):
             for y in range(self.cell_height):
-                neighbour_count = len(self.get_neighbours((x, y)))
+                neighbours = self.get_neighbours((x, y))
+                neighbour_count = 0
+                
+                for i in range(len(neighbours)):
+                    new_x, new_y = neighbours[i]
+                    if self.grid[new_x][new_y]:
+                        neighbour_count +=1
                 
                 
                 print('A guy at {}, {} has {} neighbours: {}'.format(x, y, neighbour_count, self.get_neighbours((x, y))))
@@ -259,11 +265,9 @@ class GameOfLife:
                 
                 # Determine if cell stays
                 if neighbour_count >= 2 and neighbour_count <= 3 and self.grid[x][y]:
-                    print('true1')
                     grid_copy[x][y] = 1
                 # Determine if cell appears
                 elif neighbour_count == 3:
-                    print('true2')
                     grid_copy[x][y] = 1
                 else: 
                     grid_copy[x][y] = 0
