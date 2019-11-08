@@ -46,23 +46,20 @@ class GameOfLife:
         self.screen.fill(pygame.Color('white'))
 
         # Создание списка клеток
-        # PUT YOUR CODE HERE
-        self.create_grid()
-        print(self.get_neighbours((4, 4)))
+        self.create_grid(randomize=True)
         
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     running = False
-            self.draw_lines()
-
+                    
             # Отрисовка списка клеток
-            # Выполнение одного шага игры (обновление состояния ячеек)
-            # PUT YOUR CODE HERE
             self.draw_grid()
+            # Выполнение одного шага игры (обновление состояния ячеек)
+            self.get_next_generation()
             
-
+            self.draw_lines()
             pygame.display.flip()
             clock.tick(self.speed)
         pygame.quit()
@@ -85,10 +82,14 @@ class GameOfLife:
         out : Grid
             Матрица клеток размером `cell_height` х `cell_width`.
         """
-        print('dimentions: {}x{}'.format(self.cell_height, self.cell_width))
-        self.grid = [ [ 0 for i in range(self.cell_height) ] for j in range(self.cell_width) ]
-        self.grid[5][5] = 1
-    
+        
+        if randomize:
+            self.grid = [ [ random.choice([0, 1]) for i in range(self.cell_height) ] for j in range(self.cell_width) ]
+        else: 
+            self.grid = [ [ 0 for i in range(self.cell_height) ] for j in range(self.cell_width) ]
+        
+        return self.grid
+        
     def draw_grid(self) -> None:
         """
         Отрисовка списка клеток с закрашиванием их в соответствующе цвета.
@@ -119,28 +120,31 @@ class GameOfLife:
             Список соседних клеток.
         """
         x, y = cell
-        print('detectin neighbours... at {}, {}'.format(x, y))
         Cells = []
-        # Bottom right and right
-        if self.grid[x + 1][y + 1]:
-            Cells.append((x + 1, y + 1))
-        if self.grid[x + 1][y]:
-            Cells.append((x + 1, y))
+        
+        try:
+            if self.grid[x + 1][y + 1]:
+                Cells.append((x + 1, y + 1))
+            if self.grid[x + 1][y]:
+                Cells.append((x + 1, y))
             
-        if self.grid[x - 1][y - 1]:
-            Cells.append((x - 1, y - 1))
-        if self.grid[x - 1][y]:
-            Cells.append((x - 1, y))
-            
-        if self.grid[x + 1][y - 1]:                
-            Cells.append((x + 1, y - 1))
-        if self.grid[x][y - 1]:
-            Cells.append((x, y - 1))
-            
-        if self.grid[x - 1][y + 1]:
-            Cells.append((x - 1, y + 1))
-        if self.grid[x][y + 1]:
-            Cells.append((x, y + 1))
+            if self.grid[x - 1][y - 1]:
+                Cells.append((x - 1, y - 1))
+            if self.grid[x - 1][y]:
+                Cells.append((x - 1, y))
+                
+            if self.grid[x + 1][y - 1]:                
+                Cells.append((x + 1, y - 1))
+            if self.grid[x][y - 1]:
+                Cells.append((x, y - 1))
+                
+            if self.grid[x - 1][y + 1]:
+                Cells.append((x - 1, y + 1))
+            if self.grid[x][y + 1]:
+                Cells.append((x, y + 1))
+        except IndexError:
+            pass
+        
         return Cells
 
     def get_next_generation(self) -> Grid:
@@ -152,8 +156,21 @@ class GameOfLife:
         out : Grid
             Новое поколение клеток.
         """
-        pass
+        Grid = self.create_grid()
+        for x in range(self.cell_width):
+            for y in range(self.cell_height):
+                neighbour_count = len(self.get_neighbours((x, y)))
+                # Determine if cell stays
+                if neighbour_count >= 2 and neighbour_count <= 3 and self.grid[x][y]:
+                    Grid[x][y] = 1
+                # Determine if cell appears
+                if neighbour_count == 3:
+                    Grid[x][y] = 1
+        
+        self.grid = Grid
+                    
+                    
 
 if __name__ == '__main__':
-    game = GameOfLife(320, 240, 40)
+    game = GameOfLife(320, 240, 40, 1)
     game.run()
