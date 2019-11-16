@@ -46,6 +46,7 @@ class GameOfLife:
         self.screen.fill(pygame.Color('white'))
 
         # Создание списка клеток
+<<<<<<< HEAD
         # self.grid = self.create_grid(randomize=True)
         self.grid = [
             [1,1,0,0,1,1,1,1],
@@ -55,6 +56,9 @@ class GameOfLife:
             [1,0,1,1,1,1,0,0],
             [1,1,1,1,0,1,1,1]
         ]
+=======
+        self.grid = self.create_grid(randomize=True)
+>>>>>>> parent of 4d237c8... wut?
         
         running = True
         while running:
@@ -65,7 +69,7 @@ class GameOfLife:
             # Отрисовка списка клеток
             self.draw_grid()
             # Выполнение одного шага игры (обновление состояния ячеек)
-            self.grid = self.get_next_generation()
+            self.get_next_generation()
             
             self.draw_lines()
             pygame.display.flip()
@@ -189,10 +193,14 @@ class GameOfLife:
                 else: 
                     next_grid[col][row] = 0
         
-        return next_grid
+        self.grid = next_grid
                     
                     
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     game = GameOfLife(400, 300, 50, 0.25)
+=======
+    game = GameOfLife(160*4, 160*14, 40, 0.25)
+>>>>>>> parent of 4d237c8... wut?
     game.run()
