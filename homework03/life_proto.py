@@ -89,6 +89,9 @@ class GameOfLife:
         else: 
             self.grid = [ [ 0 for i in range(self.cell_width) ] for j in range(self.cell_height) ]
         print("unaltered grid: ", self.grid)
+        
+        # TEMPORARY
+        self.grid = [[1, 0, 0, 0], [0, 1, 1, 1], [0, 1, 1, 1], [1, 0, 1, 0]]
         return self.grid
         
     def draw_grid(self) -> None:
@@ -96,7 +99,7 @@ class GameOfLife:
         Отрисовка списка клеток с закрашиванием их в соответствующе цвета.
         """
         
-        print('IM DRAWING', self.grid)
+        # print('IM DRAWING', self.grid)
         for row in range(self.cell_width):
             for col in range(self.cell_height):
                 if self.grid[col][row]:
@@ -157,6 +160,7 @@ class GameOfLife:
                 neighbours_arr.append((row, col + 1))
         
         except IndexError:
+            print('indexError')
             pass
         
         
@@ -246,7 +250,13 @@ class GameOfLife:
         out : Grid
             Новое поколение клеток.
         """
-        grid_copy = self.grid
+        
+        
+        
+        # Lets try again
+        
+        grid_copy = self.grid.copy()
+        
         for row in range(self.cell_width):
             for col in range(self.cell_height):
                 neighbour_count = 0
@@ -260,11 +270,11 @@ class GameOfLife:
                     
                 
                 
-                print('A guy at {}, {} has {} neighbours:'.format(row, col, neighbour_count), neighbours_arr)
+                # print('A guy at {}, {} has {} neighbours:'.format(row, col, neighbour_count), neighbours_arr)
 
                 
                 # Determine if cell stays
-                if neighbour_count >= 2 and neighbour_count <= 3 and self.grid[col][row]:
+                if (neighbour_count >= 2) and (neighbour_count <= 3) and self.grid[col][row]:
                     grid_copy[col][row] = 1
                 # Determine if cell appears
                 elif neighbour_count == 3:
@@ -272,9 +282,9 @@ class GameOfLife:
                 else: 
                     grid_copy[col][row] = 0
                 
-        print('--------------------------------')
-        # print('here comes grid:', self.grid)
-        print('IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
+        # print('--------------------------------')
+        # # print('here comes grid:', self.grid)
+        # print('IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
                 
         self.grid = grid_copy
         
@@ -282,5 +292,5 @@ class GameOfLife:
                     
 
 if __name__ == '__main__':
-    game = GameOfLife(120, 120, 40, 0.00005)
+    game = GameOfLife(160, 160, 40, 0.15)
     game.run()
