@@ -47,6 +47,14 @@ class GameOfLife:
 
         # Создание списка клеток
         self.grid = self.create_grid(randomize=True)
+        # self.grid = [
+        #     [1,1,0,0,1,1,1,1],
+        #     [0,1,1,1,1,1,1,0],
+        #     [1,0,1,1,0,0,0,0],
+        #     [1,0,0,0,0,0,0,1],
+        #     [1,0,1,1,1,1,0,0],
+        #     [1,1,1,1,0,1,1,1]
+        # ]
         
         running = True
         while running:
@@ -57,7 +65,7 @@ class GameOfLife:
             # Отрисовка списка клеток
             self.draw_grid()
             # Выполнение одного шага игры (обновление состояния ячеек)
-            self.get_next_generation()
+            self.grid = self.get_next_generation()
             
             self.draw_lines()
             pygame.display.flip()
@@ -178,10 +186,10 @@ class GameOfLife:
                 else: 
                     next_grid[col][row] = 0
         
-        self.grid = next_grid
+        return next_grid
                     
                     
 
-if __name__ == '__main__':
-    game = GameOfLife(160*4, 160*14, 40, 0.25)
-    game.run()
+# if __name__ == '__main__':
+#     game = GameOfLife(400, 300, 50, 0.25)
+#     game.run()
