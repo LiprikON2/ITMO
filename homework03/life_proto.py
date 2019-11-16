@@ -46,7 +46,6 @@ class GameOfLife:
         self.screen.fill(pygame.Color('white'))
 
         # Создание списка клеток
-<<<<<<< HEAD
         # self.grid = self.create_grid(randomize=True)
         self.grid = [
             [1,1,0,0,1,1,1,1],
@@ -56,9 +55,6 @@ class GameOfLife:
             [1,0,1,1,1,1,0,0],
             [1,1,1,1,0,1,1,1]
         ]
-=======
-        self.grid = self.create_grid(randomize=True)
->>>>>>> parent of 4d237c8... wut?
         
         running = True
         while running:
@@ -69,7 +65,7 @@ class GameOfLife:
             # Отрисовка списка клеток
             self.draw_grid()
             # Выполнение одного шага игры (обновление состояния ячеек)
-            self.get_next_generation()
+            self.grid = self.get_next_generation()
             
             self.draw_lines()
             pygame.display.flip()
@@ -133,10 +129,7 @@ class GameOfLife:
         """
         col, row = cell
         neighbours_arr = []
-        # ROWxCOL = 8x6 = WIDTHxHEIGHT
         
-        # given: (5,7)
-        # GIVEN: (7, 5)
         # -┙ bottom right
         if (row + 1 < self.cell_width) and (col + 1 < self.cell_height):
             neighbours_arr.append(self.grid[col + 1][row + 1])
@@ -182,7 +175,7 @@ class GameOfLife:
         
         for row in range(self.cell_width):
             for col in range(self.cell_height):
-                neighbours_count = sum(self.get_neighbours((row, col)))
+                neighbours_count = sum(self.get_neighbours((col, row)))
                 
                 # Determine if cell stays form previous grid
                 if (neighbours_count >= 2) and (neighbours_count <= 3) and self.grid[col][row]:
@@ -193,14 +186,10 @@ class GameOfLife:
                 else: 
                     next_grid[col][row] = 0
         
-        self.grid = next_grid
+        return next_grid
                     
                     
 
 if __name__ == '__main__':
-<<<<<<< HEAD
     game = GameOfLife(400, 300, 50, 0.25)
-=======
-    game = GameOfLife(160*4, 160*14, 40, 0.25)
->>>>>>> parent of 4d237c8... wut?
     game.run()
