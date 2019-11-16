@@ -46,15 +46,7 @@ class GameOfLife:
         self.screen.fill(pygame.Color('white'))
 
         # Создание списка клеток
-        # self.grid = self.create_grid(randomize=True)
-        self.grid = [
-            [1,1,0,0,1,1,1,1],
-            [0,1,1,1,1,1,1,0],
-            [1,0,1,1,0,0,0,0],
-            [1,0,0,0,0,0,0,1],
-            [1,0,1,1,1,1,0,0],
-            [1,1,1,1,0,1,1,1]
-        ]
+        self.grid = self.create_grid(randomize=True)
         
         running = True
         while running:
