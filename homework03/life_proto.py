@@ -122,42 +122,33 @@ class GameOfLife:
         row, col = cell
         neighbours_arr = []
         
-        
         # -┙ bottom right
         if (row + 1 < self.cell_width) and (col + 1 < self.cell_height):
-            if self.grid[row + 1][col + 1]:
-                neighbours_arr.append((row + 1, col + 1))
+            neighbours_arr.append(self.grid[col + 1][row + 1])
         # *| right
         if (row + 1 < self.cell_width):
-            if self.grid[row + 1][col]:
-                neighbours_arr.append((row + 1, col))
+            neighbours_arr.append(self.grid[col][row + 1])
             
         # ┍- top left
         if (row - 1 >= 0) and (col - 1 >= 0):
-            if self.grid[row - 1][col - 1]:
-                neighbours_arr.append((row - 1, col - 1))
+            neighbours_arr.append(self.grid[col - 1][row - 1])
         # |* left
         if (row - 1 >= 0):
-            if self.grid[row - 1][col]:
-                neighbours_arr.append((row - 1, col))
+            neighbours_arr.append(self.grid[col][row - 1])
             
         # -┐ top right
         if (row + 1 < self.cell_width) and (col - 1 >= 0):                
-            if self.grid[row + 1][col - 1]:
-                neighbours_arr.append((row + 1, col - 1))
+            neighbours_arr.append(self.grid[col - 1][row + 1])
         # ^^ top
         if (col - 1 >= 0):
-            if self.grid[row][col - 1]:
-                neighbours_arr.append((row, col - 1))
+            neighbours_arr.append(self.grid[col - 1][row])
             
         # └- bottom left
         if (row - 1 >= 0) and (col + 1 < self.cell_height):
-            if self.grid[row - 1][col + 1]:
-                neighbours_arr.append((row - 1, col + 1))
+            neighbours_arr.append(self.grid[col + 1][row - 1])
         # __ bottom
         if (col + 1 < self.cell_height):
-            if self.grid[row][col + 1]:
-                neighbours_arr.append((row, col + 1))
+            neighbours_arr.append(self.grid[col + 1][row])
         
         return neighbours_arr
 
@@ -176,21 +167,21 @@ class GameOfLife:
         
         for row in range(self.cell_width):
             for col in range(self.cell_height):
-                neighbours_count = len(self.get_neighbours((row, col)))
+                neighbours_count = sum(self.get_neighbours((row, col)))
                 
                 # Determine if cell stays form previous grid
-                if (neighbours_count >= 2) and (neighbours_count <= 3) and self.grid[row][col]:
-                    next_grid[row][col] = 1
+                if (neighbours_count >= 2) and (neighbours_count <= 3) and self.grid[col][row]:
+                    next_grid[col][row] = 1
                 # Determine if new cell appears
                 elif neighbours_count == 3:
-                    next_grid[row][col] = 1
+                    next_grid[col][row] = 1
                 else: 
-                    next_grid[row][col] = 0
+                    next_grid[col][row] = 0
         
         self.grid = next_grid
                     
                     
 
-# if __name__ == '__main__':
-#     game = GameOfLife(160*4, 160*4, 40, 1)
-#     game.run()
+if __name__ == '__main__':
+    game = GameOfLife(160*4, 160*14, 40, 0.25)
+    game.run()
