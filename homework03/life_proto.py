@@ -122,31 +122,31 @@ class GameOfLife:
         col, row = cell
         neighbours_arr = []
         
-        # -┙ bottom right
+        # -┙ bottom right border
         if (row + 1 < self.cell_width) and (col + 1 < self.cell_height):
             neighbours_arr.append(self.grid[col + 1][row + 1])
-        # *| right
+        # *| right border
         if (row + 1 < self.cell_width):
             neighbours_arr.append(self.grid[col][row + 1])
             
-        # ┍- top left
+        # ┍- top left border
         if (row - 1 >= 0) and (col - 1 >= 0):
             neighbours_arr.append(self.grid[col - 1][row - 1])
-        # |* left
+        # |* left border
         if (row - 1 >= 0):
             neighbours_arr.append(self.grid[col][row - 1])
             
-        # -┐ top right
+        # -┐ top right border
         if (row + 1 < self.cell_width) and (col - 1 >= 0):                
             neighbours_arr.append(self.grid[col - 1][row + 1])
-        # ^^ top
+        # ^^ top border
         if (col - 1 >= 0):
             neighbours_arr.append(self.grid[col - 1][row])
             
-        # └- bottom left
+        # └- bottom left border
         if (row - 1 >= 0) and (col + 1 < self.cell_height):
             neighbours_arr.append(self.grid[col + 1][row - 1])
-        # __ bottom
+        # __ bottom border
         if (col + 1 < self.cell_height):
             neighbours_arr.append(self.grid[col + 1][row])
         
