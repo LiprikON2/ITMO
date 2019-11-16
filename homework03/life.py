@@ -25,9 +25,9 @@ class GameOfLife:
         # Текущее поколение клеток
         self.curr_generation = self.create_curr_generation(randomize=randomize)
         # Максимальное число поколений
-        self.max_generations = max_generations
+        self.max_generation = max_generation
         # Текущее число поколений
-        self.generations = 1
+        self.n_generation = 1
 
     def create_curr_generation(self, randomize: bool=False) -> curr_generation:
         """
@@ -137,7 +137,7 @@ class GameOfLife:
         """
         self.prev_generation = self.curr_generation.copy()
         self.curr_generation = self.get_next_generation()
-        self.generations += 1
+        self.n_generation += 1
         
         
 
@@ -146,7 +146,7 @@ class GameOfLife:
         """
         Не превысило ли текущее число поколений максимально допустимое.
         """
-        return self.generations >= self.max_generations
+        return self.n_generation >= self.max_generations
         
     
     @property
@@ -176,4 +176,4 @@ if __name__ == '__main__':
     while life.is_changing and not life.is_max_generations_exceeded:
         life.step()
         pp(life.curr_generation)
-        print("\n",life.generations, "\n")
+        print("\n",life.n_generation, "\n")
