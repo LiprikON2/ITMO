@@ -173,7 +173,7 @@ class GameOfLife:
 # if __name__ == '__main__':
 #     random.seed(1234)
 #     life = GameOfLife((6, 8), True, 120)
-#     while life.is_changing and not life.is_max_generations_exceeded:
+#     while life.is_changing and not life.is_max_generations_exceed:
 #         life.step()
 #         # pp(life.curr_generation)
 #         # print("\n",life.n_generation, "\n")

@@ -8,7 +8,6 @@ class Console(UI):
     def __init__(self, life: GameOfLife) -> None:
         super().__init__(life)
         self.isPaused = False
-        
 
     def draw_borders(self, screen) -> None:
         """ Отобразить рамку. """

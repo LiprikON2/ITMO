@@ -93,7 +93,7 @@ class GameOfLife:
         Отрисовка списка клеток с закрашиванием их в соответствующе цвета.
         """
 
-        for col in range(self.cell_height):
+        for col in range(self.cell_width):
             for row in range(self.cell_height):
                 if self.grid[row][col]:
                     pygame.draw.rect(self.screen, pygame.Color('Red'),
@@ -181,5 +181,5 @@ class GameOfLife:
 
 
 # if __name__ == '__main__':
-#     game = GameOfLife(200, 200, 50, 0.05)
+#     game = GameOfLife(200, 400, 50, 0.05)
 #     game.run()
