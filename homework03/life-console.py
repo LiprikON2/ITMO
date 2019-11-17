@@ -12,7 +12,7 @@ class Console(UI):
 
     def draw_borders(self, screen) -> None:
         """ Отобразить рамку. """
-        width = self.life.rows
+        width = self.life.cols
         
         line = '+{}+\n'.format(('━' * width))
         screen.addstr(line)
@@ -20,7 +20,7 @@ class Console(UI):
     def draw_text(self, screen) -> None:
         """ Отображение текста """
         
-        screen.addstr('Press spacebar to pause')
+        screen.addstr('Press spacebar to pause        Esc to exit')
         
         # Game is paused output PAUSED
         if self.isPaused == True:
@@ -33,28 +33,32 @@ class Console(UI):
         for row in range(self.life.rows):
             screen.addstr('│')
             for col in range(self.life.cols):
-                screen.addstr('●' if self.life.curr_generation[row][col] else ' ')
+                # ⬤●•
+                screen.addstr('⬤' if self.life.curr_generation[row][col] else '.')
             screen.addstr('│\n')
-            # if row == self.life.cols - 1:
-            #     self.draw_borders(screen)
                 
-    def draw_life(self, screen, delay) -> None:
+    def draw_life(self, screen, delay: int = 500) -> None:
         screen.clear()
         
-        self.draw_borders(screen)
-        self.draw_grid(screen)
-        self.draw_borders(screen)
-        self.draw_text(screen)
+        try:
+            self.draw_borders(screen)
+            self.draw_grid(screen)
+            self.draw_borders(screen)
+            self.draw_text(screen)
+        except curses.error:
+            raise ValueError("The window is too small for grid of this size")
         
         screen.refresh()
         curses.delay_output(delay)
             
-    def run(self, delay) -> None:
+    def run(self, delay: int = 500) -> None:
         screen = curses.initscr()
-        # PUT YOUR CODE HERE
         
         # Key presses doesn't get typed
         curses.noecho()
+        # Cursor visibility
+        curses.curs_set(0)
+        
         # Screen doesn't freeze waiting for input every time screen.getch() called
         screen.nodelay(True)
         
@@ -63,19 +67,25 @@ class Console(UI):
             self.draw_life(screen, delay)
             
             # Listen for spacebar keypress
-            if screen.getch() == 32:
+            event = screen.getch()
+            
+            # If spacebar is pressed - PAUSE
+            if event == 32:
                 self.isPaused = True
                 self.draw_life(screen, delay)
                 while self.isPaused:
                     # Listen for spacebar keypress
                     if screen.getch() == 32:
                         self.isPaused = False
-                # Reduce loop CPU usage
+                # Reduce loop's CPU usage
                 time.sleep(0.1)
-                        
+            # If Esc is pressed - EXIT
+            if event == 27:
+                break
+            # Next generation of life generated
             self.life.step()
             
-                        
+                         
             
             
         curses.endwin()
@@ -84,5 +94,5 @@ class Console(UI):
 if __name__ == '__main__':
     random.seed(1234)
     
-    console = Console(GameOfLife((15, 5), True, 120))
-    console.run(500)
+    console = Console(GameOfLife((20, 120), True, 30))
+    console.run()
