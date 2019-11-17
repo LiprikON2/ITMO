@@ -7,7 +7,7 @@ from pprint import pprint as pp
 
 Cell = Tuple[int, int]
 Cells = List[int]
-curr_generation = List[Cells]
+Grid = List[Cells]
 
 
 class GameOfLife:
@@ -21,15 +21,16 @@ class GameOfLife:
         # Размер клеточного поля
         self.rows, self.cols = size
         # Предыдущее поколение клеток
-        self.prev_generation = self.create_curr_generation()
+        self.prev_generation = self.create_grid()
         # Текущее поколение клеток
-        self.curr_generation = self.create_curr_generation(randomize=randomize)
+        self.curr_generation = self.create_grid(randomize=randomize)
         # Максимальное число поколений
         self.max_generations = max_generations
         # Текущее число поколений
+        # self.generations 
         self.n_generation = 1
 
-    def create_curr_generation(self, randomize: bool=False) -> curr_generation:
+    def create_grid(self, randomize: bool=False) -> Grid:
         """
         Создание списка клеток.
         Клетка считается живой, если ее значение равно 1, в противном случае клетка
@@ -41,20 +42,18 @@ class GameOfLife:
             быть равновероятно живой или мертвой, иначе все клетки создаются мертвыми.
         Returns
         ----------
-        out : curr_generation
+        out : Grid
             Матрица клеток размером `cols` х `rows`.
         """
 
         if randomize:
-            curr_generation = [[random.choice([0, 1]) for i in range(
-                self.rows)] for j in range(self.cols)]
-            # pp(curr_generation)
-            # print('\ngenerated')
+            grid = [[random.choice([0, 1]) for i in range(
+                self.cols)] for j in range(self.rows)]
         else:
-            curr_generation = [[0 for i in range(self.rows)]
-                    for j in range(self.cols)]
+            grid = [[0 for i in range(self.cols)]
+                    for j in range(self.rows)]
 
-        return curr_generation
+        return grid
 
     def get_neighbours(self, cell: Cell) -> Cells:
         """
@@ -74,11 +73,14 @@ class GameOfLife:
         col, row = cell
         neighbours_arr = []
 
+        
+        # print(row, '+ 1 <', self.rows, 'and', col, '+ 1 <', self.cols)
+        # print('GRID: width(cols) -', len(self.curr_generation[0]), 'height(rows) -', len(self.curr_generation))
         # -┙ bottom right border
-        if (row + 1 < self.rows) and (col + 1 < self.cols):
+        if (row + 1 < self.cols) and (col + 1 < self.rows):
             neighbours_arr.append(self.curr_generation[col + 1][row + 1])
         # *| right border
-        if (row + 1 < self.rows):
+        if (row + 1 < self.cols):
             neighbours_arr.append(self.curr_generation[col][row + 1])
 
         # ┍- top left border
@@ -89,38 +91,38 @@ class GameOfLife:
             neighbours_arr.append(self.curr_generation[col][row - 1])
 
         # -┐ top right border
-        if (row + 1 < self.rows) and (col - 1 >= 0):
+        if (row + 1 < self.cols) and (col - 1 >= 0):
             neighbours_arr.append(self.curr_generation[col - 1][row + 1])
         # ^^ top border
         if (col - 1 >= 0):
             neighbours_arr.append(self.curr_generation[col - 1][row])
 
         # └- bottom left border
-        if (row - 1 >= 0) and (col + 1 < self.cols):
+        if (row - 1 >= 0) and (col + 1 < self.rows):
             neighbours_arr.append(self.curr_generation[col + 1][row - 1])
         # __ bottom border
-        if (col + 1 < self.cols):
+        if (col + 1 < self.rows):
             neighbours_arr.append(self.curr_generation[col + 1][row])
 
         return neighbours_arr
-    
-    def get_next_generation(self) -> curr_generation:
+
+    def get_next_generation(self) -> Grid:
         """
         Получить следующее поколение клеток.
         Returns
         ----------
-        out : curr_generation
+        out : Grid
             Новое поколение клеток.
         """
 
-        # Create empty curr_generation
-        next_generation = self.create_curr_generation()
+        # Create empty grid
+        next_generation = self.create_grid()
 
-        for row in range(self.rows):
-            for col in range(self.cols):
+        for row in range(self.cols):
+            for col in range(self.rows):
                 neighbours_count = sum(self.get_neighbours((col, row)))
 
-                # Determine if cell stays form previous curr_generation
+                # Determine if cell stays form previous grid
                 if (neighbours_count >= 2) and (neighbours_count <= 3) and self.curr_generation[col][row]:
                     next_generation[col][row] = 1
                 # Determine if new cell appears
@@ -138,24 +140,21 @@ class GameOfLife:
         self.prev_generation = self.curr_generation.copy()
         self.curr_generation = self.get_next_generation()
         self.n_generation += 1
-        
-        
 
     @property
-    def is_max_generations_exceeded(self) -> bool:
+    # is_max_generations_exceeded
+    def is_max_generations_exceed(self) -> bool:
         """
         Не превысило ли текущее число поколений максимально допустимое.
         """
         return self.n_generation >= self.max_generations
-        
-    
+
     @property
     def is_changing(self) -> bool:
         """
         Изменилось ли состояние клеток с предыдущего шага.
         """
         return self.curr_generation != self.prev_generation
-        
 
     @staticmethod
     def from_file(filename: pathlib.Path) -> 'GameOfLife':
@@ -170,10 +169,34 @@ class GameOfLife:
         """
         pass
     
+    
 if __name__ == '__main__':
-    random.seed(1234)
-    life = GameOfLife((5, 5), True, 120)
-    while life.is_changing and not life.is_max_generations_exceeded:
-        life.step()
-        pp(life.curr_generation)
-        # print("\n",life.n_generation, "\n")
+    
+    game = GameOfLife((6, 8))
+    game.curr_generation = [
+            [1,1,0,0,1,1,1,1],
+            [0,1,1,1,1,1,1,0],
+            [1,0,1,1,0,0,0,0],
+            [1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,0],
+            [1,1,1,1,0,1,1,1]
+        ]
+    game.step()
+    pp(game.prev_generation)
+    pp([
+            [1,1,0,0,1,1,1,1],
+            [0,1,1,1,1,1,1,0],
+            [1,0,1,1,0,0,0,0],
+            [1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,0,0],
+            [1,1,1,1,0,1,1,1]
+        ])
+    
+    
+    
+    # random.seed(1234)
+    # life = GameOfLife((6, 8), True, 120)
+    # while life.is_changing and not life.is_max_generations_exceeded:
+    #     life.step()
+    #     # pp(life.curr_generation)
+    #     # print("\n",life.n_generation, "\n")

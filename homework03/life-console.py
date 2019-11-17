@@ -71,7 +71,7 @@ class Console(UI):
                     # Listen for spacebar keypress
                     if screen.getch() == 32:
                         self.isPaused = False
-                # Reduce CPU usage
+                # Reduce loop CPU usage
                 time.sleep(0.1)
                         
             self.life.step()
