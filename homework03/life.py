@@ -1,9 +1,9 @@
 import pathlib
 import random
+import math
 
 from typing import List, Optional, Tuple
 
-from pprint import pprint as pp
 
 Cell = Tuple[int, int]
 Cells = List[int]
@@ -161,13 +161,32 @@ class GameOfLife:
         """
         Прочитать состояние клеток из указанного файла.
         """
-        pass
+        # pathlib.Path(filename)
+        file = [c for c in open(filename).read() if c in '01\n']
+        grid = [[]]
+        j = 0
+        for i in range(len(file)):
+            if file[i] != '\n':
+                grid[j].extend(file[i])
+            else:
+                # fix empty arr at the end
+                grid.append([])
+                j += 1
+        
+        print(grid)
 
     def save(self, filename: pathlib.Path) -> None:
         """
         Сохранить текущее состояние клеток в указанный файл.
         """
         pass
+
+
+if __name__ == '__main__':
+    life = GameOfLife((6, 8), True, 120)
+    life.from_file('grid.txt')
+    
+    
 
 
 # if __name__ == '__main__':

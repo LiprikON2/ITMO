@@ -1,6 +1,5 @@
 import pygame
 from pygame.locals import *
-import random
 import time
 import argparse
 
@@ -11,22 +10,21 @@ from ui import UI
 
 class GUI(UI):
 
-    def __init__(self, life: GameOfLife, cell_size: int=10, speed: int=10) -> None:
+    def __init__(self, life: GameOfLife, cell_size: int = 10, speed: int = 10) -> None:
         super().__init__(life)
-        
+
         self.cell_size = cell_size
-        
+
         # width and height in px
         self.width = self.life.cols * self.cell_size
         self.height = self.life.rows * self.cell_size
-        
+
         # in px
         self.screen_size = self.width, self.height
-        
+
         self.screen = pygame.display.set_mode(self.screen_size)
-        
+
         self.speed = speed
-        
 
     def draw_lines(self) -> None:
         """ Отрисовать сетку """
@@ -52,10 +50,10 @@ class GUI(UI):
                     pygame.draw.rect(self.screen, pygame.Color('White'),
                                      ((col * self.cell_size, row * self.cell_size),
                                       (self.cell_size, self.cell_size)))
-                    
+
     def pause(self) -> None:
         """ Постановка игры на паузу """
-        
+
         is_paused = True
         self.draw_grid()
         while is_paused:
@@ -65,72 +63,69 @@ class GUI(UI):
                     is_paused = False
                     self.is_running = False
                     break
-                
+
                 # On keydown: if spacebar is pressed - RESUME
                 if event.type == pygame.KEYDOWN and event.key == 32:
                     is_paused = False
-                        
+
                 # On mouse button press: if right click - HANDLE CLICK
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.handle_click(event)
             time.sleep(0.01)
-            
+
     def handle_click(self, event):
         """ Преключение состояния выбраной клетки """
-        
+
         x, y = event.pos
         target_row = y // self.cell_size
         target_col = x // self.cell_size
-        
+
         self.life.curr_generation = self.life.prev_generation.copy()
-    
+
         # kill cell
         if self.life.curr_generation[target_row][target_col]:
             self.life.curr_generation[target_row][target_col] = 0
         # or resurrect cell
         else:
             self.life.curr_generation[target_row][target_col] = 1
-            
+
         self.draw_grid()
         self.draw_lines()
         pygame.display.flip()
-            
-                        
+
     def run(self) -> None:
         """ Запустить игру """
-        
+
         pygame.init()
         clock = pygame.time.Clock()
         pygame.display.set_caption('Game of Life')
         self.screen.fill(pygame.Color('white'))
 
-        
         self.is_running = True
         # while running and self.life.is_changing and not self.life.is_max_generations_exceed:
         while self.is_running and not self.life.is_max_generations_exceed:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     self.is_running = False
-                    
+
                 # On keydown: if spacebar is pressed - PAUSE
                 if event.type == pygame.KEYDOWN and event.key == 32:
                     self.pause()
-                    
+
             # Отрисовка списка клеток
             self.draw_grid()
-                    
+
             # Выполнение одного шага игры (обновление состояния ячеек)
             self.life.step()
-            
+
             self.draw_lines()
             pygame.display.flip()
-            
+
             # Pause the game if nothing is changing
             if not self.life.is_changing:
                 self.pause()
             clock.tick(self.speed)
-    
-                    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -139,5 +134,6 @@ if __name__ == '__main__':
     parser.add_argument("--cell_size", help="Size of a single cell, in px")
     args = parser.parse_args()
 
-    game = GUI(GameOfLife((int(args.width) // int(args.cell_size), int(args.height) // int(args.cell_size)), True, 999), int(args.cell_size), 10)
+    game = GUI(GameOfLife((int(args.width) // int(args.cell_size),
+                           int(args.height) // int(args.cell_size)), True, 999), int(args.cell_size), 10)
     game.run()
