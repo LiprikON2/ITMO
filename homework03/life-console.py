@@ -84,5 +84,5 @@ class Console(UI):
 if __name__ == '__main__':
     random.seed(1234)
     
-    console = Console(GameOfLife((5, 5), True, 120))
+    console = Console(GameOfLife((15, 5), True, 120))
     console.run(500)

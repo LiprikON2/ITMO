@@ -70,36 +70,36 @@ class GameOfLife:
         out : Cells
             Список соседних клеток.
         """
-        col, row = cell
+        row, col = cell
         neighbours_arr = []
 
         # -┙ bottom right border
-        if (row + 1 < self.cols) and (col + 1 < self.rows):
-            neighbours_arr.append(self.curr_generation[col + 1][row + 1])
+        if (row + 1 < self.rows) and (col + 1 < self.cols):
+            neighbours_arr.append(self.curr_generation[row + 1][col + 1])
         # *| right border
-        if (row + 1 < self.cols):
-            neighbours_arr.append(self.curr_generation[col][row + 1])
+        if (row + 1 < self.rows):
+            neighbours_arr.append(self.curr_generation[row + 1][col])
 
         # ┍- top left border
         if (row - 1 >= 0) and (col - 1 >= 0):
-            neighbours_arr.append(self.curr_generation[col - 1][row - 1])
+            neighbours_arr.append(self.curr_generation[row - 1][col - 1])
         # |* left border
         if (row - 1 >= 0):
-            neighbours_arr.append(self.curr_generation[col][row - 1])
+            neighbours_arr.append(self.curr_generation[row - 1][col])
 
         # -┐ top right border
-        if (row + 1 < self.cols) and (col - 1 >= 0):
-            neighbours_arr.append(self.curr_generation[col - 1][row + 1])
+        if (row + 1 < self.rows) and (col - 1 >= 0):
+            neighbours_arr.append(self.curr_generation[row + 1][col - 1])
         # ^^ top border
         if (col - 1 >= 0):
-            neighbours_arr.append(self.curr_generation[col - 1][row])
+            neighbours_arr.append(self.curr_generation[row][col - 1])
 
         # └- bottom left border
-        if (row - 1 >= 0) and (col + 1 < self.rows):
-            neighbours_arr.append(self.curr_generation[col + 1][row - 1])
+        if (row - 1 >= 0) and (col + 1 < self.cols):
+            neighbours_arr.append(self.curr_generation[row - 1][col + 1])
         # __ bottom border
-        if (col + 1 < self.rows):
-            neighbours_arr.append(self.curr_generation[col + 1][row])
+        if (col + 1 < self.cols):
+            neighbours_arr.append(self.curr_generation[row][col + 1])
 
         return neighbours_arr
 
@@ -115,18 +115,18 @@ class GameOfLife:
         # Create empty grid
         next_generation = self.create_grid()
 
-        for row in range(self.cols):
-            for col in range(self.rows):
-                neighbours_count = sum(self.get_neighbours((col, row)))
+        for row in range(self.rows):
+            for col in range(self.cols):
+                neighbours_count = sum(self.get_neighbours((row, col)))
 
                 # Determine if cell stays form previous grid
-                if (neighbours_count >= 2) and (neighbours_count <= 3) and self.curr_generation[col][row]:
-                    next_generation[col][row] = 1
+                if (neighbours_count >= 2) and (neighbours_count <= 3) and self.curr_generation[row][col]:
+                    next_generation[row][col] = 1
                 # Determine if new cell appears
                 elif neighbours_count == 3:
-                    next_generation[col][row] = 1
+                    next_generation[row][col] = 1
                 else:
-                    next_generation[col][row] = 0
+                    next_generation[row][col] = 0
 
         return next_generation
 

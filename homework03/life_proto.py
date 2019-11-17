@@ -86,7 +86,6 @@ class GameOfLife:
         else:
             grid = [[0 for i in range(self.cell_width)]
                     for j in range(self.cell_height)]
-
         return grid
 
     def draw_grid(self) -> None:
@@ -94,15 +93,15 @@ class GameOfLife:
         Отрисовка списка клеток с закрашиванием их в соответствующе цвета.
         """
 
-        for row in range(self.cell_width):
-            for col in range(self.cell_height):
-                if self.grid[col][row]:
+        for col in range(self.cell_height):
+            for row in range(self.cell_height):
+                if self.grid[row][col]:
                     pygame.draw.rect(self.screen, pygame.Color('Red'),
-                                     ((row * self.cell_size, col * self.cell_size),
+                                     ((col * self.cell_size, row * self.cell_size),
                                       (self.cell_size, self.cell_size)))
                 else:
                     pygame.draw.rect(self.screen, pygame.Color('White'),
-                                     ((row * self.cell_size, col * self.cell_size),
+                                     ((col * self.cell_size, row * self.cell_size),
                                       (self.cell_size, self.cell_size)))
 
     def get_neighbours(self, cell: Cell) -> Cells:
@@ -120,36 +119,36 @@ class GameOfLife:
         out : Cells
             Список соседних клеток.
         """
-        col, row = cell
+        row, col = cell
         neighbours_arr = []
 
         # -┙ bottom right border
-        if (row + 1 < self.cell_width) and (col + 1 < self.cell_height):
-            neighbours_arr.append(self.grid[col + 1][row + 1])
+        if (row + 1 < self.cell_height) and (col + 1 < self.cell_width):
+            neighbours_arr.append(self.grid[row + 1][col + 1])
         # *| right border
-        if (row + 1 < self.cell_width):
-            neighbours_arr.append(self.grid[col][row + 1])
+        if (row + 1 < self.cell_height):
+            neighbours_arr.append(self.grid[row + 1][col])
 
         # ┍- top left border
         if (row - 1 >= 0) and (col - 1 >= 0):
-            neighbours_arr.append(self.grid[col - 1][row - 1])
+            neighbours_arr.append(self.grid[row - 1][col - 1])
         # |* left border
         if (row - 1 >= 0):
-            neighbours_arr.append(self.grid[col][row - 1])
+            neighbours_arr.append(self.grid[row - 1][col])
 
         # -┐ top right border
-        if (row + 1 < self.cell_width) and (col - 1 >= 0):
-            neighbours_arr.append(self.grid[col - 1][row + 1])
+        if (row + 1 < self.cell_height) and (col - 1 >= 0):
+            neighbours_arr.append(self.grid[row + 1][col - 1])
         # ^^ top border
         if (col - 1 >= 0):
-            neighbours_arr.append(self.grid[col - 1][row])
+            neighbours_arr.append(self.grid[row][col - 1])
 
         # └- bottom left border
-        if (row - 1 >= 0) and (col + 1 < self.cell_height):
-            neighbours_arr.append(self.grid[col + 1][row - 1])
+        if (row - 1 >= 0) and (col + 1 < self.cell_width):
+            neighbours_arr.append(self.grid[row - 1][col + 1])
         # __ bottom border
-        if (col + 1 < self.cell_height):
-            neighbours_arr.append(self.grid[col + 1][row])
+        if (col + 1 < self.cell_width):
+            neighbours_arr.append(self.grid[row][col + 1])
 
         return neighbours_arr
 
@@ -165,22 +164,22 @@ class GameOfLife:
         # Create empty grid
         next_grid = self.create_grid()
 
-        for row in range(self.cell_width):
-            for col in range(self.cell_height):
-                neighbours_count = sum(self.get_neighbours((col, row)))
+        for row in range(self.cell_height):
+            for col in range(self.cell_width):
+                neighbours_count = sum(self.get_neighbours((row, col)))
 
                 # Determine if cell stays form previous grid
-                if (neighbours_count >= 2) and (neighbours_count <= 3) and self.grid[col][row]:
-                    next_grid[col][row] = 1
+                if (neighbours_count >= 2) and (neighbours_count <= 3) and self.grid[row][col]:
+                    next_grid[row][col] = 1
                 # Determine if new cell appears
                 elif neighbours_count == 3:
-                    next_grid[col][row] = 1
+                    next_grid[row][col] = 1
                 else:
-                    next_grid[col][row] = 0
+                    next_grid[row][col] = 0
 
         return next_grid
 
 
 # if __name__ == '__main__':
-#     game = GameOfLife(400, 300, 50, 0.25)
+#     game = GameOfLife(200, 200, 50, 0.05)
 #     game.run()
