@@ -33,7 +33,6 @@ class Console(UI):
         for row in range(self.life.rows):
             screen.addstr('│')
             for col in range(self.life.cols):
-                print(row, col)
                 screen.addstr('●' if self.life.curr_generation[row][col] else ' ')
             screen.addstr('│\n')
             # if row == self.life.cols - 1:
@@ -59,7 +58,7 @@ class Console(UI):
         # Screen doesn't freeze waiting for input every time screen.getch() called
         screen.nodelay(True)
         
-        while self.life.is_changing and not self.life.is_max_generations_exceeded:
+        while self.life.is_changing and not self.life.is_max_generations_exceed:
             
             self.draw_life(screen, delay)
             
@@ -85,5 +84,5 @@ class Console(UI):
 if __name__ == '__main__':
     random.seed(1234)
     
-    console = Console(GameOfLife((3, 3), True, 120))
+    console = Console(GameOfLife((5, 5), True, 120))
     console.run(500)

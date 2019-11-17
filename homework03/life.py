@@ -11,12 +11,12 @@ Grid = List[Cells]
 
 
 class GameOfLife:
-    
+
     def __init__(
         self,
         size: Tuple[int, int],
-        randomize: bool=True,
-        max_generations: Optional[float]=float('inf')
+        randomize: bool = True,
+        max_generations: Optional[float] = float('inf')
     ) -> None:
         # Размер клеточного поля
         self.rows, self.cols = size
@@ -27,10 +27,10 @@ class GameOfLife:
         # Максимальное число поколений
         self.max_generations = max_generations
         # Текущее число поколений
-        # self.generations 
+        # self.generations
         self.n_generation = 1
 
-    def create_grid(self, randomize: bool=False) -> Grid:
+    def create_grid(self, randomize: bool = False) -> Grid:
         """
         Создание списка клеток.
         Клетка считается живой, если ее значение равно 1, в противном случае клетка
@@ -73,9 +73,6 @@ class GameOfLife:
         col, row = cell
         neighbours_arr = []
 
-        
-        # print(row, '+ 1 <', self.rows, 'and', col, '+ 1 <', self.cols)
-        # print('GRID: width(cols) -', len(self.curr_generation[0]), 'height(rows) -', len(self.curr_generation))
         # -┙ bottom right border
         if (row + 1 < self.cols) and (col + 1 < self.rows):
             neighbours_arr.append(self.curr_generation[col + 1][row + 1])
@@ -147,7 +144,10 @@ class GameOfLife:
         """
         Не превысило ли текущее число поколений максимально допустимое.
         """
-        return self.n_generation >= self.max_generations
+        if self.max_generations:
+            return self.n_generation >= self.max_generations
+        else:
+            return True
 
     @property
     def is_changing(self) -> bool:
@@ -168,35 +168,12 @@ class GameOfLife:
         Сохранить текущее состояние клеток в указанный файл.
         """
         pass
-    
-    
-if __name__ == '__main__':
-    
-    game = GameOfLife((6, 8))
-    game.curr_generation = [
-            [1,1,0,0,1,1,1,1],
-            [0,1,1,1,1,1,1,0],
-            [1,0,1,1,0,0,0,0],
-            [1,0,0,0,0,0,0,1],
-            [1,0,1,1,1,1,0,0],
-            [1,1,1,1,0,1,1,1]
-        ]
-    game.step()
-    pp(game.prev_generation)
-    pp([
-            [1,1,0,0,1,1,1,1],
-            [0,1,1,1,1,1,1,0],
-            [1,0,1,1,0,0,0,0],
-            [1,0,0,0,0,0,0,1],
-            [1,0,1,1,1,1,0,0],
-            [1,1,1,1,0,1,1,1]
-        ])
-    
-    
-    
-    # random.seed(1234)
-    # life = GameOfLife((6, 8), True, 120)
-    # while life.is_changing and not life.is_max_generations_exceeded:
-    #     life.step()
-    #     # pp(life.curr_generation)
-    #     # print("\n",life.n_generation, "\n")
+
+
+# if __name__ == '__main__':
+#     random.seed(1234)
+#     life = GameOfLife((6, 8), True, 120)
+#     while life.is_changing and not life.is_max_generations_exceeded:
+#         life.step()
+#         # pp(life.curr_generation)
+#         # print("\n",life.n_generation, "\n")
