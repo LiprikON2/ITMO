@@ -25,7 +25,7 @@ class GameOfLife:
         # Текущее поколение клеток
         self.curr_generation = self.create_curr_generation(randomize=randomize)
         # Максимальное число поколений
-        self.max_generation = max_generation
+        self.max_generations = max_generations
         # Текущее число поколений
         self.n_generation = 1
 
@@ -48,8 +48,8 @@ class GameOfLife:
         if randomize:
             curr_generation = [[random.choice([0, 1]) for i in range(
                 self.rows)] for j in range(self.cols)]
-            pp(curr_generation)
-            print('\ngenerated')
+            # pp(curr_generation)
+            # print('\ngenerated')
         else:
             curr_generation = [[0 for i in range(self.rows)]
                     for j in range(self.cols)]
@@ -176,4 +176,4 @@ if __name__ == '__main__':
     while life.is_changing and not life.is_max_generations_exceeded:
         life.step()
         pp(life.curr_generation)
-        print("\n",life.n_generation, "\n")
+        # print("\n",life.n_generation, "\n")
