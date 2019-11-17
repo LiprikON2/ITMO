@@ -1,8 +1,11 @@
 import curses
 import random
+import time
+import argparse
+
 from life import GameOfLife
 from ui import UI
-import time
+
 
 class Console(UI):
     def __init__(self, life: GameOfLife) -> None:
@@ -61,12 +64,13 @@ class Console(UI):
         
         # Screen doesn't freeze waiting for input every time screen.getch() called
         screen.nodelay(True)
+        self.is_running = True
         
-        while self.life.is_changing and not self.life.is_max_generations_exceed:
+        while self.is_running and self.life.is_changing and not self.life.is_max_generations_exceed:
             
             self.draw_life(screen, delay)
             
-            # Listen for spacebar keypress
+            # Listen for keypresses
             event = screen.getch()
             
             # If spacebar is pressed - PAUSE
@@ -74,14 +78,25 @@ class Console(UI):
                 self.isPaused = True
                 self.draw_life(screen, delay)
                 while self.isPaused:
+                    # Listen for keypresses
+                    event = screen.getch()
+                    
                     # Listen for spacebar keypress
-                    if screen.getch() == 32:
+                    if event == 32:
                         self.isPaused = False
+                        
+                    # If Esc is pressed - EXIT
+                    if event == 27:
+                        self.isPaused = False
+                        self.is_running = True
+                        
                 # Reduce loop's CPU usage
                 time.sleep(0.1)
+                
             # If Esc is pressed - EXIT
             if event == 27:
                 break
+            
             # Next generation of life generated
             self.life.step()
             
@@ -92,7 +107,11 @@ class Console(UI):
 
 
 if __name__ == '__main__':
-    random.seed(1234)
-    
-    console = Console(GameOfLife((20, 120), True, 30))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rows", help="Amount of rows")
+    parser.add_argument("--cols", help="Amount of columns")
+    parser.add_argument("--max-generations", help="Maximum amount of generation")
+    args = parser.parse_args()
+
+    console = Console(GameOfLife((int(args.rows), int(args.cols)), True, int(args.max_generations)))
     console.run()

@@ -2,7 +2,6 @@ import pygame
 from pygame.locals import *
 import random
 import time
-# from sys import argv
 import argparse
 
 
@@ -57,17 +56,19 @@ class GUI(UI):
     def pause(self) -> None:
         """ Постановка игры на паузу """
         
-        isPaused = True
+        is_paused = True
         self.draw_grid()
-        while isPaused:
+        while is_paused:
             for event in pygame.event.get():
+                # Quit
                 if event.type == QUIT:
-                    isPaused = False
+                    is_paused = False
+                    self.is_running = False
                     break
                 
                 # On keydown: if spacebar is pressed - RESUME
                 if event.type == pygame.KEYDOWN and event.key == 32:
-                    isPaused = False
+                    is_paused = False
                         
                 # On mouse button press: if right click - HANDLE CLICK
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -104,12 +105,12 @@ class GUI(UI):
         self.screen.fill(pygame.Color('white'))
 
         
-        running = True
+        self.is_running = True
         # while running and self.life.is_changing and not self.life.is_max_generations_exceed:
-        while running and not self.life.is_max_generations_exceed:
+        while self.is_running and not self.life.is_max_generations_exceed:
             for event in pygame.event.get():
                 if event.type == QUIT:
-                    running = False
+                    self.is_running = False
                     
                 # On keydown: if spacebar is pressed - PAUSE
                 if event.type == pygame.KEYDOWN and event.key == 32:
@@ -132,18 +133,11 @@ class GUI(UI):
                     
 
 if __name__ == '__main__':
-    # width, height, cell_size = argv
-    # print(argv)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--width")
-    parser.add_argument("--height")
-    parser.add_argument("--cell_size")
-    
-    parser.parse_args()
-    
-    
-    
-    
-    random.seed(12342)
-    game = GUI(GameOfLife((20, 20), True, 999), 40, 10)
+    parser.add_argument("--width", help="Width of a window, in px")
+    parser.add_argument("--height", help="Height of a window, in px")
+    parser.add_argument("--cell_size", help="Size of a single cell, in px")
+    args = parser.parse_args()
+
+    game = GUI(GameOfLife((int(args.width) // int(args.cell_size), int(args.height) // int(args.cell_size)), True, 999), int(args.cell_size), 10)
     game.run()
