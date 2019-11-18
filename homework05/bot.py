@@ -4,6 +4,7 @@ import telebot
 from bs4 import BeautifulSoup
 
 
+telebot.apihelper.proxy = {'https':'31.186.102.162:3128'}
 bot = telebot.TeleBot(config.access_token)
 
 
