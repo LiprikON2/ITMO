@@ -1,7 +1,6 @@
 import curses
 import time
 import argparse
-import pathlib
 
 from life import GameOfLife
 from ui import UI
@@ -118,5 +117,5 @@ class Console(UI):
 
 
 if __name__ == '__main__':
-    console = Console(GameOfLife.from_file(pathlib.Path('grid2.txt')))
+    console = Console(GameOfLife.from_file('grid.txt'))
     console.run()

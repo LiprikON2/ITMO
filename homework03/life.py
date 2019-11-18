@@ -16,7 +16,8 @@ class GameOfLife:
         self,
         size: Tuple[int, int],
         randomize: bool = True,
-        max_generations: Optional[float] = float('inf')
+        max_generations: Optional[float] = float('inf'),
+        grid_from_file: Optional[list] = None
     ) -> None:
         # Размер клеточного поля
         self.rows, self.cols = size
@@ -24,10 +25,18 @@ class GameOfLife:
         self.prev_generation = self.create_grid()
         # Текущее поколение клеток
         self.curr_generation = self.create_grid(randomize=randomize)
+        
+        if grid_from_file:
+            self.curr_generation = grid_from_file
+        else:
+            self.curr_generation = self.create_grid(randomize=randomize)
+        
         # Максимальное число поколений
-        self.max_generations = max_generations
+        if max_generations:
+            self.max_generations = max_generations
+        
         # Текущее число поколений
-        # self.generations
+        # FIXED from self.generations
         self.n_generation = 1
 
     def create_grid(self, randomize: bool = False) -> Grid:
@@ -139,7 +148,7 @@ class GameOfLife:
         self.n_generation += 1
 
     @property
-    # is_max_generations_exceeded
+    # FIXED from is_max_generations_exceeded
     def is_max_generations_exceed(self) -> bool:
         """
         Не превысило ли текущее число поколений максимально допустимое.
@@ -147,15 +156,17 @@ class GameOfLife:
         if self.max_generations:
             return self.n_generation >= self.max_generations
         else:
-            return True
+            return False
 
+    # Basically just a shortcut for creating readonly properties
+    # is_changing = property(is_changing)
     @property
     def is_changing(self) -> bool:
         """
         Изменилось ли состояние клеток с предыдущего шага.
         """
         return self.curr_generation != self.prev_generation
-
+    
     @staticmethod
     def from_file(filename: pathlib.Path) -> 'GameOfLife':
         """
@@ -163,30 +174,30 @@ class GameOfLife:
         """
         # pathlib.Path(filename)
         file = [c for c in open(filename).read() if c in '01\n']
-        grid = [[]]
+        
+        grid = [[]] # type: List[List]
         j = 0
-        for i in range(len(file)):
+        # Split number rows into array of numbers, forming 2D matrix
+        for i in range(len(file) - 1):
             if file[i] != '\n':
-                grid[j].extend(file[i])
+                number = [int(file[i])]
+                grid[j].extend(number)
             else:
-                # fix empty arr at the end
                 grid.append([])
                 j += 1
+        rows = len(grid)
+        cols = len(grid[0])
+        life = GameOfLife((rows, cols), grid_from_file=grid)
         
-        print(grid)
+        return life
 
     def save(self, filename: pathlib.Path) -> None:
         """
         Сохранить текущее состояние клеток в указанный файл.
         """
-        pass
-
-
-if __name__ == '__main__':
-    life = GameOfLife((6, 8), True, 120)
-    life.from_file('grid.txt')
-    
-    
+        file = open(filename, 'w+')
+        for i in self.curr_generation
+        
 
 
 # if __name__ == '__main__':
