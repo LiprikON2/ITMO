@@ -22,7 +22,7 @@ class Console(UI):
     def draw_text(self, screen) -> None:
         """ Отображение текста """
 
-        screen.addstr('[Press spacebar to pause]    [Esc to exit]')
+        screen.addstr('[Press spacebar to pause]    [Press S to save to file]   [Esc to exit]')
 
         # Game is paused output PAUSED
         if self.isPaused:
@@ -81,11 +81,12 @@ class Console(UI):
                 while self.isPaused:
                     # Listen for keypresses
                     event = screen.getch()
-
                     # Listen for spacebar keypress
                     if event == 32:
                         self.isPaused = False
-
+                    # Listen for S keypress
+                    if event == 115:
+                        self.life.save(pathlib.Path())
                     # If Esc is pressed - EXIT
                     if event == 27:
                         self.isPaused = False
@@ -93,7 +94,10 @@ class Console(UI):
 
                 # Reduce loop's CPU usage
                 time.sleep(0.1)
-
+                
+            # Listen for S keypress
+            if event == 115:
+                self.life.save(pathlib.Path('Save.txt'))
             # If Esc is pressed - EXIT
             if event == 27:
                 break
@@ -104,19 +108,20 @@ class Console(UI):
         curses.endwin()
 
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--rows", type=int, help="Amount of rows")
-#     parser.add_argument("--cols", type=int, help="Amount of columns")
-#     parser.add_argument("--max-generations", type=int,
-#                         help="Maximum amount of generation")
-#     args = parser.parse_args()
-    
-    
-#     console = Console(GameOfLife((args.rows if args.rows else 6, args.cols if args.cols else 8), True, args.max_generations if args.max_generations else 10, 'grid.txt'))
-#     console.run()
-
-
 if __name__ == '__main__':
-    console = Console(GameOfLife.from_file(pathlib.Path('grid2.txt')))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rows", type=int, help="Amount of rows")
+    parser.add_argument("--cols", type=int, help="Amount of columns")
+    parser.add_argument("--max-generations", type=int,
+                        help="Maximum amount of generation")
+    parser.add_argument("--file", help="Path to the save game file")
+    args = parser.parse_args()
+    
+    
+    console = Console(GameOfLife((args.rows, args.cols), True, args.max_generations))
     console.run()
+
+
+# if __name__ == '__main__':
+#     console = Console(GameOfLife.from_file(pathlib.Path('grid2.txt')))
+#     console.run()

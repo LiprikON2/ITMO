@@ -1,6 +1,7 @@
 import pathlib
 import random
 import math
+import os
 
 from typing import List, Optional, Tuple
 
@@ -195,9 +196,15 @@ class GameOfLife:
         """
         Сохранить текущее состояние клеток в указанный файл.
         """
-        file = open(filename, 'w+')
-        for i in self.curr_generation
         
+        file = open(filename, 'w+')
+        for row in range(self.rows):
+            for col in range(self.cols):
+                number = str(self.curr_generation[row][col])
+                file.write(number)
+            file.write('\n')
+            
+        file.close()
 
 
 # if __name__ == '__main__':
