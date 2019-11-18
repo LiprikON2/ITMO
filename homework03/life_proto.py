@@ -178,8 +178,3 @@ class GameOfLife:
                     next_grid[row][col] = 0
 
         return next_grid
-
-
-# if __name__ == '__main__':
-#     game = GameOfLife(200, 400, 50, 0.05)
-#     game.run()

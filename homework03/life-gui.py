@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import time
 import argparse
+import pathlib
 
 
 from life import GameOfLife
@@ -13,9 +14,10 @@ class GUI(UI):
     def __init__(self, life: GameOfLife, cell_size: int = 10, speed: int = 10) -> None:
         super().__init__(life)
 
+        # in px
         self.cell_size = cell_size
 
-        # width and height in px
+        # in px
         self.width = self.life.cols * self.cell_size
         self.height = self.life.rows * self.cell_size
 
@@ -56,6 +58,8 @@ class GUI(UI):
 
         is_paused = True
         self.draw_grid()
+        # Change cursor style
+        pygame.mouse.set_cursor(*pygame.cursors.tri_left)
         while is_paused:
             for event in pygame.event.get():
                 # Quit
@@ -64,13 +68,20 @@ class GUI(UI):
                     self.is_running = False
                     break
 
-                # On keydown: if spacebar is pressed - RESUME
+                # Listen for spacebar keypress - RESUME
                 if event.type == pygame.KEYDOWN and event.key == 32:
                     is_paused = False
+                    # Change cursor back
+                    pygame.mouse.set_cursor(*pygame.cursors.arrow)
+                # Listen for S keypress - SAVE
+                if event.type == pygame.KEYDOWN and event.key == 115:
+                    self.life.save(pathlib.Path('Save.txt'))
 
                 # On mouse button press: if right click - HANDLE CLICK
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.handle_click(event)
+
+            # Reduce loop's CPU usage
             time.sleep(0.01)
 
     def handle_click(self, event):
@@ -98,7 +109,7 @@ class GUI(UI):
 
         pygame.init()
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Game of Life')
+        pygame.display.set_caption('Game of Life: [Pause: SPACE] [Save: S]')
         self.screen.fill(pygame.Color('white'))
 
         self.is_running = True
@@ -108,9 +119,12 @@ class GUI(UI):
                 if event.type == QUIT:
                     self.is_running = False
 
-                # On keydown: if spacebar is pressed - PAUSE
+                # Listen for spacebar keypress - PAUSE
                 if event.type == pygame.KEYDOWN and event.key == 32:
                     self.pause()
+                # Listen for S keypress - SAVE
+                if event.type == pygame.KEYDOWN and event.key == 115:
+                    self.life.save(pathlib.Path('Save.txt'))
 
             # Отрисовка списка клеток
             self.draw_grid()
@@ -129,11 +143,36 @@ class GUI(UI):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--width", help="Width of a window, in px")
-    parser.add_argument("--height", help="Height of a window, in px")
-    parser.add_argument("--cell_size", help="Size of a single cell, in px")
+    parser.add_argument("--width", type=int,
+                        help="Width of a window in px. Default: 500")
+    parser.add_argument("--height", type=int,
+                        help="Height of a window in px. Default: 500")
+    parser.add_argument("--cell_size", type=int,
+                        help="Size of a single cell in px. Default: 20")
+    parser.add_argument("--max-generations", type=int,
+                        help="Maximum amount of generation. Default: 500")
+    parser.add_argument("--speed", type=int,
+                        help="Speed in pygame ticks. Default: 1")
+
     args = parser.parse_args()
 
-    game = GUI(GameOfLife((int(args.width) // int(args.cell_size),
-                           int(args.height) // int(args.cell_size)), True, 999), int(args.cell_size), 10)
+    # Iterate over arguments to set defaults
+    # https://stackoverflow.com/questions/4075190/what-is-getattr-exactly-and-how-do-i-use-it
+    for arg in vars(args):
+        if not getattr(args, arg) and (arg == 'width' or arg == 'height' or arg == 'max_generations'):
+            # setattr(x, 'y', val) is equivalent to `x.y = val`
+            setattr(args, arg, 500)
+        elif not getattr(args, arg) and (arg == 'cell_size'):
+            setattr(args, arg, 20)
+        elif not getattr(args, arg):
+            setattr(args, arg, 5)
+
+    game = GUI(GameOfLife((args.height // args.cell_size, args.width //
+                           args.cell_size), True, args.max_generations), args.cell_size, args.speed)
     game.run()
+
+
+# Run from save file
+# if __name__ == '__main__':
+#     console = GUI(GameOfLife.from_file(pathlib.Path('Save.txt')))
+#     console.run()

@@ -18,24 +18,19 @@ class GameOfLife:
         size: Tuple[int, int],
         randomize: bool = True,
         max_generations: Optional[float] = float('inf'),
-        grid_from_file: Optional[list] = None
     ) -> None:
         # Размер клеточного поля
         self.rows, self.cols = size
         # Предыдущее поколение клеток
         self.prev_generation = self.create_grid()
+
         # Текущее поколение клеток
         self.curr_generation = self.create_grid(randomize=randomize)
-        
-        if grid_from_file:
-            self.curr_generation = grid_from_file
-        else:
-            self.curr_generation = self.create_grid(randomize=randomize)
-        
+
         # Максимальное число поколений
         if max_generations:
             self.max_generations = max_generations
-        
+
         # Текущее число поколений
         # FIXED from self.generations
         self.n_generation = 1
@@ -167,16 +162,15 @@ class GameOfLife:
         Изменилось ли состояние клеток с предыдущего шага.
         """
         return self.curr_generation != self.prev_generation
-    
+
     @staticmethod
     def from_file(filename: pathlib.Path) -> 'GameOfLife':
         """
         Прочитать состояние клеток из указанного файла.
         """
-        # pathlib.Path(filename)
         file = [c for c in open(filename).read() if c in '01\n']
-        
-        grid = [[]] # type: List[List]
+
+        grid = [[]]  # type: List[List]
         j = 0
         # Split number rows into array of numbers, forming 2D matrix
         for i in range(len(file) - 1):
@@ -188,29 +182,21 @@ class GameOfLife:
                 j += 1
         rows = len(grid)
         cols = len(grid[0])
-        life = GameOfLife((rows, cols), grid_from_file=grid)
-        
+        life = GameOfLife((rows, cols))
+        life.curr_generation = grid
+
         return life
 
     def save(self, filename: pathlib.Path) -> None:
         """
         Сохранить текущее состояние клеток в указанный файл.
         """
-        
+
         file = open(filename, 'w+')
         for row in range(self.rows):
             for col in range(self.cols):
                 number = str(self.curr_generation[row][col])
                 file.write(number)
             file.write('\n')
-            
+
         file.close()
-
-
-# if __name__ == '__main__':
-#     random.seed(1234)
-#     life = GameOfLife((6, 8), True, 120)
-#     while life.is_changing and not life.is_max_generations_exceed:
-#         life.step()
-#         # pp(life.curr_generation)
-#         # print("\n",life.n_generation, "\n")
