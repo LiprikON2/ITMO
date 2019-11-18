@@ -4,7 +4,8 @@ import telebot
 from bs4 import BeautifulSoup
 
 
-telebot.apihelper.proxy = {'https':'31.186.102.162:3128'}
+# telebot.apihelper.proxy = {'https':'31.186.102.162:3128'}
+telebot.apihelper.proxy = {'https':'54.37.131.161:3128'}
 bot = telebot.TeleBot(config.access_token)
 
 
@@ -22,10 +23,9 @@ def get_page(group, week=''):
 
 def parse_schedule_for_a_monday(web_page):
     soup = BeautifulSoup(web_page, "html5lib")
-
     # Получаем таблицу с расписанием на понедельник
     schedule_table = soup.find("table", attrs={"id": "1day"})
-
+    
     # Время проведения занятий
     times_list = schedule_table.find_all("td", attrs={"class": "time"})
     times_list = [time.span.text for time in times_list]
@@ -40,7 +40,6 @@ def parse_schedule_for_a_monday(web_page):
     lessons_list = [', '.join([info for info in lesson_info if info]) for lesson_info in lessons_list]
 
     return times_list, locations_list, lessons_list
-
 
 @bot.message_handler(commands=['monday'])
 def get_monday(message):

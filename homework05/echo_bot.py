@@ -1,7 +1,9 @@
 import telebot
 
 access_token = open("API_KEY.txt").read()
-telebot.apihelper.proxy = {'https':'31.186.102.162:3128'}
+# telebot.apihelper.proxy = {'https':'31.186.102.162:3128'}
+telebot.apihelper.proxy = {'https':'54.37.131.161:3128'}
+
 
 bot = telebot.TeleBot(access_token)
 
