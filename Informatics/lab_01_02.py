@@ -56,39 +56,49 @@ print("\n\n")
 
 
 
+
 print("My code:")
 print("__________\n")
 
 # Задание 9
+print("Задание 9")
+
 A = 21
 B = 2
 C = True
 D = False
+print("A:", A, "B:", B, "C:", C, "D", D, "\n")
 
 
 # Задание 10
-print("A:", A, "B:", B, "C:", C, "D", D)
+print("Задание 10")
+
 print("¬(C∧D): ", not (C and D)) 
 print("C∧D∨¬(C∧D): ", C and D or not (C and D))
 print("¬C∨D: ", not C or D, "\n")
 
 
 # Задание 11
+print("Задание 11")
+
 print("A<=B: ", A<=B)
 print("A>B ∨ A==B: ", A>B or A==B)
 print("¬(A<B): ", not (A<B), "\n")
 
 
 # Задание 12
+print("Задание 12")
+
 s = 154
 p = 6
-
 print ("Decimal:", "s:", s, "p:", p)
 print ("Binary:", "s:", bin(s)[2:], "p:", bin(p)[2:], "\n")
 
 
 # Задание 13
-print("побитовое ИЛИ - s | p")
+print("Задание 13")
+print("s | p - побитовое ИЛИ")
+# Применение ИЛИ к каждой паре бит, стоящих на одинаковой позиции
 
 s = s | p
 print ("Decimal:", "s:", s)
@@ -96,13 +106,14 @@ print ("Binary:", "s:", bin(s)[2:], "\n")
 
 
 # Задание 14
+print("Задание 14")
 print("s >> 2, p >> 2 – побитовый сдвиг числа s, p вправо на 2 бит")
+# s >> 1 is equvalent to s // 2^1
+
+print('Given: Decimal:', 's:', s, 'p:', p)
+print ("Given: Binary:", "s:", bin(s)[2:], "p:", bin(p)[2:], "\n")
 s = s >> 2
 p = p >> 2
-
-print ("Decimal:", "s:", s, "p:", p)
-print ("Binary:", "s:", bin(s)[2:], "p:", bin(p)[2:], "\n")
-
-
-
+print ("Shift to right: Decimal:", "s:", s, "p:", p)
+print ("Shift to right: Binary:", "s:", bin(s)[2:], "p:", bin(p)[2:], "\n")
 print("__________\n")

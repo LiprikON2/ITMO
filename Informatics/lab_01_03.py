@@ -25,36 +25,72 @@ print("Your birthday is %s.%s.%s and you are %d in the group list" % (d,m,y,int(
 
 print("\nMy code:")
 print("__________\n")
+
 # Задание 16
-print("m = %s; pi = %.3f" % (m, pi))
+print("Задание 16")
+
+print("m = %4d; pi = %.3f" % (int(m), pi), "\n")
+
 
 # Задание 17
-print("m = {}; pi = {}".format(m[-4:], round(pi, 3)))
+print("Задание 17")
+
+print("m = {}; pi = {}".format(m, pi), "\n")
+
 
 # Задание 18
+print("Задание 18")
+
 year = input("Год курса обучения: ")
-print("\n", year, "г")
+print("Вы ввели:", year,"год обучения", "\n")
+
 
 # Задание 19
+print("Задание 19")
+
 while True:
     try:
-        r1, m1, p1 = input("\nВведите ваши баллы ЕГЭ по трем предметам через запятую: ").split(",")
+        r1, m1, p1 = input("Введите ваши баллы ЕГЭ по русскому, математике и профильному предмету через запятую: ").split(",")
     except ValueError:
         print("Нужно 3 числа через запятую!")
         continue
     else:
         break
-    
+
 print("Ваши баллы: {}, {}, {}".format(r1, m1, p1), "\n")
     
+
 # Задание 20
-#   Мой день рожденья - (12 % 8) + 2 = 6
-number_6 = input("Введите двенадцатиразрядное число в системе счисления 6: ")
-number_10 = number_6
-for i in range(number_6):
-    n = number_6[:]
-    
+print("Задание 20")
+
+print("Мой день рожденья: (12 mod 8) + 2 = 6")
+given_num = input("Введите двенадцатиразрядное число в системе счисления 6: ")
+
+# Convert given_num to string and reverse the order
+num_str = str(given_num)[::-1]
+# Determine number of digits in given number
+digits = len(num_str)
+
+base = 6
+num_10 = 0
+for n in range(digits):
+    if not num_str[n] == '-':
+        if int(num_str[n]) < 6:
+            num_10 += int(num_str[n]) * base**n
+        else:
+            raise ValueError("Было введено некорректное число!")
+    else:
+        num_10 *= -1
+
+print(given_num, "в десятичной:", num_10, "\n")
 
 
+# Задание 21
+print("Задание 21")
+# s >> 1 is equvalent to s // 2^1
+# s << 1 is equvalent to s * 2^1
+
+number = int(input("Введите число, чтобы осуществить умножение и деление с использованием операции побитого сдвига влево и вправо соответственно: "))
+print("Умножение:", number << 1, "Деление:", number >> 1)
 
 print("__________\n")

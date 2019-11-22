@@ -6,26 +6,11 @@
 '''
  Пример работы с целыми числами
 '''
-# Задание 6
-z = 3
-y = 5
-print("\n")
-print("My code:")
-print("__________\n")
-print("z + y = ", z + y)
-print("z - y = ", z - y)
-print("z * y = ", z * y)
-print("z^y = ", z * y)
-
-# Задание 7
-x = 105
-v = 58
-print("x / v = ", float(x / v), "(converted to float)")
-print("x / v = ", x / v)
-print("__________\n")
-
-a = -100
-b = 2
+# Задание 5
+# a = 15
+# b = 7
+a = 99
+b = -123
 
 print("a = ", a)
 print("b = ", b)
@@ -79,3 +64,33 @@ print("e %= 5: ", e)
 e **= 3
 print("e **= 3: ", e)
 print("\n")
+
+
+
+
+print("\n")
+print("My code:")
+print("__________\n")
+
+# Задание 6
+print("Задание 6")
+
+z = 3
+y = 5
+print("z + y = ", z + y)
+print("z - y = ", z - y)
+print("z * y = ", z * y)
+print("z / y = ", z / y)
+print("z div y = ", z // y)
+print("z mod y = ", z % y)
+print("z^y = ", z ** y, '\n')
+
+
+# Задание 7
+print("Задание 7")
+
+x = 105
+v = 58
+print("x / v = ", float(x / v), "(converted to float)")
+print("x / v = ", x / v)
+print("__________")
