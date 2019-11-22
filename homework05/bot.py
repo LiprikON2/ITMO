@@ -104,7 +104,7 @@ def day_off(message):
 def get_schedule(message):
     """ Получить расписание на указанный день """
     
-    # Prevent crash when no group is passed
+    # Prevent crash when no group is passed 
     try:
         weekday, group = message.text.split()
     except ValueError:
