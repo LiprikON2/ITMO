@@ -27,10 +27,6 @@ def get_page(group, week=''):
     web_page = response.text
     return web_page
 
-
-
-
-    
     
 # MY CODE
 def parse_schedule(web_page, day, message):
@@ -59,15 +55,12 @@ def parse_schedule(web_page, day, message):
 
 def get_day(weekday = None, date = None):
     
-    # Edit this
-    # Get serial number of a current week if it's not provided
+    # If date is not provided, get today's date
     if not date:
         # date = datetime.datetime.now() + datetime.timedelta(days=2)
         date = datetime.datetime.now()
         
     week = date.isocalendar()[1]
-    hour = date.hour
-    minute = date.minute
     
     # If weekday is not provided, get today's week_id
     if not weekday:
@@ -99,12 +92,11 @@ def get_day(weekday = None, date = None):
     parity = week % 2
     
     
-    return {'date': date, 'hour': hour, 'minute': minute, 'week': week, 'parity': parity, 'weekday_id': weekday_id}
-    # return {'hour': hour, 'minute': minute, 'week': week, 'weekday': weekday}
+    return {'date': date, 'week': week, 'parity': parity, 'weekday_id': weekday_id}
 
 
 def day_off(message):
-    resp = '🎉 Looks like the day is day off! 🎉'
+    resp = '🎉 Looks like that day turned out to be day off! 🎉'
     bot.send_message(message.chat.id, resp, parse_mode='HTML')
     
 
@@ -139,18 +131,14 @@ def get_schedule(message):
 @bot.message_handler(commands=['near'])
 def get_near_lesson(message):
     """ Получить ближайшее занятие """
-    # weekdays = ('1day', '2day', '3day', '4day', '5day', '6day', '7day')
     today = get_day()
-    ### today['week']
-    
-    # friday = 4 (5day)
-    # index = weekdays.index(today['weekday_id'])
     
     # Prevent crash when no group or no week number is passed
     try:
         _, group = message.text.split()
     except ValueError:
         return
+    
     days_offset = 0
     while days_offset < 15:
         
@@ -205,6 +193,7 @@ def get_all_schedule(message):
     
     resp = ''
     for weekday in weekdays:
+        print(weekday)
         resp += '\n\n------------------------- <b>{}</b> -------------------------\n\n'.format(weekday.upper())
         day = get_day(weekday)
         web_page = get_page(group, parity)
@@ -213,7 +202,7 @@ def get_all_schedule(message):
             times_lst, locations_lst, lessons_lst = \
                 parse_schedule(web_page, day, message)
         except TypeError:
-            resp += '                          🎉 Day off 🎉'
+            resp += '                          🎉 Day off 🎉\n'
             continue
         
         
