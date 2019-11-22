@@ -57,15 +57,21 @@ def parse_schedule(web_page, day, message):
         return
 
 
-def get_day(weekday = None):
-    hour = datetime.datetime.now().hour
-    minute = datetime.datetime.now().minute
-    # Get serial number of a week
-    week = datetime.date.today().isocalendar()[1]
+def get_day(weekday = None, date = None):
     
-    # If weekday is not specified, get today's week_id
+    # Edit this
+    # Get serial number of a current week if it's not provided
+    if not date:
+        # date = datetime.datetime.now() + datetime.timedelta(days=2)
+        date = datetime.datetime.now()
+        
+    week = date.isocalendar()[1]
+    hour = date.hour
+    minute = date.minute
+    
+    # If weekday is not provided, get today's week_id
     if not weekday:
-        weekday = datetime.datetime.today().weekday()
+        weekday = date.weekday()
         weekday_id = str(weekday + 1) + 'day'
         
     elif weekday in '/monday':
@@ -84,18 +90,16 @@ def get_day(weekday = None):
        weekday_id = '7day'
     
     elif weekday in '/tomorrow':
-        weekday_num = datetime.datetime.today().weekday()
+        weekday_num = date.weekday()
         weekday_id = str((weekday_num + 2) % 7) + 'day'
         # check if week cycles from Sunday to Monday
         if weekday_num + 2 > 7:
             week += 1
-    else: 
-        print(weekday)
     
     parity = week % 2
     
     
-    return {'hour': hour, 'minute': minute, 'week': week, 'parity': parity, 'weekday_id': weekday_id}
+    return {'date': date, 'hour': hour, 'minute': minute, 'week': week, 'parity': parity, 'weekday_id': weekday_id}
     # return {'hour': hour, 'minute': minute, 'week': week, 'weekday': weekday}
 
 
@@ -135,40 +139,55 @@ def get_schedule(message):
 @bot.message_handler(commands=['near'])
 def get_near_lesson(message):
     """ Получить ближайшее занятие """
-    weekdays = ('1day', '2day', '3day', '4day', '5day', '6day', '7day')
+    # weekdays = ('1day', '2day', '3day', '4day', '5day', '6day', '7day')
     today = get_day()
+    ### today['week']
+    
     # friday = 4 (5day)
-    index = weekdays.index(today['weekday_id'])
+    # index = weekdays.index(today['weekday_id'])
     
     # Prevent crash when no group or no week number is passed
     try:
         _, group = message.text.split()
     except ValueError:
         return
-    day_offset = 0
-    
-    while day_offset < 15:
+    days_offset = 0
+    while days_offset < 15:
         
-        day = get_day(weekdays[index + day_offset])
+        day = get_day(date = today['date'] + datetime.timedelta(days=days_offset))
         web_page = get_page(group)
         # Prevent crash when no schedule is available
         try:
             times_lst, locations_lst, lessons_lst = \
                 parse_schedule(web_page, day, message)
+            
         except TypeError:
-            day_offset += 1
+            days_offset += 1
+            
         else:
-            break
+            class_number = 0
+            if today == day:
+                for i in range(len(lessons_lst)):
+                    # print(day['date'].hour, '<', int(times_lst[i][:2]), 'and',  day['date'].minute, '<', int(times_lst[i][3:5]))
+                    if day['date'].hour < int(times_lst[i][:2]) and day['date'].minute < int(times_lst[i][3:5]):
+                        class_number = i
+                        break
+                days_offset += 1
+            else:
+                break
         
     else:
         resp = 'Looks like there is no classes in the next 15 days O_o'
         bot.send_message(message.chat.id, resp, parse_mode='HTML')
         return
     
-    resp = ''
-    # for time, location, lession in zip(times_lst, locations_lst, lessons_lst):
     
-    resp += '<b>{}</b>, {}, {}\n'.format(times_lst[0], locations_lst[0], lessons_lst[0])
+    
+    
+    
+    resp = ''
+    
+    resp += '<b>{}</b>, {}, {}\n'.format(times_lst[class_number], locations_lst[class_number], lessons_lst[class_number])
     bot.send_message(message.chat.id, resp, parse_mode='HTML')
 
 
