@@ -21,7 +21,7 @@ def get_page(group, week=''):
     url = '{domain}/{group}/{week}raspisanie_zanyatiy_{group}.htm'.format(
         domain=config.domain,
         week=week,
-        group=group)
+        group=group.upper())
     print(url)
     response = requests.get(url)
     web_page = response.text
