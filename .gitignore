@@ -1,6 +1,7 @@
 .virtualenvs
 .vscode
 pybook-assignments
+.gitignore
 
 
 @@ -1,104 +1,2 @@
