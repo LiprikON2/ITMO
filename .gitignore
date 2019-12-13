@@ -112,3 +112,4 @@ venv.bak/
 .virtualenvs
 .vscode
 homework05/config.py
+homework04/config.py

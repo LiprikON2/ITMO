@@ -24,10 +24,10 @@ def age_predict(user_id: int) -> Optional[float]:
     curr_date = date.now()
     
     deltas = []
-    for i in range(len(json['response']['items'])):
+    for friend in json['response']['items']:
         
         try:
-            birthday = json['response']['items'][i]['bdate']
+            birthday = friend['bdate']
             birthday_date = date.strptime(birthday, '%d.%m.%Y')
             delta = curr_date - birthday_date
             deltas.append(delta.days / 365)
@@ -44,6 +44,7 @@ def age_predict(user_id: int) -> Optional[float]:
 
 
 if __name__ == "__main__":
-    age = age_predict(74171270)
+    age = age_predict(146783872)
+    # age = age_predict(74171270)
     # age = age_predict(1)
     print(age)
