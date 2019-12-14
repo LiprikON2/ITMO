@@ -23,21 +23,37 @@ def get_network(users_ids, as_edgelist=True):
             'user_friends': user_friends
         })
     
-    print(users)
+    # print(users)
+    
+    # Create friend-points
+    vertices = set()
+    edges = []
+    for i in range(len(users)):
+
+        for name in users[i]['user_friends']:
+            # add to edge, for loop above needs in enumerate
+            vertices.add(name)
+        
+    vertices = list(vertices)
+    print(vertices)
+    
+
+        
     
     # Создание вершин и ребер
-    vertices = [i for i in range(7)]
+    # vertices = [i for i in range(7)]
     # vertices = ['lol', 'kek', 'lol', 'kek', 'lol', 'kek', 'cheburek']
     
-    edges = [
-        (0,2),(0,1),(0,3),
-        (1,0),(1,2),(1,3),
-        (2,0),(2,1),(2,3),(2,4),
-        (3,0),(3,1),(3,2),
-        (4,5),(4,6),
-        (5,4),(5,6),
-        (6,4),(6,5)
-    ]
+    # edges = [
+    #     (0,2),(0,1),(0,3),
+    #     (1,0),(1,2),(1,3),
+    #     (2,0),(2,1),(2,3),(2,4),
+    #     (3,0),(3,1),(3,2),
+    #     (4,5),(4,6),
+    #     (5,4),(5,6),
+    #     (6,4),(6,5)
+    # ]
+    
 
     # Создание графа
     g = Graph(vertex_attrs={"label":vertices},
