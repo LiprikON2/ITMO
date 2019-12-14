@@ -47,7 +47,7 @@ def get_friends(user_id, fields = 'bdate', vk_command = 'friends.get'):
     query = f"{config.VK_CONFIG['domain']}/{vk_command}?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
     
-    print(json)
+    # print(json)
     # json = get('https://httpbin.org/error', max_retries=3, backoff_factor=0)
     return json
 

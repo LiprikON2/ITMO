@@ -5,29 +5,25 @@ import numpy as np
 def get_network(users_ids, as_edgelist=True):
     """ Building a friend graph for an arbitrary list of users """
     
+    users = []
     
-    
-    group_ids = []
     for user_id in users_ids:
-        json = get_friends(user_id, vk_command='groups.get')
+        json = get_friends(user_id, fields='lists')
         
-        for group_id in json['response']['items']:
-            group_ids.append(group_id)
-    
-    
-    json = get_group(group_ids)
-    
-    groups = []
-    for group in json['response']:
-        # groups.append((group['name'], group['id']))
-        groups.append(group['name'])
         
-    print(groups)
+        user_friends = []
+        for friend in json['response']['items']:
+            if not 'deactivated' in friend:
+                # s = get_friends(int(friend['id']), fields='sex')
+                # print(s)
+                user_friends.append(friend['first_name'] + ' ' + friend['last_name'])    
+                    
+        users.append({
+            'user_id': user_id,
+            'user_friends': user_friends
+        })
     
-    
-            
-    
-    
+    print(users)
     
     # Создание вершин и ребер
     vertices = [i for i in range(7)]
@@ -54,9 +50,9 @@ def get_network(users_ids, as_edgelist=True):
         maxiter=1000,
         area=N**3,
         repulserad=N**3)
-    visual_style['vertex_label'] = groups
+    # visual_style['vertex_label'] = users['user_friends']
     visual_style["bbox"] = (1200, 900)
-    visual_style["edge_width"] = min(2, 20)
+    visual_style["edge_width"] = min(2, 20) # hmmm
     visual_style["vertex_size"] = 30
     # visual_style["vertex_shape"] = 'rectangle'
     visual_style["vertex_label_dist"] = 1.5
@@ -82,5 +78,7 @@ def plot_graph(graph):
 
 
 if __name__ == "__main__":
-    get_network([74171270, 87393116])
+    # get_network([74171270])
+    # get_network([74171270, 87393116])
+    get_network([87393116, 74171270])
     pass
