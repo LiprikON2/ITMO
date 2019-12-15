@@ -1,28 +1,28 @@
-from api import get_friends, get_mutual, get_user
+from api import get_friends, get_user
 from igraph import Graph, plot, drawing, summary
 import numpy as np
 import itertools
 import random
 
-def get_network(users_ids, as_edgelist=True):
-    """ Building a friend graph for an arbitrary list of users """
+def process_friends(users_ids) -> list:
+    """ Creates list of dictionaries that contains friends info """
     
     users = []
     
-    # Creating list of dictionaries that contains friends info
     for user_id in users_ids:
         
         friends_json = get_friends(user_id, fields='lists')
         
         user_friends = []
         for friend in friends_json['response']['items']:
+            # Check if profile is deleted
             if not 'deactivated' in friend:
                 name = friend['first_name'] + ' ' + friend['last_name']
-                user_friends.append({'name': name, 'id': friend['id']})    
+                user_friends.append({'name': name, 'id': friend['id']})
         
         # Get user info
         user_info = get_user(user_id)['response'][0]
-        # Format name from user info
+        # Retrive user name from user info
         user_name = user_info['first_name'] + ' ' + user_info['last_name']
         
         users.append({
@@ -31,10 +31,22 @@ def get_network(users_ids, as_edgelist=True):
             'user_friends': user_friends,
             'index': ''
         })
+        
+        
     
+    vertices = create_vertices(users)    
     
-    # Create friend-points
+    # Get users index in vertices list
+    for user in users:
+        user['index'] = vertices.index(user['user_name'])
+        
+    return users
+
+def create_vertices(users) -> list:
+    """ Creates vertices (points) that represent friends """
     vertices = set()
+    
+    # vertices = []
     
     for user in users:
         for friend in user['user_friends']:
@@ -42,12 +54,9 @@ def get_network(users_ids, as_edgelist=True):
         
     vertices = list(vertices)
     
-    
-    # Get users index in vertices list
-    for user in users:
-        user['index'] = vertices.index(user['user_name'])
-    
-    
+    return vertices
+
+def get_mutual(users, vertices):
     # Get mutual friends
     edges = []
     mutual_indexes = []
@@ -72,6 +81,18 @@ def get_network(users_ids, as_edgelist=True):
                     # Add friend to mutual friends index list
                     mutual_indexes.append(friend_index)
     
+    return edges, mutual_indexes
+
+
+
+def get_network(users_ids, as_edgelist=True):
+    """ Building a friend graph for an arbitrary list of users """
+    
+    users = process_friends(users_ids)
+    vertices = create_vertices(users)    
+    
+    edges, mutual_indexes = get_mutual(users, vertices)
+    
 
     # Создание графа
     g = Graph(vertex_attrs={"label":vertices},
@@ -84,7 +105,6 @@ def get_network(users_ids, as_edgelist=True):
         maxiter=1000,
         area=N**3,
         repulserad=N**3)
-    # visual_style['vertex_label'] = users['user_friends']
     # Image size
     visual_style["bbox"] = (1600, 900)
     # Line size
@@ -93,12 +113,12 @@ def get_network(users_ids, as_edgelist=True):
     visual_style["vertex_size"] = 25
     # Font size
     visual_style["vertex_label_size"] = 12
-    
     # Distance between dot and label
     visual_style["vertex_label_dist"] = 1.5
     
     visual_style["margin"] = 100
     visual_style["vertex_label_color"] = "black"
+    visual_style["edge_color"] = 'grey'
 
     
     # Теперь удалим из графа петли и повторяющиеся ребра
@@ -120,16 +140,6 @@ def get_network(users_ids, as_edgelist=True):
         
         random.seed(connections*12345)
         g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
-        # print("%06x" % random.randint(0, 0xFFFFFF))
-
-        
-        # random.seed(connections*100000)
-        # r = lambda: random.randint(0,255)
-        # g.vs[mutual]['color'] = '#%02X%02X%02X' % (r(),r(),r())
-        
-        # g.vs[mutual]['color'] = '#{}'.format(999999 // connections)
-
-
 
     # Paint given users
     for user in users:
