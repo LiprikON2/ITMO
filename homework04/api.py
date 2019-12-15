@@ -47,14 +47,38 @@ def get_friends(user_id, fields = 'bdate', vk_command = 'friends.get'):
     query = f"{config.VK_CONFIG['domain']}/{vk_command}?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
     
+    if 'error' in json:
+        print('error occured =(')
+    
     # print(json)
     # json = get('https://httpbin.org/error', max_retries=3, backoff_factor=0)
+    return json
+
+
+def get_user(user_ids, fields=''):
+    query = f"{config.VK_CONFIG['domain']}/users.get?access_token={config.VK_CONFIG['access_token']}&user_ids={user_ids}&fields={fields}&v={config.VK_CONFIG['version']}"
+    json = get(query).json()
+    
+    if 'error' in json:
+        print('error occured =(')
+    return json
+    
+
+def get_mutual(source_uid, target_uid):
+    query = f"{config.VK_CONFIG['domain']}/friends.getMutual?access_token={config.VK_CONFIG['access_token']}&source_uid={source_uid}&target_uid={target_uid}&v={config.VK_CONFIG['version']}"
+    json = get(query).json()
+    
+    if 'error' in json:
+        print('error occured =(')
     return json
 
 def get_group(group_ids):
     
     query = f"{config.VK_CONFIG['domain']}/groups.getById?access_token={config.VK_CONFIG['access_token']}&group_ids={group_ids}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
+    
+    if 'error' in json:
+        print('error occured =(')
     return json
     
 
