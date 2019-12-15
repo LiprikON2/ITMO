@@ -2,13 +2,14 @@ from api import get_friends, get_mutual, get_user
 from igraph import Graph, plot, drawing, summary
 import numpy as np
 import itertools
+import random
 
 def get_network(users_ids, as_edgelist=True):
     """ Building a friend graph for an arbitrary list of users """
     
     users = []
     
-    # Creating list of dictionaries that contain friends info
+    # Creating list of dictionaries that contains friends info
     for user_id in users_ids:
         
         friends_json = get_friends(user_id, fields='lists')
@@ -16,7 +17,8 @@ def get_network(users_ids, as_edgelist=True):
         user_friends = []
         for friend in friends_json['response']['items']:
             if not 'deactivated' in friend:
-                user_friends.append({'name': friend['first_name'] + ' ' + friend['last_name'], 'id': friend['id']})    
+                name = friend['first_name'] + ' ' + friend['last_name']
+                user_friends.append({'name': name, 'id': friend['id']})    
         
         # Get user info
         user_info = get_user(user_id)['response'][0]
@@ -35,57 +37,40 @@ def get_network(users_ids, as_edgelist=True):
     vertices = set()
     
     for user in users:
-        
         for friend in user['user_friends']:
             vertices.add(friend['name'])
         
     vertices = list(vertices)
     
-    # Give users index in vertices list
+    
+    # Get users index in vertices list
     for user in users:
         user['index'] = vertices.index(user['user_name'])
-    
-    # print(vertices)
-    
     
     
     # Get mutual friends
     edges = []
-    mutuals_index = []
+    mutual_indexes = []
     for user_a, user_b in itertools.combinations(users, 2):
         
         for friend_a in user_a['user_friends']:
             for friend_b in user_b['user_friends']:
                 
+                # Connect friends and users
                 edges.append((vertices.index(friend_a['name']), user_a['index']))
                 edges.append((vertices.index(friend_b['name']), user_b['index']))
                 
-                # Check if users have mutual friend
+                # Check if users have mutual friends
                 if friend_a['id'] == friend_b['id']:
                     
                     friend_index = vertices.index(friend_a['name'])
                     
-                    # Connect them with users
+                    # Connect mutual friends
                     edges.append((friend_index, user_a['index']))
                     edges.append((friend_index, user_b['index']))
                     
                     # Add friend to mutual friends index list
-                    mutuals_index.append(friend_index)
-    
-    print(mutuals_index)
-    
-    # Создание вершин и ребер
-    # vertices = [i for i in range(7)]
-    
-    # edges = [
-    #     (0,2),(0,1),(0,3),
-    #     (1,0),(1,2),(1,3),
-    #     (2,0),(2,1),(2,3),(2,4),
-    #     (3,0),(3,1),(3,2),
-    #     (4,5),(4,6),
-    #     (5,4),(5,6),
-    #     (6,4),(6,5)
-    # ]
+                    mutual_indexes.append(friend_index)
     
 
     # Создание графа
@@ -112,11 +97,9 @@ def get_network(users_ids, as_edgelist=True):
     # Distance between dot and label
     visual_style["vertex_label_dist"] = 1.5
     
-    # visual_style["vertex_shape"] = 'rectangle'
+    visual_style["margin"] = 100
+    visual_style["vertex_label_color"] = "black"
 
-    
-    
-    # summary(g)
     
     # Теперь удалим из графа петли и повторяющиеся ребра
     g.simplify(multiple=True, loops=True)
@@ -131,19 +114,27 @@ def get_network(users_ids, as_edgelist=True):
     # Individual style
     
     # Paint mutual friends
-    for mutual in mutuals_index:
-        g.vs[mutual]['color'] = 'grey'
+    for mutual in mutual_indexes:
+        # g.vs[mutual]['color'] = '#5e9955'
+        connections = mutual_indexes.count(mutual)
+        
+        random.seed(connections*12345)
+        g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
+        # print("%06x" % random.randint(0, 0xFFFFFF))
+
+        
+        # random.seed(connections*100000)
+        # r = lambda: random.randint(0,255)
+        # g.vs[mutual]['color'] = '#%02X%02X%02X' % (r(),r(),r())
+        
+        # g.vs[mutual]['color'] = '#{}'.format(999999 // connections)
+
+
 
     # Paint given users
     for user in users:
         g.vs[user['index']]['color'] = 'white'
         
-    # for e in g.es:
-    #     s= e.tuple
-    #     print(s)
-    # for v in g.vs:
-    #     v["weight"] = 100
-    
     # Отрисовываем граф
     plot(g, **visual_style)
     

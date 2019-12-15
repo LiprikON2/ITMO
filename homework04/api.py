@@ -34,7 +34,7 @@ def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
         
 
 
-def get_friends(user_id, fields = 'bdate', vk_command = 'friends.get'):
+def get_friends(user_id, fields = 'bdate'):
     """ Вернуть данных о друзьях пользователя
 
     :param user_id: идентификатор пользователя, список друзей которого нужно получить
@@ -44,11 +44,11 @@ def get_friends(user_id, fields = 'bdate', vk_command = 'friends.get'):
     assert isinstance(fields, str), "fields must be string"
     assert user_id > 0, "user_id must be positive integer"
     
-    query = f"{config.VK_CONFIG['domain']}/{vk_command}?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
+    query = f"{config.VK_CONFIG['domain']}/friends.get?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
     
-    if 'error' in json:
-        print('error occured =(')
+    if json.get('error'):
+        raise Exception(json['error']['error_msg'])
     
     # print(json)
     # json = get('https://httpbin.org/error', max_retries=3, backoff_factor=0)
