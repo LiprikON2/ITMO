@@ -4,8 +4,8 @@ from datetime import datetime as date
 
 import config
 
-
-def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
+# backoff_factor=0.3
+def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3):
     """ Выполнить GET-запрос
 
     :param url: адрес, на который необходимо выполнить запрос
@@ -19,8 +19,11 @@ def get(url, params={}, timeout=5, max_retries=5, backoff_factor=0.3):
 
     while call_count < max_retries:
         response = requests.get(url, params)
-        if response.ok:
+        # print(response)
+        if response.ok and not response.json().get('error'):
             break
+        
+        print('delaying!!!!!:',delay)
         # error happened, pause between requests
         time.sleep(delay)
 
@@ -45,10 +48,15 @@ def get_friends(user_id, fields = 'bdate'):
     assert user_id > 0, "user_id must be positive integer"
     
     query = f"{config.VK_CONFIG['domain']}/friends.get?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
+    
+    # try:
+    #     json = get(query).json()
+    # except Exception:
+    #     raise Exception(json['error']['error_msg'])
+        
     json = get(query).json()
     
-    if json.get('error'):
-        raise Exception(json['error']['error_msg'])
+    # if json.get('error'):
     
     # print(json)
     # json = get('https://httpbin.org/error', max_retries=3, backoff_factor=0)

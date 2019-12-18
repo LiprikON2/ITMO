@@ -1,0 +1,1 @@
+direct=['C:', 'Workspace', 'Source Code', 'ITMO', 'parse']
