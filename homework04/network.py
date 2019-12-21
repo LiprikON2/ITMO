@@ -1,8 +1,12 @@
-from api import get_friends, get_user, get_mutual
 from igraph import Graph, plot, drawing, summary
 import numpy as np
 import itertools
 import random
+import argparse
+
+from api import get_friends, get_user, get_ids, get_name
+from bcolors import bcolors
+
 
 def process_friends(users_ids: int, vertices: list = None) -> (list, list):
     """ Creates list of dictionaries that contains friends info """
@@ -14,9 +18,10 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
         # Get user friends
         friends_json = get_friends(user_id, fields='lists')
         
-        
+        # Skip user if his profile is not avalible
         if 'error' in friends_json:
-            print(friends_json['error'])
+            name = get_name(str(user_id))
+            print(f"{bcolors.FAIL}{name}'s profile is private{bcolors.ENDC}")
             continue
         
         # Create user friend list
@@ -35,24 +40,45 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
                 })
         
         users.append({
-            'user_name': get_name(user_id),
+            'user_name': get_name(str(user_id)),
             'user_id': user_id,
             'user_friends': user_friends,
             'index': ''
         })
         
-
+    # In case users have DIFFERENT friends with the SAME NAME, assign them unique name
+    for user_a, user_b in itertools.combinations(users, 2):
+        
+        for friend_a in user_a['user_friends']:
+            for friend_b in user_b['user_friends']:
+                
+                if friend_a['name'] == friend_b['name'] and friend_a['id'] != friend_b['id']:
+                    friend_a['name'] = resolve_duplicate(friend_a['name'], [friend_b])
+            
+            
     vertices = create_vertices(users)
         
     # Get users index in vertices list
     for user in users:
-        
-        user['index'] = vertices.index(user['user_name'])
-        vertices.append(str(user['user_name']))
+        while True:
+            # In case getting network of one user
+            try:
+                user['index'] = vertices.index(user['user_name'])
+            # Add him to friend list
+            except ValueError:
+                vertices.append(str(user['user_name']))
+                continue
+            break
         
     return users, vertices
 
-def resolve_duplicate(name, user_friends, recurr_lvl = 0):
+
+def resolve_duplicate(name: str, user_friends: list, recurr_lvl = 0) -> str:
+    """ 
+    Compares name with list of names
+    If duplicate found, add (1) to dupicate
+    """
+    
     # Recursive check if there is already friend with the same name
     for user_friend in user_friends:
         if user_friend['name'] == name:
@@ -69,16 +95,6 @@ def resolve_duplicate(name, user_friends, recurr_lvl = 0):
     return name
             
 
-
-def get_name(id: int) -> str:
-    """ Retrives name from id """
-    
-    # Get user info
-    user_info = get_user(id)['response'][0]
-    # Retrive user name from user info
-    user_name = user_info['first_name'] + ' ' + user_info['last_name']
-    
-    return user_name
 
 
 def create_vertices(users: list) -> list:
@@ -125,13 +141,12 @@ def connect_mutuals(users: list, vertices: list) -> (list, list):
                     
                     # Add friend to mutual friends index list
                     mutual_indexes.append(friend_index)
-        print(users.index(user_a), 'and',users.index(user_b) ,'/', len(users))
         
     return edges, mutual_indexes
 
 
 
-def get_network(users_ids: list):
+def get_network(users_ids: list) -> None:
     """ Building a friend graph for an arbitrary list of users """
     
     users, vertices = process_friends(users_ids)
@@ -143,7 +158,7 @@ def get_network(users_ids: list):
     
     
 
-def plot_graph(vertices: list, edges: list, mutual_indexes: list = None, users: list = None):
+def plot_graph(vertices: list, edges: list, mutual_indexes: list = None, users: list = None) -> None:
     """ Create image of VK friends connections """
     
     # Создание графа
@@ -190,22 +205,9 @@ def plot_graph(vertices: list, edges: list, mutual_indexes: list = None, users: 
         for mutual in mutual_indexes:
             # g.vs[mutual]['color'] = '#5e9955'
             connections = mutual_indexes.count(mutual)
-            print('cons:', connections)
             # Generate unique color for certain level of mutuality
             random.seed(connections*123456)
             g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
-
-    print(mutual_indexes)
-    
-    # for index, vertice in enumerate(vertices):
-    #     # g.vs[mutual]['color'] = '#5e9955'
-    #     connections = mutual_indexes.count(mutual)
-        
-    #     # Generate unique color for certain level of mutuality
-    #     random.seed(connections*123456)
-    #     g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
-
-
 
     # Paint mutual friends
     if users:
@@ -215,11 +217,17 @@ def plot_graph(vertices: list, edges: list, mutual_indexes: list = None, users: 
         
     # Отрисовываем граф
     plot(g, **visual_style)
+    
 
 
 if __name__ == "__main__":
-    # get_network([87393116])
-    # get_network([87393116, 74171270])
-    # get_network([74171270, 87393116, 146783872, 544881323])
-    get_network([74171270, 87393116, 146783872])
-    pass
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("ids", type=str, help="Comma separated list of VK users ids or screen names")
+    
+    args = parser.parse_args()
+    
+    ids = get_ids(args.ids.split(','))
+    get_network(ids)
+    
+    # ids = get_ids(['liprikon2', 'trycha2305', '74171270', '146783872'])

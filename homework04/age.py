@@ -1,11 +1,12 @@
 from datetime import datetime as date
 from statistics import median
 from typing import Optional
+import argparse
 
 
-
-from api import get_friends
+from api import get_friends, get_ids, get_name
 from api_models import User
+from bcolors import bcolors
 
 
 
@@ -21,9 +22,17 @@ def age_predict(user_id: int) -> Optional[float]:
     assert user_id > 0, "user_id must be positive integer"
     
     json = get_friends(user_id, 'bdate')
+    name = get_name(str(user_id))
+    
+    # Exit user profile is not avalible
+    if 'error' in json:
+            print(f"{bcolors.FAIL}{name}'s profile is private{bcolors.ENDC}")
+            raise SystemExit(0)
+        
     curr_date = date.now()
     
     deltas = []
+    # Cycle through user friends
     for friend in json['response']['items']:
         
         try:
@@ -35,16 +44,25 @@ def age_predict(user_id: int) -> Optional[float]:
         except:
             pass
     try:
+        # Calculate average age across user friend
         age_avg = round(median(deltas), 1)
-        return age_avg
+        print(f"{bcolors.OKGREEN}I predict {bcolors.OKBLUE}{name}'s{bcolors.OKGREEN} age as {bcolors.ENDC}{age_avg}")
     except:
-        return 'Не получилось! :('
+        print(f"{bcolors.FAIL}{name} does not have friends with accessible birthday{bcolors.ENDC}")
+        raise SystemExit(0)
         
     
 
 
 if __name__ == "__main__":
-    age = age_predict(146783872)
-    # age = age_predict(74171270)
-    # age = age_predict(1)
-    print(age)
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("id", type=str, help="VK user id or screen name")
+    
+    args = parser.parse_args()
+    
+    id = get_ids(args.id.split())[0]
+    age_predict(id)
+    # liprikon2
+    # 74171270
+    # 544881323
