@@ -2,6 +2,7 @@ import requests
 import time
 from datetime import datetime as date
 
+
 from bcolors import bcolors
 import config
 
@@ -64,18 +65,18 @@ def get_friends(user_id: str, fields = ''):
 
 
 def get_user(ids: list, fields=''):
-    user_ids = ','.join(ids)
+    user_ids = ','.join(str(id) for id in ids)
     
     query = f"{config.VK_CONFIG['domain']}/users.get?access_token={config.VK_CONFIG['access_token']}&user_ids={user_ids}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
-    
-    return json
+    print(json)
+    return json['response']
 
-def get_name(id: str) -> str:
+def get_name(id: int) -> str:
     """ Retrives name from id """
     
     # Get user info
-    user_info = get_user([id])['response'][0]
+    user_info = get_user([id])[0]
     # Retrive user name from user info
     user_name = user_info['first_name'] + ' ' + user_info['last_name']
     
@@ -85,7 +86,7 @@ def get_name(id: str) -> str:
 def get_ids(screen_names: list) -> list:
     users = get_user(screen_names)
     try:
-        ids = [user['id'] for user in users['response']]
+        ids = [user['id'] for user in users]
     except:
         print(f"{bcolors.FAIL}Some of users doesn't seem to exist{bcolors.ENDC}")
         
@@ -95,25 +96,7 @@ def get_ids(screen_names: list) -> list:
         raise SystemExit(0)
     return ids
 
-
-def messages_get_history(user_id, offset=0, count=20):
-    """ Получить историю переписки с указанным пользователем
-
-    :param user_id: идентификатор пользователя, с которым нужно получить историю переписки
-    :param offset: смещение в истории переписки
-    :param count: число сообщений, которое нужно получить
-    """
-    assert isinstance(user_id, int), "user_id must be positive integer"
-    assert user_id > 0, "user_id must be positive integer"
-    assert isinstance(offset, int), "offset must be positive integer"
-    assert offset >= 0, "user_id must be positive integer"
-    assert count >= 0, "user_id must be positive integer"
-    # PUT YOUR CODE HERE
-
-
 if __name__ == "__main__":
-    # get_friends(74171270, 'bdate')
-    
     pass
     
     

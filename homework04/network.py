@@ -4,7 +4,7 @@ import itertools
 import random
 import argparse
 
-from api import get_friends, get_user, get_ids, get_name
+from api import get_friends, get_ids, get_name
 from bcolors import bcolors
 
 
@@ -20,7 +20,7 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
         
         # Skip user if his profile is not avalible
         if 'error' in friends_json:
-            name = get_name(str(user_id))
+            name = get_name(user_id)
             print(f"{bcolors.FAIL}{name}'s profile is private{bcolors.ENDC}")
             continue
         
@@ -40,7 +40,7 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
                 })
         
         users.append({
-            'user_name': get_name(str(user_id)),
+            'user_name': get_name(user_id),
             'user_id': user_id,
             'user_friends': user_friends,
             'index': ''

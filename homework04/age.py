@@ -24,7 +24,7 @@ def age_predict(user_id: int) -> Optional[float]:
     json = get_friends(user_id, 'bdate')
     print(json)
     
-    name = get_name(str(user_id))
+    name = get_name(user_id)
     
     # Exit user profile is not avalible
     if 'error' in json:
