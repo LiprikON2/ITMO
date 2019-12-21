@@ -56,8 +56,11 @@ def get_friends(user_id: str, fields = ''):
     query = f"{config.VK_CONFIG['domain']}/friends.get?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
     
     json = get(query).json()
-        
-    return json
+    # When user profile is private json doesn't have 'response' field
+    if 'error' in json:
+        return json
+            
+    return json['response']['items']
 
 
 def get_user(ids: list, fields=''):
@@ -88,6 +91,7 @@ def get_ids(screen_names: list) -> list:
         
     # Exit if all provided screen names are invalid
     if not 'ids' in locals():
+        # Exit  
         raise SystemExit(0)
     return ids
 

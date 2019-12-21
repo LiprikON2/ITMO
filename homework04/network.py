@@ -26,7 +26,7 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
         
         # Create user friend list
         user_friends = []
-        for friend in friends_json['response']['items']:
+        for friend in friends_json:
             # Check if friend profile is deleted
             if not 'deactivated' in friend:
                 name = friend['first_name'] + ' ' + friend['last_name']

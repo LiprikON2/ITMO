@@ -22,18 +22,21 @@ def age_predict(user_id: int) -> Optional[float]:
     assert user_id > 0, "user_id must be positive integer"
     
     json = get_friends(user_id, 'bdate')
+    print(json)
+    
     name = get_name(str(user_id))
     
     # Exit user profile is not avalible
     if 'error' in json:
             print(f"{bcolors.FAIL}{name}'s profile is private{bcolors.ENDC}")
+            # Exit
             raise SystemExit(0)
         
     curr_date = date.now()
     
     deltas = []
     # Cycle through user friends
-    for friend in json['response']['items']:
+    for friend in json:
         
         try:
             birthday = friend['bdate']
@@ -47,11 +50,10 @@ def age_predict(user_id: int) -> Optional[float]:
         # Calculate average age across user friend
         age_avg = round(median(deltas), 1)
         print(f"{bcolors.OKGREEN}I predict {bcolors.OKBLUE}{name}'s{bcolors.OKGREEN} age as {bcolors.ENDC}{age_avg}")
+        return age_avg
     except:
         print(f"{bcolors.FAIL}{name} does not have friends with accessible birthday{bcolors.ENDC}")
-        raise SystemExit(0)
-        
-    
+        return None
 
 
 if __name__ == "__main__":
@@ -66,3 +68,4 @@ if __name__ == "__main__":
     # liprikon2
     # 74171270
     # 544881323
+    # liprikon2,trycha2305,74171270,146783872
