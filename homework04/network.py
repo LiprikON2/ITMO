@@ -26,8 +26,11 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
             if not 'deactivated' in friend:
                 name = friend['first_name'] + ' ' + friend['last_name']
                 
+                # Add (1) to the end of a name if needed
+                unique_name = resolve_duplicate(name, user_friends)            
+                
                 user_friends.append({
-                    'name': name,
+                    'name': unique_name,
                     'id': friend['id'],
                 })
         
@@ -38,9 +41,8 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
             'index': ''
         })
         
-    
-    if not vertices:
-        vertices = create_vertices(users)
+
+    vertices = create_vertices(users)
         
     # Get users index in vertices list
     for user in users:
@@ -58,8 +60,25 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
                 continue
             break
         
-    print(vertices)
     return users, vertices
+
+def resolve_duplicate(name, user_friends, recurr_lvl = 0):
+    # Recursive check if there is already friend with the same name
+    for user_friend in user_friends:
+        if user_friend['name'] == name:
+            recurr_lvl += 1
+            
+            if not '(' in name:
+                name += f' ({recurr_lvl})'
+            else:
+                index = name.index('(') - 1
+                name = name[0:index] + f' ({recurr_lvl})'
+            
+            name = resolve_duplicate(name, user_friends, recurr_lvl)
+            
+    return name
+            
+
 
 def get_name(id: int) -> str:
     """ Retrives name from id """
@@ -85,35 +104,26 @@ def create_vertices(users: list) -> list:
     
     return vertices
 
+
 def connect_mutuals(users: list, vertices: list) -> (list, list):
     """ Creates connectionas between mutual friends """
     
     edges = []
     mutual_indexes = []
+    
+    # Makes program work if only one user id is passed to it
     if len(users) == 1:
         users.append(users[0])
+    
     for user_a, user_b in itertools.combinations(users, 2):
-        # for friend_a, friend_b in itertools.combinations(user_a['user_friends'], 2):
+        
         for friend_a in user_a['user_friends']:
             for friend_b in user_b['user_friends']:
                 
-                # mutals_json = get_mutual(int(friend_a['id']), int(friend_b['id']))
-                
-                # for mutual_id in mutals_json['response']:
-                #     mutual_name = get_name(mutual_id)
-                #     try:
-                #         edges.append((vertices.index(friend_a['name']), (vertices.index(mutual_name))))
-                #         edges.append((vertices.index(friend_b['name']), (vertices.index(mutual_name))))
-                #     except ValueError:
-                #         print('ValueError')
-                #         continue
                 # Connect friends and users
-                try:
-                    edges.append((vertices.index(friend_a['name']), user_a['index']))
-                    edges.append((vertices.index(friend_b['name']), user_b['index']))
-                except ValueError:
-                    print('ValueError')
-                    continue
+                edges.append((vertices.index(friend_a['name']), user_a['index']))
+                edges.append((vertices.index(friend_b['name']), user_b['index']))
+                
                 
                 # Check if users have mutual friends
                 if friend_a['id'] == friend_b['id']:
@@ -127,31 +137,26 @@ def connect_mutuals(users: list, vertices: list) -> (list, list):
                     # Add friend to mutual friends index list
                     mutual_indexes.append(friend_index)
         print(users.index(user_a), 'and',users.index(user_b) ,'/', len(users))
-    # edges = list(set(edges))
+        
     return edges, mutual_indexes
 
 
 
-def get_network(users_ids, as_edgelist=True):
+def get_network(users_ids: list, as_edgelist=True):
     """ Building a friend graph for an arbitrary list of users """
     
     users, vertices = process_friends(users_ids)
     
     edges, mutual_indexes = connect_mutuals(users, vertices)
     
-    # all_friends = []
-    # for user in users:
-    #     for friend in user['user_friends']:
-    #         all_friends.append(friend['id'])
-            
-    # users2, _ = process_friends(all_friends, vertices=vertices)
+    plot_graph(vertices, edges, mutual_indexes, users)
     
-    # print('users2 len', len(users2))
-    # edges, mutual_indexes = connect_mutuals(users2, vertices)
-    # print('EDGY', edges)
     
-    # print(vertices)
+    
 
+def plot_graph(vertices, edges, mutual_indexes, users: None):
+    """ Create image of VK friends connections """
+    
     # Создание графа
     g = Graph(vertex_attrs={"label":vertices},
         edges=edges, directed=False)
@@ -199,24 +204,18 @@ def get_network(users_ids, as_edgelist=True):
         random.seed(connections*123456)
         g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
 
-    # Paint given users
-    for user in users:
-        print(user['index'], len(g.vs))
-        g.vs[user['index']]['color'] = 'white'
+    if users:
+        # Paint given users
+        for user in users:
+            g.vs[user['index']]['color'] = 'white'
         
     # Отрисовываем граф
     plot(g, **visual_style)
-    
-
-def plot_graph(graph):
-    # PUT YOUR CODE HERE
-    pass
 
 
 if __name__ == "__main__":
     # get_network([87393116])
+    # get_network([74171270, 87393116, 146783872, 544881323])
     get_network([74171270, 87393116, 146783872])
-    s = get_mutual(74171270, 87393116)
-    print(s)
     # get_network([87393116, 74171270])
     pass
