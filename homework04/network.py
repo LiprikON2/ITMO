@@ -46,19 +46,9 @@ def process_friends(users_ids: int, vertices: list = None) -> (list, list):
         
     # Get users index in vertices list
     for user in users:
-        print('user', user['user_name'])
         
-        while True:
-            # In case getting network of one user
-            try:
-                print('trying', user['user_name'])
-                user['index'] = vertices.index(user['user_name'])
-            # Add him to friend list
-            except ValueError:
-                vertices.append(str(user['user_name']))
-                print(user['user_name'], 'ValueError in process_friends; continuing')
-                continue
-            break
+        user['index'] = vertices.index(user['user_name'])
+        vertices.append(str(user['user_name']))
         
     return users, vertices
 
@@ -111,7 +101,7 @@ def connect_mutuals(users: list, vertices: list) -> (list, list):
     edges = []
     mutual_indexes = []
     
-    # Makes program work if only one user id is passed to it
+    # Makes program work in case only one user id is passed to it
     if len(users) == 1:
         users.append(users[0])
     
@@ -123,7 +113,6 @@ def connect_mutuals(users: list, vertices: list) -> (list, list):
                 # Connect friends and users
                 edges.append((vertices.index(friend_a['name']), user_a['index']))
                 edges.append((vertices.index(friend_b['name']), user_b['index']))
-                
                 
                 # Check if users have mutual friends
                 if friend_a['id'] == friend_b['id']:
@@ -142,19 +131,19 @@ def connect_mutuals(users: list, vertices: list) -> (list, list):
 
 
 
-def get_network(users_ids: list, as_edgelist=True):
+def get_network(users_ids: list):
     """ Building a friend graph for an arbitrary list of users """
     
     users, vertices = process_friends(users_ids)
     
     edges, mutual_indexes = connect_mutuals(users, vertices)
     
-    plot_graph(vertices, edges, mutual_indexes, users)
+    plot_graph(vertices, edges, mutual_indexes=mutual_indexes, users=users)
     
     
     
 
-def plot_graph(vertices, edges, mutual_indexes, users: None):
+def plot_graph(vertices: list, edges: list, mutual_indexes: list = None, users: list = None):
     """ Create image of VK friends connections """
     
     # Создание графа
@@ -194,16 +183,31 @@ def plot_graph(vertices, edges, mutual_indexes, users: None):
     g.vs['color'] = pal.get_many(clusters.membership)
     
     
-    # Individual style
+    # Optional individual style
     
-    # Paint mutual friends
-    for mutual in mutual_indexes:
-        # g.vs[mutual]['color'] = '#5e9955'
-        connections = mutual_indexes.count(mutual)
-        
-        random.seed(connections*123456)
-        g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
+    if mutual_indexes:
+        # Paint mutual friends
+        for mutual in mutual_indexes:
+            # g.vs[mutual]['color'] = '#5e9955'
+            connections = mutual_indexes.count(mutual)
+            print('cons:', connections)
+            # Generate unique color for certain level of mutuality
+            random.seed(connections*123456)
+            g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
 
+    print(mutual_indexes)
+    
+    # for index, vertice in enumerate(vertices):
+    #     # g.vs[mutual]['color'] = '#5e9955'
+    #     connections = mutual_indexes.count(mutual)
+        
+    #     # Generate unique color for certain level of mutuality
+    #     random.seed(connections*123456)
+    #     g.vs[mutual]['color'] = "#%06x" % random.randint(0, 0xFFFFFF)
+
+
+
+    # Paint mutual friends
     if users:
         # Paint given users
         for user in users:
@@ -215,7 +219,7 @@ def plot_graph(vertices, edges, mutual_indexes, users: None):
 
 if __name__ == "__main__":
     # get_network([87393116])
+    # get_network([87393116, 74171270])
     # get_network([74171270, 87393116, 146783872, 544881323])
     get_network([74171270, 87393116, 146783872])
-    # get_network([87393116, 74171270])
     pass
