@@ -6,5 +6,4 @@ pip install pycairo-1.18.2-cp37-cp37m-win_amd64.whl
 pip install cairocffi
 
 
-![gif](https://i.imgur.com/E0w5sld.gif)
-![](http://i.imgur.com/OUkLi.gif)
+![age.py](https://i.imgur.com/E0w5sld.gif)
