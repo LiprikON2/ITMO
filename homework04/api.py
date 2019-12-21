@@ -5,7 +5,7 @@ from datetime import datetime as date
 import config
 
 # backoff_factor=0.3
-def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3):
+def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3, delay = 1):
     """ Выполнить GET-запрос
 
     :param url: адрес, на который необходимо выполнить запрос
@@ -15,7 +15,6 @@ def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3):
     :param backoff_factor: коэффициент экспоненциального нарастания задержки
     """
     call_count = 0
-    delay = 1
 
     while call_count < max_retries:
         response = requests.get(url, params)
@@ -28,7 +27,8 @@ def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3):
         time.sleep(delay)
 
         # calculate next delay
-        delay = min(timeout * backoff_factor, timeout)
+        print('delay calc:', delay, '*', backoff_factor,'=', timeout * backoff_factor, 'or', timeout)
+        delay = min(delay * backoff_factor, timeout)
         call_count += 1
         
     print('max_retries:', max_retries, 'call_count:', call_count, 'backoff_factor:', backoff_factor)
