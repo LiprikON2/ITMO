@@ -25,7 +25,6 @@ class TestGetRequest(unittest.TestCase):
                 get('http://example.com', max_retries=max_retries, backoff_factor=backoff_factor)
         end_time = time.time()
         time_diff = end_time - start_time
-        print('||||||||||||||', time_diff)
         self.assertAlmostEqual(time_diff, total_delay, places=0)
         self.assertEqual(requests_get.call_count, max_retries)
 
