@@ -69,7 +69,7 @@ def get_user(ids: list, fields=''):
     
     query = f"{config.VK_CONFIG['domain']}/users.get?access_token={config.VK_CONFIG['access_token']}&user_ids={user_ids}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
-    print(json)
+    
     return json['response']
 
 def get_name(id: int) -> str:
