@@ -1,7 +1,7 @@
 import requests
 import time
 from datetime import datetime as date
-
+from typing import List, Optional, Tuple, Dict
 
 from bcolors import bcolors
 import config
@@ -44,7 +44,7 @@ def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3):
     return response
         
 
-def get_friends(user_id: str, fields = ''):
+def get_friends(user_id: int, fields = '') -> List[dict]:
     """ Вернуть данных о друзьях пользователя
 
     :param user_id: идентификатор пользователя, список друзей которого нужно получить
@@ -57,23 +57,32 @@ def get_friends(user_id: str, fields = ''):
     query = f"{config.VK_CONFIG['domain']}/friends.get?access_token={config.VK_CONFIG['access_token']}&user_id={user_id}&fields={fields}&v={config.VK_CONFIG['version']}"
     
     json = get(query).json()
+    
     # When user profile is private json doesn't have 'response' field
     if 'error' in json:
         return json
-            
     return json['response']['items']
 
 
-def get_user(ids: list, fields=''):
+def get_user(ids: List[any], fields='') -> Dict:
+    """ Retrives user info from id """
+    
+    # Convert list to comma separated string
     user_ids = ','.join(str(id) for id in ids)
     
     query = f"{config.VK_CONFIG['domain']}/users.get?access_token={config.VK_CONFIG['access_token']}&user_ids={user_ids}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
     
+    # When user profile doesn't exist json doesn't have 'response' field
+    if 'error' in json:
+        print(f"{bcolors.FAIL}The user doesn't seem to exist{bcolors.ENDC}")
+        return json
+    
     return json['response']
 
+
 def get_name(id: int) -> str:
-    """ Retrives name from id """
+    """ Retrives user name from id """
     
     # Get user info
     user_info = get_user([id])[0]
@@ -83,7 +92,15 @@ def get_name(id: int) -> str:
     return user_name
 
 
-def get_ids(screen_names: list) -> list:
+def get_ids(screen_names: List[str]) -> List[int]:
+    """ Converts screen names to ids """
+    
+    # Check if community id is passed
+    for screen_name in screen_names:
+        print('sc name',screen_name)
+        if screen_name[0] == '-':
+            return screen_names
+
     users = get_user(screen_names)
     try:
         ids = [user['id'] for user in users]

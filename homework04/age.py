@@ -22,7 +22,6 @@ def age_predict(user_id: int) -> Optional[float]:
     assert user_id > 0, "user_id must be positive integer"
     
     json = get_friends(user_id, 'bdate')
-    print(json)
     
     name = get_name(user_id)
     

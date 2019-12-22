@@ -5,6 +5,7 @@ import nltk
 import requests
 from string import ascii_lowercase
 import re
+import argparse
 
 import pandas as pd
 import textwrap
@@ -70,7 +71,7 @@ def get_wall(
     
     return pd.DataFrame(response.json()['response']['items'])
 
-def build_model(walls: list) -> None:
+def build_model(wall: pd.DataFrame) -> None:
     # Generate string of russian alphabet including 'ё'
     a = ord('а')
     rus_lowercase = ''.join([chr(i) for i in range(a,a+6)] + [chr(a+33)] + [chr(i) for i in range(a+6,a+32)])
@@ -125,15 +126,57 @@ def build_model(walls: list) -> None:
     # lda_model ref: https://radimrehurek.com/gensim/models/ldamodel.html
 
 if __name__ == "__main__":
-
-   
-    wall = get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping')
-    # wall.append(get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping'))
-    # wall.append(get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping'))
-    wall.append(get_wall(owner_id='noize_mc', domain='noizemc'), ignore_index=True)
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--id", type=str, help="VK user id or screen name")
+    
+    # args = parser.parse_args()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--owner_id', 
+        nargs='+', 
+        type=str,
+        help="""
+            ID of the user or community that owns the wall. 
+            By default, current user ID. 
+            Use a negative value to designate a community ID
+        """
+    )
+    parser.add_argument(
+        '--domain',
+        nargs='+',
+        type=str,
+        help="User or community short address"
+    )
+    args = parser.parse_args()
     
     
-    # wall.append(get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping'), ignore_index=True)
+    # Check if user provided VK group owner id
+    if args.owner_id:
+        
+        owner_ids = get_ids(args.owner_id)
+        for owner_id in owner_ids:
+            
+            # Check if wall is already created
+            if not 'wall' in locals():
+                wall = get_wall(owner_id=owner_id)
+            else:
+                wall.append(get_wall(owner_id=owner_id), ignore_index=True)
     
+    # Check if user provided VK groups domains      
+    if args.domain:
+        
+        domains = args.domain
+        for domain in domains:
+            
+            # Check if wall is already created
+            if not 'wall' in locals():
+                wall = get_wall(domain=domain)
+            else:
+                wall.append(get_wall(domain=domain), ignore_index=True)
+            
     build_model(wall)
+    
+    # wall = get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping')
+    # wall.append(get_wall(owner_id='noize_mc', domain='noizemc'), ignore_index=True)
     

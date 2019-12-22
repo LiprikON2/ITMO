@@ -3,7 +3,7 @@
 ## `age.py`
 - Predict user age based on his friend's age
 
-![age.py] (https://i.imgur.com/E0w5sld.gif)
+![age.py](https://i.imgur.com/E0w5sld.gif)
 
 ### Usage
 
