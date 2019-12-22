@@ -15,6 +15,7 @@ from string import Template
 from tqdm import tqdm
 
 from api import get, get_ids
+from bcolors import bcolors
 import config
 
 def get_wall(
@@ -45,7 +46,6 @@ def get_wall(
     if owner_id != '':
         owner_id = get_ids([owner_id])[0]
     
-    query = f"{config.VK_CONFIG['domain']}/wall.get?access_token={config.VK_CONFIG['access_token']}&owner_id={owner_id}&offset={offset}&count={count}&filter={filter}&extended={extended}&fields={fields}&v={v}"
     
     code = f"""
         return API.wall.get({{
@@ -71,7 +71,8 @@ def get_wall(
     
     return pd.DataFrame(response.json()['response']['items'])
 
-def build_model(wall: pd.DataFrame) -> None:
+def build_model(wall: pd.DataFrame, num_topics: int = 4) -> None:
+    
     # Generate string of russian alphabet including 'ё'
     a = ord('а')
     rus_lowercase = ''.join([chr(i) for i in range(a,a+6)] + [chr(a+33)] + [chr(i) for i in range(a+6,a+32)])
@@ -107,10 +108,10 @@ def build_model(wall: pd.DataFrame) -> None:
     # Convert texts into the bag-of-words (BoW) format
     # list of (token_id, token_count) tuples.
     corpus = [dictionary.doc2bow(post) for post in posts]
-        
+    
     lda_model = gensim.models.ldamodel.LdaModel(
         corpus=corpus,
-        num_topics=3,
+        num_topics=num_topics,
         id2word=dictionary,
         update_every=1,
         chunksize=100,
@@ -126,11 +127,6 @@ def build_model(wall: pd.DataFrame) -> None:
     # lda_model ref: https://radimrehurek.com/gensim/models/ldamodel.html
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--id", type=str, help="VK user id or screen name")
-    
-    # args = parser.parse_args()
-    
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--owner_id', 
@@ -148,6 +144,11 @@ if __name__ == "__main__":
         type=str,
         help="User or community short address"
     )
+    parser.add_argument(
+        '--num_topics',
+        type=int,
+        help="The number of requested latent topics to be extracted from the training corpus. Default: 4"
+    )
     args = parser.parse_args()
     
     
@@ -161,7 +162,7 @@ if __name__ == "__main__":
             if not 'wall' in locals():
                 wall = get_wall(owner_id=owner_id)
             else:
-                wall.append(get_wall(owner_id=owner_id), ignore_index=True)
+                wall = wall.append(get_wall(owner_id=owner_id), ignore_index=True)
     
     # Check if user provided VK groups domains      
     if args.domain:
@@ -173,10 +174,14 @@ if __name__ == "__main__":
             if not 'wall' in locals():
                 wall = get_wall(domain=domain)
             else:
-                wall.append(get_wall(domain=domain), ignore_index=True)
-            
-    build_model(wall)
-    
-    # wall = get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping')
-    # wall.append(get_wall(owner_id='noize_mc', domain='noizemc'), ignore_index=True)
-    
+                wall = wall.append(get_wall(domain=domain), ignore_index=True)
+                
+    # Check if user provided CLI arguments
+    if not 'wall' in locals():
+        print(f'{bcolors.WARNING}Looks like you have not provided VK group id. Type `{bcolors.ENDC}python model.py -h{bcolors.WARNING}` for help.{bcolors.ENDC}')
+        raise SystemExit(0)
+        
+    if args.num_topics:
+        build_model(wall, num_topics=args.num_topics)
+    else:
+        build_model(wall)
