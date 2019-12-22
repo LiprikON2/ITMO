@@ -126,13 +126,13 @@ def build_model(walls: list) -> None:
 
 if __name__ == "__main__":
 
-    
+   
     wall = get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping')
     # wall.append(get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping'))
     # wall.append(get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping'))
     wall.append(get_wall(owner_id='noize_mc', domain='noizemc'), ignore_index=True)
     
-    print(wall)
+    
     # wall.append(get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping'), ignore_index=True)
     
     build_model(wall)
