@@ -78,7 +78,11 @@ def get_user(ids: List[Any], fields='') -> Dict:
 
     query = f"{config.VK_CONFIG['domain']}/users.get?access_token={config.VK_CONFIG['access_token']}&user_ids={user_ids}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> parent of 3e0f73a... Release v1.0
     # When user profile doesn't exist json doesn't have 'response' field
     if 'error' in json:
 
@@ -112,8 +116,13 @@ def get_ids(screen_names: List[Any]) -> List[int]:
 
     # Check if community id is passed
     for screen_name in screen_names:
+<<<<<<< HEAD
 
         if str(screen_name)[0] == '-':
+=======
+        print('sc name',screen_name)
+        if screen_name[0] == '-':
+>>>>>>> parent of 3e0f73a... Release v1.0
             return screen_names
 
     users = get_user(screen_names)
@@ -124,6 +133,6 @@ def get_ids(screen_names: List[Any]) -> List[int]:
 
     # Exit if all provided screen names are invalid
     if not 'ids' in locals():
-        # Exit program
+        # Exit  
         raise SystemExit(0)
     return ids

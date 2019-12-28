@@ -1,4 +1,4 @@
-# VK api
+# VK api network graph + age prediction
 
 ## `age.py`
 - Predict user age based on his friend's age
@@ -28,7 +28,7 @@ python age.py SCREEN_NAME
 
 - Accepts comma separated list of screen names **without spaces**
 ```
-python network.py SCREEN_NAME1,SCREEN_NAME2...
+python network.py SCREEN_NAME,SCREEN_NAME...
 ```
 
 
@@ -36,31 +36,6 @@ python network.py SCREEN_NAME1,SCREEN_NAME2...
 - Builds topic model from provided VK groups
 
 ![jEUcQEP.png](https://i.imgur.com/jEUcQEP.png)
-
-
-### Usage
-
-`--domain DOMAIN1 DOMAIN2...` - user or community short address
-`--owner_id ID1 ID2...` - ID of the user or community that owns the wall. By default, current user ID. Use a negative value to designate a community ID.
-`--num_topics N` - (Optional) The number of requested latent topics to be extracted from the training corpus. Default: 4
-
-
-#### Examples
-```
-python model.py --owner_id noize_mc
-```
-
-```
-python model.py --domain noizemc
-```
-
-```
-python model.py --domain itmem noizemc
-```
-
-```
-python model.py --domain itmem --owner_id noize_mc --num_topics 5
-```
 
 ___
 ## Installation
@@ -71,21 +46,6 @@ ___
 ```
 pip install requirements.txt
 ```
-<details>
-    <summary>
-        What in here?
-    </summary>
-        &nbsp;&nbsp;cairocffi<br>
-        &nbsp;&nbsp;numpy<br>
-        &nbsp;&nbsp;pymorphy2<br>
-        &nbsp;&nbsp;gensim<br>
-        &nbsp;&nbsp;tqdm<br>
-        &nbsp;&nbsp;pandas<br>
-        &nbsp;&nbsp;pymorphy2<br>
-        &nbsp;&nbsp;pydantic<br>
-        &nbsp;&nbsp;pyLDAvis<br>
-        &nbsp;&nbsp;nltk<br>
-</details><br>
 
 #### Additional for `network.py`
 (Windows) from [this site](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo) download `igraph`, `pycario` for your system
@@ -109,11 +69,11 @@ python -m nltk.downloader stopwords
 - Optional permission codes avalible [here](https://vk.com/dev/permissions)
 
 ```
-python access_token.py APP_ID PERMISSON_CODE
+python access_token.py PERMISSON_CODE
 ```
 
 ### `config.py`
-1. Create `config.py` with following content
+1. Create config.py with following content
 ```
 VK_CONFIG = {
     'domain': 'https://api.vk.com/method',
@@ -121,4 +81,10 @@ VK_CONFIG = {
     'version': '5.87',
 }
 ```
-2. Insert your [Access token](#access-tokens)
+2. Insesrt [Access token](#access-tokens)
+
+
+
+[click on this link](#my-multi-word-header)
+
+### My Multi Word Header
