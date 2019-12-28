@@ -27,7 +27,6 @@ def get(url, params={}, timeout=5, max_retries=5, backoff_factor=1.3):
                 raise
             response = None
 
-        # if response.ok and not response.json().get('error'):
         if response:
             if response.ok:
                 break

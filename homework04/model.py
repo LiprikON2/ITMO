@@ -46,7 +46,6 @@ def get_wall(
     # Convert screen name to id
     if owner_id != None:
         owner_id = get_ids([owner_id])[0]
-
     code = f"""
         return API.wall.get({{
         "owner_id": '{owner_id}',
