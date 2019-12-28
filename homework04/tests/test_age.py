@@ -19,7 +19,7 @@ class TestAgePredict(unittest.TestCase):
         ]
         with patch('age.get_friends', return_value=response):
             predicted_age = age_predict(user_id=1)
-            self.assertEqual(predicted_age, 23.5)
+            self.assertEqual(predicted_age, 25)
 
     def test_friends_without_bdate_field(self):
         response = [

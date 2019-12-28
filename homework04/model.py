@@ -20,7 +20,7 @@ import config
 
 
 def get_wall(
-    owner_id: int = None,
+    owner_id: str = '',
     domain: str = '',
     offset: int = 0,
     count: int = 10,
@@ -46,7 +46,7 @@ def get_wall(
     # Convert screen name to id
     if owner_id != '':
         owner_id = get_ids([owner_id])[0]
-    
+
     code = f"""
         return API.wall.get({{
         "owner_id": '{owner_id}',
@@ -68,11 +68,9 @@ def get_wall(
                 "v": "5.103"
             }
     )
-    
     if 'error' in response.json():
 
         error_msg = response.json()['error']['error_msg']
-        print(response.json())
         print(f'{bcolors.FAIL}{error_msg}{bcolors.ENDC}')
         raise SystemExit(0)
 
@@ -80,6 +78,7 @@ def get_wall(
 
 
 def build_model(wall: pd.DataFrame, num_topics: int = 4) -> None:
+
     # Generate string of russian alphabet including 'ё'
     a = ord('а')
     rus_lowercase = ''.join([chr(i) for i in range(
@@ -117,10 +116,9 @@ def build_model(wall: pd.DataFrame, num_topics: int = 4) -> None:
     # list of (token_id, token_count) tuples.
     corpus = [dictionary.doc2bow(post) for post in posts]
 
-        
     lda_model = gensim.models.ldamodel.LdaModel(
         corpus=corpus,
-        num_topics=3,
+        num_topics=num_topics,
         id2word=dictionary,
         update_every=1,
         chunksize=100,
@@ -137,11 +135,6 @@ def build_model(wall: pd.DataFrame, num_topics: int = 4) -> None:
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--id", type=str, help="VK user id or screen name")
-    
-    # args = parser.parse_args()
-    
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--owner_id',
@@ -159,6 +152,11 @@ if __name__ == "__main__":
         type=str,
         help="User or community short address"
     )
+    parser.add_argument(
+        '--num_topics',
+        type=int,
+        help="The number of requested latent topics to be extracted from the training corpus. Default: 4"
+    )
     args = parser.parse_args()
 
     # Check if user provided VK group owner id
@@ -171,9 +169,10 @@ if __name__ == "__main__":
             if not 'wall' in locals():
                 wall = get_wall(owner_id=owner_id)
             else:
-                wall.append(get_wall(owner_id=owner_id), ignore_index=True)
-    
-    # Check if user provided VK groups domains      
+                wall = wall.append(
+                    get_wall(owner_id=owner_id), ignore_index=True)
+
+    # Check if user provided VK groups domains
     if args.domain:
 
         domains = args.domain

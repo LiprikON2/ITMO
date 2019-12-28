@@ -79,6 +79,7 @@ def get_user(ids: List[Any], fields='') -> Dict:
 
     query = f"{config.VK_CONFIG['domain']}/users.get?access_token={config.VK_CONFIG['access_token']}&user_ids={user_ids}&fields={fields}&v={config.VK_CONFIG['version']}"
     json = get(query).json()
+
     # When user profile doesn't exist json doesn't have 'response' field
     if 'error' in json:
 
@@ -124,6 +125,6 @@ def get_ids(screen_names: List[Any]) -> List[int]:
 
     # Exit if all provided screen names are invalid
     if not 'ids' in locals():
-        # Exit  
+        # Exit program
         raise SystemExit(0)
     return ids
