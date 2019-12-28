@@ -15,6 +15,7 @@ from string import Template
 from tqdm import tqdm
 
 from api import get, get_ids
+from bcolors import bcolors
 import config
 
 
@@ -43,14 +44,9 @@ def get_wall(
     :param v: Версия API.
     """
     # Convert screen name to id
-    if owner_id != None:
+    if owner_id != '':
         owner_id = get_ids([owner_id])[0]
-<<<<<<< HEAD
-=======
     
-    query = f"{config.VK_CONFIG['domain']}/wall.get?access_token={config.VK_CONFIG['access_token']}&owner_id={owner_id}&offset={offset}&count={count}&filter={filter}&extended={extended}&fields={fields}&v={v}"
-    
->>>>>>> parent of 3e0f73a... Release v1.0
     code = f"""
         return API.wall.get({{
         "owner_id": '{owner_id}',
@@ -72,21 +68,18 @@ def get_wall(
                 "v": "5.103"
             }
     )
+    
     if 'error' in response.json():
 
         error_msg = response.json()['error']['error_msg']
+        print(response.json())
         print(f'{bcolors.FAIL}{error_msg}{bcolors.ENDC}')
         raise SystemExit(0)
 
     return pd.DataFrame(response.json()['response']['items'])
 
-<<<<<<< HEAD
 
 def build_model(wall: pd.DataFrame, num_topics: int = 4) -> None:
-
-=======
-def build_model(wall: pd.DataFrame) -> None:
->>>>>>> parent of 3e0f73a... Release v1.0
     # Generate string of russian alphabet including 'ё'
     a = ord('а')
     rus_lowercase = ''.join([chr(i) for i in range(
@@ -123,11 +116,8 @@ def build_model(wall: pd.DataFrame) -> None:
     # Convert texts into the bag-of-words (BoW) format
     # list of (token_id, token_count) tuples.
     corpus = [dictionary.doc2bow(post) for post in posts]
-<<<<<<< HEAD
 
-=======
         
->>>>>>> parent of 3e0f73a... Release v1.0
     lda_model = gensim.models.ldamodel.LdaModel(
         corpus=corpus,
         num_topics=3,
@@ -181,16 +171,9 @@ if __name__ == "__main__":
             if not 'wall' in locals():
                 wall = get_wall(owner_id=owner_id)
             else:
-<<<<<<< HEAD
-                wall = wall.append(
-                    get_wall(owner_id=owner_id), ignore_index=True)
-
-    # Check if user provided VK groups domains
-=======
                 wall.append(get_wall(owner_id=owner_id), ignore_index=True)
     
     # Check if user provided VK groups domains      
->>>>>>> parent of 3e0f73a... Release v1.0
     if args.domain:
 
         domains = args.domain
@@ -200,7 +183,6 @@ if __name__ == "__main__":
             if not 'wall' in locals():
                 wall = get_wall(domain=domain)
             else:
-<<<<<<< HEAD
                 wall = wall.append(get_wall(domain=domain), ignore_index=True)
 
     # Check if user provided CLI arguments
@@ -212,12 +194,3 @@ if __name__ == "__main__":
         build_model(wall, num_topics=args.num_topics)
     else:
         build_model(wall)
-=======
-                wall.append(get_wall(domain=domain), ignore_index=True)
-            
-    build_model(wall)
-    
-    # wall = get_wall(owner_id='danilkaaaaaaaaaaaaaaaaaa', domain='animationdroping')
-    # wall.append(get_wall(owner_id='noize_mc', domain='noizemc'), ignore_index=True)
-    
->>>>>>> parent of 3e0f73a... Release v1.0
