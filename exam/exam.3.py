@@ -75,7 +75,7 @@ class Node():
 
 def astar(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
-    print('called astar')
+
     # Create start and end node
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
@@ -91,6 +91,7 @@ def astar(maze, start, end):
 
     # Loop until you find the end
     while len(open_list) > 0:
+
         # Get the current node
         current_node = open_list[0]
         current_index = 0
@@ -114,21 +115,18 @@ def astar(maze, start, end):
 
         # Generate children
         children = []
+        # for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]: # Adjacent squares
         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: # Adjacent squares
 
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
-            
+
             # Make sure within range
             if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (len(maze[len(maze)-1]) -1) or node_position[1] < 0:
                 continue
 
             # Make sure walkable terrain
             if maze[node_position[0]][node_position[1]] != 0:
-                continue
-            
-            # Make sure the neighbour is not already in the closed list.
-            if Node(current_node, node_position) in closed_list:
                 continue
 
             # Create new node
@@ -139,32 +137,40 @@ def astar(maze, start, end):
 
         # Loop through children
         for child in children:
+
             # Child is on the closed list
+            check = False
             for closed_child in closed_list:
                 if child == closed_child:
-                    break
-            else:
-                # Create the f, g, and h values
-                child.g = current_node.g + 1
-                # H: Manhattan distance to end point
-                child.h = abs(child.position[0] - end_node.position[0]) + abs(child.position[1] - end_node.position[1])
-                child.f = child.g + child.h
+                    check = True
+                    continue
+            if check:
+                continue
 
-                # Child is already in the open list
-                for open_node in open_list:
-                    # check if the new path to children is worst or equal 
-                    # than one already in the open_list (by measuring g)
-                    if child == open_node and child.g >= open_node.g:
-                        break
-                else:
-                    # Add the child to the open list
-                    open_list.append(child)
+            # Create the f, g, and h values
+            child.g = current_node.g + 1
+            child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
+            child.f = child.g + child.h
+
+            # Child is already in the open list
+            check = False
+            for open_node in open_list:
+                if child == open_node and child.g > open_node.g:
+                    check = True
+                    continue
+            if check:
+                continue
+
+            # Add the child to the open list
+            open_list.append(child)
 
 
 # ref https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
 
 def find_closest_house(paths: list) -> list:
     """ From paths to different houses it retuns the shortest"""
+    # Remove None from the list
+    paths = [path for path in paths if path is not None]
     path_lengths = list(map(len, paths))
     index = path_lengths.index(min(path_lengths))
     

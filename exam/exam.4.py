@@ -5,6 +5,9 @@
 
 import random
 from pprint import pprint as pp
+import heapq
+
+health = 10
 
 def generate_grid(dims: int, symbols: list = None) -> list:
     """ Generates 2d grid """
@@ -46,7 +49,7 @@ def render_grid(grid: list) -> None:
     print(border2)
 
 def convert_grid(grid: list) -> list:
-    """ Converts grid to feed to pathfinding algorithm """
+    """ Converts grid to feed it to the pathfinding algorithm """
     dims = len(grid)
     converted_grid = [['' for dim in range(dims)] for dim in range(dims)]
     for y, line in enumerate(grid):
@@ -58,8 +61,10 @@ def convert_grid(grid: list) -> list:
     # print(grid)
     return converted_grid
 
-class Node():
-    """A node class for A* Pathfinding"""
+class Node:
+    """
+    A node class for A* Pathfinding
+    """
 
     def __init__(self, parent=None, position=None):
         self.parent = parent
@@ -71,11 +76,38 @@ class Node():
 
     def __eq__(self, other):
         return self.position == other.position
+    
+    def __repr__(self):
+      return f"{self.position} - g: {self.g} h: {self.h} f: {self.f}"
+
+    # defining less than for purposes of heap queue
+    def __lt__(self, other):
+      return self.f < other.f
+    
+    # defining greater than for purposes of heap queue
+    def __gt__(self, other):
+      return self.f > other.f
+
+def return_path(current_node):
+    path = []
+    current = current_node
+    while current is not None:
+        path.append(current.position)
+        current = current.parent
+    return path[::-1]  # Return reversed path
 
 
-def astar(maze, start, end):
-    """Returns a list of tuples as a path from the given start to the given end in the given maze"""
-    print('called astar')
+def astar(maze, start, end, grid, allow_diagonal_movement = False):
+    """
+    Returns a list of tuples as a path from the given start to the given end in the given maze
+    :param maze:
+    :param start:
+    :param end:
+    :return:
+    """
+    global health
+    health = 10
+
     # Create start and end node
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
@@ -86,39 +118,45 @@ def astar(maze, start, end):
     open_list = []
     closed_list = []
 
-    # Add the start node
-    open_list.append(start_node)
+    # Heapify the open_list and Add the start node
+    heapq.heapify(open_list) 
+    heapq.heappush(open_list, start_node)
+
+    # Adding a stop condition
+    outer_iterations = 0
+    max_iterations = (len(maze[0]) * len(maze) // 2)
+
+    # what squares do we search
+    adjacent_squares = ((0, -1), (0, 1), (-1, 0), (1, 0),)
+    if allow_diagonal_movement:
+        adjacent_squares = ((0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1),)
 
     # Loop until you find the end
     while len(open_list) > 0:
-        # Get the current node
-        current_node = open_list[0]
-        current_index = 0
-        for index, item in enumerate(open_list):
-            if item.f < current_node.f:
-                current_node = item
-                current_index = index
+        outer_iterations += 1
 
-        # Pop current off open list, add to closed list
-        open_list.pop(current_index)
+        if outer_iterations > max_iterations:
+          # if we hit this point return the path such as it is
+          # it will not contain the destination
+          print("giving up on pathfinding too many iterations")
+          return None   
+        
+        # Get the current node
+        current_node = heapq.heappop(open_list)
         closed_list.append(current_node)
 
         # Found the goal
         if current_node == end_node:
-            path = []
-            current = current_node
-            while current is not None:
-                path.append(current.position)
-                current = current.parent
-            return path[::-1] # Return reversed path
+            return return_path(current_node)
 
         # Generate children
         children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: # Adjacent squares
+        
+        for new_position in adjacent_squares: # Adjacent squares
 
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
-            
+
             # Make sure within range
             if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (len(maze[len(maze)-1]) -1) or node_position[1] < 0:
                 continue
@@ -127,10 +165,15 @@ def astar(maze, start, end):
             if maze[node_position[0]][node_position[1]] != 0:
                 continue
             
-            # Make sure the neighbour is not already in the closed list.
-            if Node(current_node, node_position) in closed_list:
-                continue
-
+            # Add monster support 
+            if grid[node_position[0]][node_position[1]] in ['👹', '👾']:
+                if grid[node_position[0]][node_position[1]] == '👾' and (health - 5 > 0):
+                    health -= 5
+                elif grid[node_position[0]][node_position[1]] == '👹' and (health - 10 > 0):
+                    health -= 10
+                else:
+                    continue
+                
             # Create new node
             new_node = Node(current_node, node_position)
 
@@ -140,31 +183,31 @@ def astar(maze, start, end):
         # Loop through children
         for child in children:
             # Child is on the closed list
-            for closed_child in closed_list:
-                if child == closed_child:
-                    break
-            else:
-                # Create the f, g, and h values
-                child.g = current_node.g + 1
-                # H: Manhattan distance to end point
-                child.h = abs(child.position[0] - end_node.position[0]) + abs(child.position[1] - end_node.position[1])
-                child.f = child.g + child.h
+            if len([closed_child for closed_child in closed_list if closed_child == child]) > 0:
+                continue
 
-                # Child is already in the open list
-                for open_node in open_list:
-                    # check if the new path to children is worst or equal 
-                    # than one already in the open_list (by measuring g)
-                    if child == open_node and child.g >= open_node.g:
-                        break
-                else:
-                    # Add the child to the open list
-                    open_list.append(child)
+            # Create the f, g, and h values
+            child.g = current_node.g + 1
+            child.h = ((child.position[0] - end_node.position[0]) ** 2) + ((child.position[1] - end_node.position[1]) ** 2)
+            child.f = child.g + child.h
 
+            # Child is already in the open list
+            if len([open_node for open_node in open_list if child.position == open_node.position and child.g > open_node.g]) > 0:
+                continue
+
+            # Add the child to the open list
+            heapq.heappush(open_list, child)
+
+    print("Couldn't get a path to destination")
+    return None
 
 # ref https://medium.com/@nicholas.w.swift/easy-a-star-pathfinding-7e6689c7f7b2
+# Fixed verison https://gist.github.com/ryancollingwood/32446307e976a11a1185a5394d6657bc
 
 def find_closest_house(paths: list) -> list:
     """ From paths to different houses it retuns the shortest"""
+    # Remove None from the list
+    paths = [path for path in paths if path is not None]
     path_lengths = list(map(len, paths))
     index = path_lengths.index(min(path_lengths))
     
@@ -178,14 +221,13 @@ if __name__ == '__main__':
         grid = generate_grid(5)
         grid = place_hero_in_grid(grid)
         
-        # grid = [['⬛', '👦', '⬛', '🌲', '⬛'], ['⬛', '🏡', '⬛', '🏡', '⬛'], ['⬛', '⬛', '🌲', '⬛', '👹'], ['⬛', '🌲', '🌲', '👹', '⬛'], ['👹', '⬛', '👾', '👾', '⬛']]
         if find_in_grid(grid, '🏡'):
             break
         iteration += 1
 
     render_grid(grid)
-    converted_grid = convert_grid(grid)
-    pp(converted_grid)
+    maze = convert_grid(grid)
+    pp(maze)
     
     # Start point of pathfinding
     start = find_in_grid(grid, '👦')
@@ -197,11 +239,14 @@ if __name__ == '__main__':
             break
         # End point of pathfinding
         end = find_in_grid(grid, '🏡', n)
-        print('start, end points:', start, end)
         n += 1
-        paths.append(astar(converted_grid, start, end))
+        paths.append(astar(maze, start, end, grid))
     
-    print(paths, '\n\n\n')
+    # print(paths, '\n\n\n')
+    
+    # Ensure path is found
     if paths[0]:
         final_path = find_closest_house(paths)
         print(final_path)
+        
+    print('remaining health:', health)
