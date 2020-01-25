@@ -7,11 +7,11 @@ import random
 from pprint import pprint as pp
 import heapq
 
-health = 10
+# health = 10
 
 def generate_grid(dims: int, symbols: list = None) -> list:
     """ Generates 2d grid """
-    if symbols is None: 
+    if symbols is None:
         symbols = ["⬛", "⬛", "⬛", "⬛", "⬛", "⬛", "🌲", "🌲", "🏡", "👹", "👾"]
     
     grid = [[random.choice(symbols) for dim in range(dims)] for dim in range(dims)]
@@ -105,8 +105,8 @@ def astar(maze, start, end, grid, allow_diagonal_movement = False):
     :param end:
     :return:
     """
-    global health
-    health = 10
+    # global health
+    # health = 10
 
     # Create start and end node
     start_node = Node(None, start)
@@ -165,14 +165,14 @@ def astar(maze, start, end, grid, allow_diagonal_movement = False):
             if maze[node_position[0]][node_position[1]] != 0:
                 continue
             
-            # Add monster support 
-            if grid[node_position[0]][node_position[1]] in ['👹', '👾']:
-                if grid[node_position[0]][node_position[1]] == '👾' and (health - 5 > 0):
-                    health -= 5
-                elif grid[node_position[0]][node_position[1]] == '👹' and (health - 10 > 0):
-                    health -= 10
-                else:
-                    continue
+            # # Add monster support 
+            # if grid[node_position[0]][node_position[1]] in ['👹', '👾']:
+            #     if grid[node_position[0]][node_position[1]] == '👾' and (health - 5 > 0):
+            #         health -= 5
+            #     elif grid[node_position[0]][node_position[1]] == '👹' and (health - 10 > 0):
+            #         health -= 10
+            #     else:
+            #         continue
                 
             # Create new node
             new_node = Node(current_node, node_position)
@@ -249,4 +249,4 @@ if __name__ == '__main__':
         final_path = find_closest_house(paths)
         print(final_path)
         
-    print('remaining health:', health)
+    # print('remaining health:', health)
