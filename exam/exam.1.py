@@ -75,7 +75,6 @@ class Node():
 
 def astar(maze, start, end):
     """Returns a list of tuples as a path from the given start to the given end in the given maze"""
-    print('called astar')
     # Create start and end node
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0
@@ -165,6 +164,8 @@ def astar(maze, start, end):
 
 def find_closest_house(paths: list) -> list:
     """ From paths to different houses it retuns the shortest"""
+    # Remove None from the list
+    paths = [path for path in paths if path is not None]
     path_lengths = list(map(len, paths))
     index = path_lengths.index(min(path_lengths))
     
@@ -203,5 +204,6 @@ if __name__ == '__main__':
     
     print(paths, '\n\n\n')
     if paths[0]:
+        print('final path')
         final_path = find_closest_house(paths)
         print(final_path)

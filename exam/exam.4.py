@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
     render_grid(grid)
     maze = convert_grid(grid)
-    pp(maze)
+    # pp(maze)
     
     # Start point of pathfinding
     start = find_in_grid(grid, '👦')
