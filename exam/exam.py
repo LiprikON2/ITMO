@@ -25,7 +25,7 @@ def place_hero_in_grid(grid: list) -> list:
     dims = len(grid)
     x = random.randint(0, dims - 1)
     y = random.randint(0, dims - 1)
-    print('Placed hero at', x,y)
+    # print('Placed hero at', x,y)
     grid[y][x] = '👦'
     return grid
 
@@ -52,56 +52,78 @@ def get_neighbours(grid: list, pos: tuple) -> list:
     dims = len(grid)
     
     col, row = pos
-    neighbours_arr = []
-
-    # -┙ bottom right border
-    if (row + 1 < dims) and (col + 1 < dims):
-        neighbours_arr.append(grid[row + 1][col + 1])
+    neighbours = []
+    
     # *| right border
     if (row + 1 < dims):
-        neighbours_arr.append(grid[row + 1][col])
+        neighbours.append((grid[row + 1][col], (col, row + 1)))
 
-    # ┍- top left border
-    if (row - 1 >= 0) and (col - 1 >= 0):
-        neighbours_arr.append(grid[row - 1][col - 1])
-    # |* left border
-    if (row - 1 >= 0):
-        neighbours_arr.append(grid[row - 1][col])
-
-    # -┐ top right border
-    if (row + 1 < dims) and (col - 1 >= 0):
-        neighbours_arr.append(grid[row + 1][col - 1])
     # ^^ top border
     if (col - 1 >= 0):
-        neighbours_arr.append(grid[row][col - 1])
+        neighbours.append((grid[row][col - 1], (col - 1, row)))
+        
+    # |* left border
+    if (row - 1 >= 0):
+        neighbours.append((grid[row - 1][col], (col, row - 1)))
 
-    # └- bottom left border
-    if (row - 1 >= 0) and (col + 1 < dims):
-        neighbours_arr.append(grid[row - 1][col + 1])
     # __ bottom border
     if (col + 1 < dims):
-        neighbours_arr.append(grid[row][col + 1])
+        neighbours.append((grid[row][col + 1], (col + 1, row)))
 
-    return neighbours_arr
+    return neighbours
+
+def step(grid: list, pos: tuple, steps: list = []):
+    neighbours = get_neighbours(grid, pos)
+    # print('Current steps is', steps)
+    # print('Neighbours', neighbours)
+    
+    # Check if 🏡 in reach
+    for neighbour in neighbours:
+        
+        neighbour_symbol, neighbour_pos = neighbour
+        neighbour_x, neighbour_y = neighbour_pos
+        
+        if neighbour_symbol == '🏡':
+            steps.append(neighbour_pos)
+            print('Path is found')
+            print(steps)
+            return
+    
+    for neighbour in neighbours:
+        
+        neighbour_symbol, neighbour_pos = neighbour
+        neighbour_x, neighbour_y = neighbour_pos
+        
+        if neighbour_symbol in ['👹', '👾', '⬛'] and neighbour_pos not in steps:
+            print('HMMM:',neighbour_pos, 'is not in', steps)
+            steps.append(neighbour_pos)
+            step(grid, neighbour_pos, steps=steps)
+        # elif
 
 
+
+    
 
 if __name__ == '__main__':
     
     # Ensure 🏡 is in generated grid
     iteration = 0
     while iteration < 100:
-        grid = generate_grid(5)
-        grid = place_hero_in_grid(grid)
+        # grid = generate_grid(5)
+        # grid = place_hero_in_grid(grid)
+        
+        grid = [['👾', '⬛', '🌲', '🏡', '⬛'], ['🌲', '⬛', '⬛', '⬛', '⬛'], ['⬛', '👹', '👾', '⬛', '🌲'], ['⬛', '🏡', '🌲', '⬛', '⬛'], ['👦', '⬛', '⬛', '🌲', '⬛']]
         if find_in_grid(grid, '🏡'):
             break
         iteration += 1
-        print('Trying again')
+        # print('Trying again')
         
+    step(grid, pos = find_in_grid(grid, '👦'))
     
-    s = find_in_grid(grid, '👦')
-    b = get_neighbours(grid, s)
-    print(b)
+    
+    # s = find_in_grid(grid, '👦')
+    # b = get_neighbours(grid, s)
+    # pp(b)
     
     
     render_grid(grid)
