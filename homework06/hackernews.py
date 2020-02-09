@@ -17,6 +17,7 @@ def news_list():
 @route("/add_label/")
 def add_label():
     s = session()
+    print(request.query.id, request.query.label)
     
     for news in s.query(News).filter_by(id=request.query.id):
         news.label = request.query.label
@@ -33,7 +34,7 @@ def update_news():
 
 @route("/classify")
 def classify_news():
-    # PUT YOUR CODE HEREsssssssssss
+    # PUT YOUR CODE sss
 
     pass
 
