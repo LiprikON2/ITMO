@@ -24,13 +24,13 @@ def extract_news(parser):
         author = subtext.find('a', {'class': 'hnuser'}).text
 
 
-        upvotes_text = subtext.find('span', {'class': 'score'}).text
         # Extract number from text
+        upvotes_text = subtext.find('span', {'class': 'score'}).text
         upvotes = re.findall(r'\d+', upvotes_text)[0]
         
         
-        comments_text = subtext.findAll('a')[-1].text
         # Extract number of comments from text
+        comments_text = subtext.findAll('a')[-1].text
         comments = re.findall(r'\d+', comments_text)
         if not comments:
             comments = 0
@@ -52,7 +52,7 @@ def extract_news(parser):
 
 def extract_next_page(parser):
     """ Extract next page URL """
-    pass
+    return parser.select('.morelink')[0].get('href')
 
 
 def get_news(url, n_pages=1):
@@ -63,11 +63,11 @@ def get_news(url, n_pages=1):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         news_list = extract_news(soup)
-        # next_page = extract_next_page(soup)
-        # url = "https://news.ycombinator.com/" + next_page
+        next_page = extract_next_page(soup)
+        url = "https://news.ycombinator.com/" + next_page
         news.extend(news_list)
         n_pages -= 1
     return news
 
 if __name__ == '__main__':
-    get_news('https://news.ycombinator.com/newest')
+    pp(get_news('https://news.ycombinator.com/newest', 2))
