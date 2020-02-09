@@ -4,6 +4,8 @@ from urllib.parse import urlsplit
 import re
 from pprint import pprint as pp
 
+import db
+
 def extract_news(parser):
     """ Extract news from a given web page """
     news_list = []
@@ -11,22 +13,33 @@ def extract_news(parser):
     headlines = parser.body.center.table.findAll('table')[1].findAll('tr', {'class': 'athing'})
     for headline in headlines:
         
+        # Extract headline's title
         title = headline.findChild('a', {'class': 'storylink'}).text
+        # Skip deleted headlines
+        if title == '[deleted]':
+            continue
         
         
-        url = headline.findChild('a', {'class': 'storylink'}).get('href')
+        # Extract headline's link and fix internal site links
+        if headline.findChild('a', {'class': 'storylink'}).has_attr('rel'):
+            url = headline.findChild('a', {'class': 'storylink'}).get('href')
+        else:
+            url = "https://news.ycombinator.com/" + headline.findChild('a', {'class': 'storylink'}).get('href')
+            
         domain = "{0.scheme}://{0.netloc}/".format(urlsplit(url))
+
 
         # Subtext contains info about author, number of upvotes and comments
         subtext = headline.find_next_siblings('tr')[0].find('td', {'class': 'subtext'})
 
-        # Extract story's author
+        
+        # Extract headline's author
         author = subtext.find('a', {'class': 'hnuser'}).text
 
 
-        # Extract number from text
+        # Extract number of upvotes from text
         upvotes_text = subtext.find('span', {'class': 'score'}).text
-        upvotes = re.findall(r'\d+', upvotes_text)[0]
+        upvotes = int(re.findall(r'\d+', upvotes_text)[0])
         
         
         # Extract number of comments from text
@@ -35,17 +48,26 @@ def extract_news(parser):
         if not comments:
             comments = 0
         else:
-            comments = comments[0]
-            
-        news = {
-            'title': title,
-            'url': url,
-            'domain': domain,
-            'author': author,
-            'upvotes': upvotes,
-            'comments': comments
-        }
+            comments = int(comments[0])
+           
+        news = db.News(
+            title=title,
+            author=author,
+            url=url,
+            domain=domain,
+            upvotes=upvotes,
+            comments=comments
+        ) 
+        # news = {
+        #     'title': title,
+        #     'author': author,
+        #     'url': url,
+        #     'domain': domain,
+        #     'upvotes': upvotes,
+        #     'comments': comments
+        # }
         news_list.append(news)
+        s.add(news)
 
     return news_list
 
@@ -70,4 +92,12 @@ def get_news(url, n_pages=1):
     return news
 
 if __name__ == '__main__':
-    pp(get_news('https://news.ycombinator.com/newest', 2))
+    s = db.session()
+    
+    news = get_news('https://news.ycombinator.com/newest', 2)
+    
+    # print(news[0])
+    
+    s.commit()
+    
+    

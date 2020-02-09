@@ -1,0 +1,4 @@
+reqs:
+
+sqlalchemy
+bs4
