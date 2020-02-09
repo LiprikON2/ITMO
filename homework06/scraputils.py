@@ -94,9 +94,7 @@ def get_news(url, n_pages=1):
 if __name__ == '__main__':
     s = db.session()
     
-    news = get_news('https://news.ycombinator.com/newest', 2)
-    
-    # print(news[0])
+    news = get_news('https://news.ycombinator.com/newest', 34)
     
     s.commit()
     

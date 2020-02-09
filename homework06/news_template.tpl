@@ -1,30 +1,44 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.12/semantic.min.css"></link>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.3/dist/semantic.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.3/dist/semantic.min.js"></script>
+        <!-- 
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.12/semantic.min.css"></link> 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.12/semantic.min.js"></script>
+        -->
+        <style>
+            body {
+                background: #4079b1;
+            }
+        </style>
+
+        
+
+        
     </head>
     <body>
         <div class="ui container" style="padding-top: 10px;">
-        <table class="ui celled table">
+        <table class="ui celled inverted table">
             <thead>
-                <th>Title</th>
-                <th>Author</th>
-                <th>#Likes</th>
-                <th>#Comments</th>
-                <th colspan="3">Label</th>
+                <th class='center aligned'>Title</th>
+                <th class='center aligned'>Author</th>
+                <th class='center aligned'>Upvotes</th>
+                <th class='center aligned'>Comments</th>
+                <th class='center aligned' colspan="3">Label</th>
             </thead>
             <tbody>
                 %for row in rows:
                 <tr>
                     <td><a href="{{ row.url }}">{{ row.title }}</a></td>
                     <td>{{ row.author }}</td>
-                    <td>{{ row.points }}</td>
-                    <td>{{ row.comments }}</td>
-                    <td class="positive"><a href="/add_label/?label=good&id={{ row.id }}">Интересно</a></td>
-                    <td class="active"><a href="/add_label/?label=maybe&id={{ row.id }}">Возможно</a></td>
-                    <td class="negative"><a href="/add_label/?label=never&id={{ row.id }}">Не интересно</a></td>
+                    <td class='right aligned'>{{ row.upvotes }}</td>
+                    <td class='right aligned'>{{ row.comments }}</td>
+                    <td><a href="/add_label/?label=good&id={{ row.id }}"><em data-emoji=":blue_heart:"></em></a></td>
+                    <td><a href="/add_label/?label=maybe&id={{ row.id }}"><em data-emoji=":thinking:"></a></td>
+                    <td><a href="/add_label/?label=never&id={{ row.id }}"><em data-emoji=":broken_heart:"></em></a></td>
                 </tr>
                 %end
             </tbody>
