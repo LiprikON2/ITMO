@@ -7,16 +7,71 @@ from db import News, session, engine
 from bayes import NaiveBayesClassifier
 import sqlalchemy
 
-@route("/news")
-def news_list():
+
+@route('/all')
+def all_news():
     s = session()
-    all_count = s.query(News).count()
-    rows = s.query(News).filter(News.label == None).all()
-    # Show 'empty template' if no news without a label is found
-    if rows == []:
-        return template('news_template_empty', all_count=all_count)
     
-    return template('news_template', rows=rows, all_count=all_count, unlabeled_count=len(rows))
+    count = count_news(s)
+    
+    rows = s.query(News).all()
+    if rows == []:
+        return template('./templates/news_empty', count=count)
+    
+    return template('./templates/news_all', rows=rows, count=count)
+
+
+@route("/unlabeled")
+def unlabeled_news():
+    s = session()
+    
+    count = count_news(s)
+    
+    rows = s.query(News).filter(News.label == None).all()
+    # Show 'empty template' if no news without a label is foundsssss
+    if rows == []:
+        return template('./templates/news_empty', count=count)
+    
+    return template('./templates/news_unlabeled', rows=rows, count=count)
+
+@route("/upvoted")
+def upvoted_news():
+    s = session()
+    
+    count = count_news(s)
+    
+    rows = s.query(News).filter(News.label == 'upvote').all()
+    # Show 'empty template' if no news without a label is foundsssss
+    if rows == []:
+        return template('./templates/news_empty', count=count)
+    
+    return template('./templates/news_upvoted', rows=rows, count=count)
+
+@route("/maybe")
+def maybe_news():
+    s = session()
+    
+    count = count_news(s)
+    
+    rows = s.query(News).filter(News.label == 'maybe').all()
+    # Show 'empty template' if no news without a label is foundsssss
+    if rows == []:
+        return template('./templates/news_empty', count=count)
+    
+    return template('./templates/news_maybe', rows=rows, count=count)
+
+@route("/downvoted")
+def downvoted_news():
+    s = session()
+    
+    count = count_news(s)
+    
+    rows = s.query(News).filter(News.label == 'downvote').all()
+    # Show 'empty template' if no news without a label is foundssssssss
+    if rows == []:
+        return template('./templates/news_empty', count=count)
+    
+    return template('./templates/news_downvoted', rows=rows, count=count)
 
 
 @route("/add_label/")
@@ -29,7 +84,7 @@ def add_label():
         match[0].label = request.query.label
     s.commit()
     
-    redirect("/news")
+    redirect("/unlabeled")
 
 
 @route("/update")
@@ -48,21 +103,32 @@ def update_news():
         page += 1
         print('proceding to', page)
     s.commit()
-    redirect("/news")
+    redirect("/unlabeled")
     
 @route("/drop")
 def drop_table():
     s = session()
     s.query(News).delete()
     s.commit()
-    redirect("/news")
+    redirect("/unlabeled")
 
 
 @route("/classify")
 def classify_news():
     # PUT YOUR CODE sss
-
     pass
+
+def count_news(s) -> dict:
+    
+    count = {
+        'all': s.query(News).count(),
+        'unlabeled': s.query(News).filter(News.label == None).count(),
+        'upvoted': s.query(News).filter(News.label == 'upvote').count(),
+        'maybe': s.query(News).filter(News.label == 'maybe').count(),
+        'downvoted': s.query(News).filter(News.label == 'downvote').count(),
+    }
+    
+    return count
 
 
 if __name__ == "__main__":
