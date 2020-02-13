@@ -8,6 +8,12 @@
             body {
                 background: #4079b1;
             }
+            a {
+                color: #05d8cf;
+            }
+            a:hover {
+                color: #00b5ad;
+            }
         </style>
     
     </head>
@@ -56,27 +62,32 @@
                 </thead>
                 <tbody>
                     %for row in rows:
-                    <tr class='active1'>
+                    <tr>
                         <td><div><a href="{{ row.url }}">{{ row.title }}</a></div></td>
                         <td><div>{{ row.author }}</td>
                         <td class='right aligned'><div>{{ row.upvotes }}</div></td>
                         <td class='right aligned'><div>{{ row.comments }}</div></td>
                         <td>
-                            <div class="ui buttons">
+                            <div class="fluid ui buttons">
                                 <button 
                                     onclick="window.location.href = '/add_label/?label=upvote&id={{ row.id }}&redirected_from=unlabeled';"
-                                    class="small ui positive button">
-                                    Upvote
+                                    class="ui animated fade medium positive button"
+                                    style="min-width: 5em;">
+                                        <div class="visible content"><i class="arrow up icon"></i></div>
+                                        <div class="hidden content">Upvote</div>
                                 </button>
                                 <button 
                                     onclick="window.location.href = '/add_label/?label=maybe&id={{ row.id }}&redirected_from=unlabeled';" 
-                                    class="small ui button">
-                                    Maybe
+                                    class="ui animated fade medium button">
+                                        <div class="visible content"><i class="meh outline icon"></i></div>
+                                        <div class="hidden content">Maybe</div>
                                 </button>
                                 <button 
                                     onclick="window.location.href = '/add_label/?label=downvote&id={{ row.id }}&redirected_from=unlabeled';" 
-                                    class="small ui negative button">
-                                    Downvote
+                                    class="ui animated fade medium negative button"
+                                    style="min-width: 5em;">
+                                        <div class="visible content"><i class="arrow down icon"></i></div>
+                                        <div class="hidden content">Downvote</div>
                                 </button>
                             </div>
                         </td>

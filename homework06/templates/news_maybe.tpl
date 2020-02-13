@@ -8,6 +8,12 @@
             body {
                 background: #4079b1;
             }
+            a {
+                color: #05d8cf;
+            }
+            a:hover {
+                color: #00b5ad;
+            }
         </style>
     
     </head>
@@ -56,7 +62,7 @@
                 </thead>
                 <tbody>
                     %for row in rows:
-                    <tr class='active1'>
+                    <tr>
                         <td><div><a href="{{ row.url }}">{{ row.title }}</a></div></td>
                         <td><div>{{ row.author }}</td>
                         <td class='right aligned'><div>{{ row.upvotes }}</div></td>

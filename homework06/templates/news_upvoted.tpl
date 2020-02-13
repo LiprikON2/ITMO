@@ -8,6 +8,12 @@
             body {
                 background: #4079b1;
             }
+            a {
+                color: #05d8cf;
+            }
+            a:hover {
+                color: #00b5ad;
+            }
         </style>
     </head>
     <body>
@@ -55,7 +61,7 @@
                 </thead>
                 <tbody>
                     %for row in rows:
-                    <tr class='active1'>
+                    <tr>
                         <td><div><a href="{{ row.url }}">{{ row.title }}</a></div></td>
                         <td><div>{{ row.author }}</div></td>
                         <td class='right aligned'><div>{{ row.upvotes }}</div></td>
@@ -63,8 +69,9 @@
                         <td>
                             <button
                                 onClick="window.location.href = '/remove_label/?id={{ row.id }}&redirected_from=upvoted'"
-                                class="ui small toggle positive button">
-                                Upvoted
+                                class="ui animated fade small toggle positive button">
+                                <div class="visible content">Upvoted</div>
+                                <div class="hidden content"><i class="times icon"></i></div>
                             </button>
                         </td>
                     </tr>

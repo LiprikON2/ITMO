@@ -8,6 +8,12 @@
             body {
                 background: #4079b1;
             }
+            a {
+                color: #05d8cf;
+            }
+            a:hover {
+                color: #00b5ad;
+            }
         </style>
     </head>
     <body>
@@ -45,7 +51,7 @@
         </div>
 
         <div class="ui container" style="padding: 10px 0 20px 0;">
-            <div class="ui horizontally fitted inverted placeholder segment">
+            <div style="background-color: #2b2b2b;" class="ui horizontally fitted inverted placeholder segment">
                 <div class="ui icon header">
                     <i class="search icon"></i>
                     Looks like no more news in here
