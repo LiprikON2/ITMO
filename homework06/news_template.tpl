@@ -35,7 +35,13 @@
         
     </head>
     <body>
-        <div class="ui container" style="padding-top: 10px;">
+        <h2 class="ui header" style="padding-top: 20px;">
+            <i class="plug icon"></i>
+            <div class="content">
+                News count: {{ all_count }}
+            </div>
+        </h2>
+        <div class="ui container" style="padding: 20px 0 20px 0;">
         <table class="ui large celled inverted table">
             <thead>
                 <th class='center aligned'>Title</th>
@@ -87,6 +93,7 @@
             <tfoot class="full-width">
                 <tr>
                     <th colspan="7">
+                        <a href="/drop" class="ui left floated small primary negative button">Drop table</a>
                         <a href="/update" class="ui right floated small primary button">I Wanna 30 more Hacker News!</a>
                     </th>
                 </tr>
