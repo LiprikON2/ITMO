@@ -28,7 +28,18 @@ def add_label():
 
 @route("/update")
 def update_news():
-    # PUT YOUR CODE HERE
+    news_count = 0
+    page = 1
+    s = session()
+    while news_count < 30:
+        news_list = get_news('https://news.ycombinator.com/newest', page)
+        for news in news_list:
+            # Check if news is already in db by its title and author
+            if not s.query(News).filter(News.title == news.title).filter(News.author == news.author).all():
+                s.add(news)
+                news_count += 1
+        page += 1
+    s.commit()
     redirect("/news")
 
 

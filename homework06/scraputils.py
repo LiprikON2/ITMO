@@ -67,7 +67,7 @@ def extract_news(parser):
         #     'comments': comments
         # }
         news_list.append(news)
-        s.add(news)
+        
 
     return news_list
 
@@ -94,8 +94,10 @@ def get_news(url, n_pages=1):
 if __name__ == '__main__':
     s = db.session()
     
-    news = get_news('https://news.ycombinator.com/newest', 3)
-    
+    news_list = get_news('https://news.ycombinator.com/newest', 3)
+    for news in news_list:
+        s.add(news)
+        
     s.commit()
     
     
