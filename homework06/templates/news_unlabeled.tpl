@@ -64,23 +64,17 @@
                         <td>
                             <div class="ui buttons">
                                 <button 
-                                    onclick="
-                                        $('tr:nth-child({{ 1 }})').toggleClass('active1'); 
-                                        window.location.href = '/add_label/?label=upvote&id={{ row.id }}';"
+                                    onclick="window.location.href = '/add_label/?label=upvote&id={{ row.id }}&redirected_from=unlabeled';"
                                     class="small ui positive button">
                                     Upvote
                                 </button>
                                 <button 
-                                    onclick="
-                                        $('tr:nth-child({{ row.id - 1 }})').toggleClass('active1');
-                                        window.location.href = '/add_label/?label=maybe&id={{ row.id }}';" 
+                                    onclick="window.location.href = '/add_label/?label=maybe&id={{ row.id }}&redirected_from=unlabeled';" 
                                     class="small ui button">
                                     Maybe
                                 </button>
                                 <button 
-                                    onclick="
-                                        $('tr:nth-child({{ row.id - 1 }})').toggleClass('active1');
-                                        window.location.href = '/add_label/?label=downvote&id={{ row.id }}';" 
+                                    onclick="window.location.href = '/add_label/?label=downvote&id={{ row.id }}&redirected_from=unlabeled';" 
                                     class="small ui negative button">
                                     Downvote
                                 </button>

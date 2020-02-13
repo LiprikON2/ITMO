@@ -63,7 +63,9 @@
                         <td class='right aligned'><div>{{ row.comments }}</div></td>
                         <td>
                             <div class="ui buttons">
-                                <button class="ui small disabled button">
+                                <button 
+                                    onClick="window.location.href = '/remove_label/?id={{ row.id }}&redirected_from=maybe'"
+                                    class="ui small toggle button">
                                 Maybe'ed
                             </button>
                             </div>

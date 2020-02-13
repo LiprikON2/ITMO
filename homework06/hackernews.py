@@ -1,5 +1,5 @@
 from bottle import (
-    route, run, template, request, redirect
+    route, run, template, request, redirect, TEMPLATES
 )
 
 from scraputils import get_news
@@ -67,7 +67,7 @@ def downvoted_news():
     count = count_news(s)
     
     rows = s.query(News).filter(News.label == 'downvote').all()
-    # Show 'empty template' if no news without a label is foundssssssss
+    # Show 'empty template' if no news without a label is foundssssssssss
     if rows == []:
         return template('./templates/news_empty', count=count)
     
@@ -84,7 +84,34 @@ def add_label():
         match[0].label = request.query.label
     s.commit()
     
-    redirect("/unlabeled")
+    handle_redirect(request.query.redirected_from)
+        
+@route("/remove_label/")
+def remove_label():
+    s = session()
+    
+    # Find News row in db by id
+    match = s.query(News).filter_by(id=request.query.id)
+    if match:
+        match[0].label = None
+    
+    s.commit()
+    
+    handle_redirect(request.query.redirected_from)
+    
+        
+def handle_redirect(redirected_from):
+    # Redirect page back
+    if redirected_from == 'all':
+        redirect("/all")
+    elif redirected_from == 'upvoted':
+        redirect("/upvoted")
+    elif redirected_from == 'maybe':
+        redirect("/maybe")
+    elif redirected_from == 'downvoted':
+        redirect("/downvoted")
+    else:
+        redirect("/unlabeled")
 
 
 @route("/update")

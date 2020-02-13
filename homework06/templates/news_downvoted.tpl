@@ -63,7 +63,9 @@
                         <td class='right aligned'><div>{{ row.comments }}</div></td>
                         <td>
                             <div class="ui buttons">
-                                <button class="ui small disabled negative button">
+                                <button 
+                                    onClick="window.location.href = '/remove_label/?id={{ row.id }}&redirected_from=downvoted'"
+                                    class="ui small toggle negative button">
                                 Downvoted
                             </button>
                             </div>

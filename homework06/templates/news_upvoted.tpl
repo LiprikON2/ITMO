@@ -9,7 +9,6 @@
                 background: #4079b1;
             }
         </style>
-    
     </head>
     <body>
         <div class="ui secondary pointing menu inverted">
@@ -62,7 +61,9 @@
                         <td class='right aligned'><div>{{ row.upvotes }}</div></td>
                         <td class='right aligned'><div>{{ row.comments }}</div></td>
                         <td>
-                            <button class="ui small disabled positive button">
+                            <button
+                                onClick="window.location.href = '/remove_label/?id={{ row.id }}&redirected_from=upvoted'"
+                                class="ui small toggle positive button">
                                 Upvoted
                             </button>
                         </td>
