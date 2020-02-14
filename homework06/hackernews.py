@@ -1,5 +1,5 @@
 from bottle import (
-    route, run, template, request, redirect, TEMPLATES
+    route, run, template, request, redirect, static_file
 )
 
 from scraputils import get_news
@@ -11,7 +11,7 @@ import sqlalchemy
 @route('/all')
 def all_news():
     s = session()
-    
+        
     count = count_news(s)
     
     rows = s.query(News).all()
@@ -28,7 +28,7 @@ def unlabeled_news():
     count = count_news(s)
     
     rows = s.query(News).filter(News.label == None).all()
-    # Show 'empty template' if no news without a label is foundsssss
+    # Show 'empty template' if no news without a label is found
     if rows == []:
         return template('./templates/news_empty', count=count)
     
@@ -131,7 +131,7 @@ def update_news():
         print('proceding to', page)
     s.commit()
     redirect("/unlabeled")
-    
+
 @route("/drop")
 def drop_table():
     s = session()
@@ -156,6 +156,12 @@ def count_news(s) -> dict:
     }
     
     return count
+
+# For improting css and javacript files into templates
+# Ref: https://stackoverflow.com/questions/6978603/how-to-load-a-javascript-or-css-file-into-a-bottlepy-template
+@route('/static/:path#.+#', name='static')
+def static(path):
+    return static_file(path, root='static')
 
 
 if __name__ == "__main__":

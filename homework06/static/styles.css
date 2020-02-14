@@ -1,0 +1,10 @@
+body {
+    background: #4079b1;
+    background-image: url("bg.png")
+}
+a {
+    color: #05d8cf;
+}
+a:hover {
+    color: #00b5ad;
+}
