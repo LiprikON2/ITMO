@@ -71,8 +71,9 @@
                             <div class="ui buttons">
                                 <button 
                                     onClick="window.location.href = '/remove_label/?id={{ row.id }}&redirected_from=downvoted'"
-                                    class="ui small toggle negative button">
-                                Downvoted
+                                    class="ui animated fade small toggle negative button">
+                                    <div class="visible content">Downvoted</div>
+                                    <div class="hidden content"><i class="times icon"></i></div>
                             </button>
                             </div>
                         </td>

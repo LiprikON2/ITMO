@@ -71,8 +71,9 @@
                             <div class="ui buttons">
                                 <button 
                                     onClick="window.location.href = '/remove_label/?id={{ row.id }}&redirected_from=maybe'"
-                                    class="ui small toggle button">
-                                Maybe'ed
+                                    class="ui animated fade small toggle button">
+                                    <div class="visible content">Maybe'ed</div>
+                                    <div class="hidden content"><i class="times icon"></i></div>
                             </button>
                             </div>
                         </td>
