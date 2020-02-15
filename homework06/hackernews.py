@@ -128,7 +128,6 @@ def update_news():
                 s.add(news)
                 news_count += 1
         page += 1
-        print('proceding to', page)
     s.commit()
     redirect("/unlabeled")
 

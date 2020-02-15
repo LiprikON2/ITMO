@@ -21,10 +21,9 @@ def extract_news(parser):
         
         
         # Extract headline's link and 
-        url = headline.findChild('a', {'class': 'storylink'})
-        
+        url = headline.findChild('a', {'class': 'storylink'}).get('href')
         # Fix internal site links
-        if "item?id=" in headline.findChild('a', {'class': 'storylink'}).get('href'):
+        if "item?id=" in url:
             url = "https://news.ycombinator.com/" + url
 
         # Extract a domian from link
