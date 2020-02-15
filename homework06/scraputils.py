@@ -20,12 +20,14 @@ def extract_news(parser):
             continue
         
         
-        # Extract headline's link and fix internal site links
-        if headline.findChild('a', {'class': 'storylink'}).has_attr('rel'):
-            url = headline.findChild('a', {'class': 'storylink'}).get('href')
-        else:
-            url = "https://news.ycombinator.com/" + headline.findChild('a', {'class': 'storylink'}).get('href')
-            
+        # Extract headline's link and 
+        url = headline.findChild('a', {'class': 'storylink'})
+        
+        # Fix internal site links
+        if "item?id=" in headline.findChild('a', {'class': 'storylink'}).get('href'):
+            url = "https://news.ycombinator.com/" + url
+
+        # Extract a domian from link
         domain = "{0.scheme}://{0.netloc}/".format(urlsplit(url))
 
 

@@ -165,5 +165,5 @@ def static(path):
 
 
 if __name__ == "__main__":
-    run(host="localhost", port=8090, reloader=True)
+    run(host="192.168.0.196", port=8090, reloader=True)
 

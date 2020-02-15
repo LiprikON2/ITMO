@@ -22,7 +22,7 @@
                 <tbody>
                     %for row in rows:
                     <tr>
-                        <td><div><a href="{{ row.url }}">{{ row.title }}</a></div></td>
+                        <td><div><img class='favicon' height="16" width="16" src='http://www.google.com/s2/favicons?domain={{ row.domain }}' />&nbsp;<a target="_blank" rel="noopener noreferrer" href="{{ row.url }}">{{ row.title }}</a></div></td>
                         <td><div>{{ row.author }}</td>
                         <td class='right aligned'><div>{{ row.upvotes }}</div></td>
                         <td class='right aligned'><div>{{ row.comments }}</div></td>

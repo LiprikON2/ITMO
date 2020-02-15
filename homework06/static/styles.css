@@ -8,3 +8,8 @@ a {
 a:hover {
     color: #00b5ad;
 }
+.favicon {
+    margin-right: 3px;
+    position: relative;
+    top: 1.5px;
+}
