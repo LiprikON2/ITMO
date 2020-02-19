@@ -78,7 +78,7 @@ def extract_next_page(parser):
     return parser.select('.morelink')[0].get('href')
 
 
-def get_news(url, n_pages=1):
+def get_news(url, n_pages=1, start_page=None):
     """ Collect news from a given web page """
     news = []
     while n_pages:

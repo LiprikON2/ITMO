@@ -9,7 +9,7 @@
         <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.3/dist/semantic.min.css">
         <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.3/dist/semantic.min.js"></script>
         <link rel="stylesheet" href="static/styles.css">
-        <title>Maybe'ed news</title>
+        <title>News - maybe'ed</title>
     </head>
     <body>
         % include('./templates/news_component_header')

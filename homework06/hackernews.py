@@ -8,6 +8,10 @@ from bayes import NaiveBayesClassifier
 import sqlalchemy
 
 
+@route('/')
+def root():
+    handle_redirect(request.query.redirected_from)
+
 @route('/all')
 def all_news():
     s = session()
@@ -99,7 +103,7 @@ def remove_label():
     
     handle_redirect(request.query.redirected_from)
     
-        
+      
 def handle_redirect(redirected_from):
     # Redirect page back
     if redirected_from == 'all':
@@ -116,6 +120,7 @@ def handle_redirect(redirected_from):
 
 @route("/update")
 def update_news():
+    print('Updating news...')
     news_count = 0
     page = 1
     s = session()
@@ -124,7 +129,8 @@ def update_news():
         news_list = get_news('https://news.ycombinator.com/newest', page)
         for news in news_list:
             # Check if news is already in db by its title and author
-            if not s.query(News).filter(News.title == news.title).filter(News.author == news.author).all():
+            if (not s.query(News).filter(News.title == news.title).filter(News.author == news.author).all() and
+                    news_count < 30):
                 s.add(news)
                 news_count += 1
         page += 1
@@ -145,7 +151,10 @@ def classify_news():
     pass
 
 def count_news(s) -> dict:
+    """ Counts news in database
     
+    s: sqlalchemy.session
+    """
     count = {
         'all': s.query(News).count(),
         'unlabeled': s.query(News).filter(News.label == None).count(),
@@ -164,5 +173,6 @@ def static(path):
 
 
 if __name__ == "__main__":
-    run(host="192.168.0.196", port=8090, reloader=True)
+    run(host="localhost", port=8090, reloader=True)
+    # run(host="192.168.0.196", port=8090, reloader=True)
 
