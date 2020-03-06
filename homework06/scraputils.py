@@ -59,14 +59,6 @@ def extract_news(parser):
             upvotes=upvotes,
             comments=comments
         ) 
-        # news = {
-        #     'title': title,
-        #     'author': author,
-        #     'url': url,
-        #     'domain': domain,
-        #     'upvotes': upvotes,
-        #     'comments': comments
-        # }
         news_list.append(news)
         
 
