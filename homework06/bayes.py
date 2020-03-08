@@ -7,7 +7,7 @@ import time
 
 class NaiveBayesClassifier:
 
-    def __init__(self, alpha=1):
+    def __init__(self, alpha=0.05):
         self.alpha = alpha
         self.labels = []
         self.classified_words = [] # list of word_info dicts
@@ -103,7 +103,6 @@ class NaiveBayesClassifier:
                 for word in sanitized_title:
                     word_info = list(filter(lambda word_info: word_info['word'] == word, self.classified_words))
                     
-                    # print(word, 'is in', word_info, 'dict')
                     if word_info:
                         word_info = word_info[0]
                         for prob in word_info['prob_in_class']:
@@ -132,9 +131,9 @@ class NaiveBayesClassifier:
         fail = 0
         predictions = self.predict(X_test)
         
-        for index in enumerate(predictions):
+        for index, _ in enumerate(predictions):
             # Compare predicted label and true label
-            if predictions[index]['title'] == y_test[index]:
+            if predictions[index]['label'] == y_test[index]:
                 success += 1
             else: 
                 fail += 1
@@ -144,7 +143,7 @@ class NaiveBayesClassifier:
 
         t1 = time.time()
         total = t1-t0
-        print('Scored in %.2f' % total, 'seconds')
+        print('Predicted in %.2f' % total, 'seconds')
         print('Result accuracy: %.6f' % accuracy, f'with α={self.alpha}')
 
 # Score on SMS Spam Collection 
@@ -161,3 +160,26 @@ if __name__ == '__main__':
     bayers = NaiveBayesClassifier()
     bayers.fit(texts[:3900], labels[:3900])
     bayers.score(texts[3900:], labels[3900:])
+
+# Score on SMS Spam Collection by sklearn
+# if __name__ == '__main__':
+#     import csv
+#     with open("SMSSpamCollection", encoding="utf8") as f:
+#             data = list(csv.reader(f, delimiter="\t"))
+#     labels = []
+#     texts = []
+#     for pair in data:
+#         label, text = pair
+#         labels.append(label)
+#         texts.append(text)
+#     from sklearn.naive_bayes import MultinomialNB
+#     from sklearn.pipeline import Pipeline
+#     from sklearn.feature_extraction.text import TfidfVectorizer
+
+#     model = Pipeline([
+#         ('vectorizer', TfidfVectorizer()),
+#         ('classifier', MultinomialNB(alpha=0.05)),
+#     ])
+
+#     model.fit(texts[:3900], labels[:3900])
+#     print(model.score(texts[3900:], labels[3900:]))

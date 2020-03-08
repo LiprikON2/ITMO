@@ -120,7 +120,6 @@ def handle_redirect(redirected_from):
 
 @route("/update")
 def update_news():
-    print('Updating news...')
     news_count = 0
     page = 1
     s = session()
@@ -204,10 +203,8 @@ def recommendations():
     
     result_ids = []
     for news in classified_news:
-        if news['prob_sum'] > -20:
-            print(news, 'seems good to me')
+        if news['prob_sum'] > -10:
             result_ids.append(news['id'])
-    print(result_ids)
     
     result_rows = s.query(News).filter(News.id.in_(result_ids)).all()
         
