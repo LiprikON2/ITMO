@@ -9,7 +9,7 @@
         <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.3/dist/semantic.min.css">
         <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.3/dist/semantic.min.js"></script>
         <link rel="stylesheet" href="static/styles.css">
-        <title>News - Unlabeled</title>
+        <title>News - Recommendations</title>
     </head>
     <body>
         % include('./templates/news_component_header')
@@ -21,13 +21,13 @@
                     <th class='center aligned'>Author</th>
                     <th class='center aligned'>Upvotes</th>
                     <th class='center aligned'>Comments</th>
-                    <th class='center aligned' style="width: 20%;">Label</th>
+                    <th class='center aligned' style="width: 6%;">Label</th>
                 </thead>
                 <tbody>
                     %for row in rows:
                     <tr>
                         <td><div><img class='favicon' height="16" width="16" src='http://www.google.com/s2/favicons?domain={{ row.domain }}' />&nbsp;<a target="_blank" rel="noopener noreferrer" href="{{ row.url }}">{{ row.title }}</a></div></td>
-                        <td><div>{{ row.author }}</td>
+                        <td><div>{{ row.author }}</div></td>
                         <td class='right aligned'><div>{{ row.upvotes }}</div></td>
                         <td class='right aligned'><div>{{ row.comments }}</div></td>
                         <td>

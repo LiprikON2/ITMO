@@ -145,10 +145,6 @@ def drop_table():
     redirect("/unlabeled")
 
 
-@route("/classify")
-def classify_news():
-    # PUT YOUR CODE sss
-    pass
 
 def count_news(s) -> dict:
     """ Counts news in database
@@ -165,7 +161,61 @@ def count_news(s) -> dict:
     
     return count
 
-# For improting css and javacript files into templates
+@route("/classify")
+def classify_news(train_titles, train_labels, test_titles):
+    
+    bayers = NaiveBayesClassifier()
+    
+    bayers.fit(train_titles, train_labels)
+    predictions = bayers.predict(test_titles)
+    
+    
+    return predictions
+    # bayers.score(predictions, labels)
+    
+    
+    
+
+@route('/recommendations')
+def recommendations():
+    s = session()
+    
+    count = count_news(s)
+    
+    # Data, used to fit the classificator
+    train_titles = [title[0] for title in s.query(News.title).filter(News.label != None).all()]
+    train_labels = [label[0] for label in s.query(News.label).filter(News.label != None).all()]
+    
+    # Data, label of which to be predicted
+    test = s.query(News).filter(News.label == None).all()
+    
+    test_titles = [row.title for row in test]
+    test_ids = [row.id for row in test]
+    
+    
+    
+    classified_news = classify_news(train_titles, train_labels, test_titles)
+    for index, news in enumerate(classified_news):
+        news.update({'id': test_ids[index]})
+    
+    # Sort by float element in dict (tuple)
+    # ref: https://www.geeksforgeeks.org/python-sort-tuple-float-element/
+    classified_news = sorted(classified_news, key = lambda x: float(x['prob_sum']), reverse = True)
+    
+    result_ids = []
+    for news in classified_news:
+        if news['prob_sum'] > -20:
+            print(news, 'seems good to me')
+            result_ids.append(news['id'])
+    print(result_ids)
+    
+    result_rows = s.query(News).filter(News.id.in_(result_ids)).all()
+        
+    return template('./templates/news_recommendations', rows=result_rows, count=count)
+    
+
+
+# For improting css and javascript files into templates
 # Ref: https://stackoverflow.com/questions/6978603/how-to-load-a-javascript-or-css-file-into-a-bottlepy-template
 @route('/static/:path#.+#', name='static')
 def static(path):
@@ -173,6 +223,6 @@ def static(path):
 
 
 if __name__ == "__main__":
-    run(host="localhost", port=8090, reloader=True)
+    run(host="localhost", port=8095, reloader=True)
     # run(host="192.168.0.196", port=8090, reloader=True)
 

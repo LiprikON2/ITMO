@@ -64,7 +64,9 @@ class NaiveBayesClassifier:
                 for occur in word_info['occur_in_class']:
                     if list(occur.keys())[0] == label:
                         occur_in_class = occur[f'{label}']
-                # Formula: https://i.imgur.com/oaym6LY.png 
+                        
+                # Calculationg probability of a word appearing in class (label)
+                # Formula: https://i.imgur.com/oaym6LY.png
                 prob = log((occur_in_class + self.alpha)/(self.count[f'{label}'] + self.alpha * len(unique_words)))
                 
                 word_info['prob_in_class'].append({
@@ -96,7 +98,7 @@ class NaiveBayesClassifier:
             
             prob_sums = []
             for label in self.labels:
-                prob_sum = log(1 / len(labels))
+                prob_sum = log(1 / len(self.labels))
                 
                 for word in sanitized_title:
                     word_info = list(filter(lambda word_info: word_info['word'] == word, self.classified_words))
@@ -112,7 +114,12 @@ class NaiveBayesClassifier:
             
             
             # ref: https://stackoverflow.com/questions/13145368/find-the-maximum-value-in-a-list-of-tuples-in-python
-            prediction = (title, max(prob_sums,key=itemgetter(1))[0], max(prob_sums,key=itemgetter(1))[1])
+            prediction = {
+                'title': title,
+                'label': max(prob_sums,key=itemgetter(1))[0],
+                'prob_sum': max(prob_sums,key=itemgetter(1))[1],
+            }
+            
             predictions.append(prediction)
         return predictions
             
@@ -125,9 +132,9 @@ class NaiveBayesClassifier:
         fail = 0
         predictions = self.predict(X_test)
         
-        for i in range(len(predictions)):
+        for index in enumerate(predictions):
             # Compare predicted label and true label
-            if predictions[i][1] == y_test[i]:
+            if predictions[index]['title'] == y_test[index]:
                 success += 1
             else: 
                 fail += 1
@@ -138,7 +145,7 @@ class NaiveBayesClassifier:
         t1 = time.time()
         total = t1-t0
         print('Scored in %.2f' % total, 'seconds')
-        print('Result accuracy: %.6f' % accuracy, ' with alpha =', self.alpha)
+        print('Result accuracy: %.6f' % accuracy, f'with α={self.alpha}')
 
 # Score on SMS Spam Collection 
 if __name__ == '__main__':

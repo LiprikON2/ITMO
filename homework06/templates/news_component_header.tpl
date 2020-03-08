@@ -20,6 +20,10 @@
         Downvoted news
         <div class="ui label">{{ count['downvoted'] }}</div>
     </a>
+    <a href="/recommendations" class="item">
+        Recommendations
+        <div class="ui label red">New</div>
+    </a>
 
     <div class="right menu">
         <div class="item">
