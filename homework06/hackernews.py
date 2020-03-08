@@ -203,7 +203,8 @@ def recommendations():
     
     result_ids = []
     for news in classified_news:
-        if news['prob_sum'] > -10:
+        # if news['prob_sum'] > -10:
+        if news['label'] == 'upvote':
             result_ids.append(news['id'])
     
     result_rows = s.query(News).filter(News.id.in_(result_ids)).all()
