@@ -89,6 +89,8 @@ class NaiveBayesClassifier:
 
     def predict(self, X):
         """ Perform classification on an array of test vectors X. """
+        t0 = time.time()
+        
         tokenizer = RegexpTokenizer(r'\w+')
         
         predictions = []
@@ -120,13 +122,16 @@ class NaiveBayesClassifier:
             }
             
             predictions.append(prediction)
+            
+        t1 = time.time()
+        total = t1-t0
+        print('Predicted in %.2f' % total, 'seconds')
         return predictions
             
         
             
     def score(self, X_test, y_test):
         """ Returns the mean accuracy on the given test data and labels. """
-        t0 = time.time()
         success = 0
         fail = 0
         predictions = self.predict(X_test)
@@ -141,9 +146,6 @@ class NaiveBayesClassifier:
         accuracy = success / total
         
 
-        t1 = time.time()
-        total = t1-t0
-        print('Predicted in %.2f' % total, 'seconds')
         print('Result accuracy: %.6f' % accuracy, f'with α={self.alpha}')
 
 # Score on SMS Spam Collection 
