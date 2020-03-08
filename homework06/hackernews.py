@@ -147,9 +147,8 @@ def drop_table():
 
 @route("/classify")
 def classify_news():
-    rows = s.query(News).filter(News.label == 'maybe').all()
-    
-    
+    # PUT YOUR CODE sss
+    pass
 
 def count_news(s) -> dict:
     """ Counts news in database
