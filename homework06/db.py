@@ -20,4 +20,5 @@ class News(Base):
     comments = Column(Integer)
     label = Column(String)
 
+
 Base.metadata.create_all(bind=engine)
