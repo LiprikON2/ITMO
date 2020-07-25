@@ -1,6 +1,8 @@
 import asyncore
 import asynchat
 
+from pprint import pprint as pp
+
 # For HTTP parse
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
@@ -15,6 +17,9 @@ class HTTPRequest(BaseHTTPRequestHandler):
     def send_error(self, code, message):
         self.error_code = code
         self.error_message = message
+    
+    
+    
 
 
 
@@ -24,58 +29,72 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def __init__(self, sock):
         super().__init__(sock)
         self.set_terminator(b"\r\n\r\n")
-        self.requests = []
-        self.headers_parsed = False
+        self.buffer = []
+        self.headers_are_read = False
 
     def collect_incoming_data(self, data):
-        # print(f"Incoming data: {data}")
-        self._collect_incoming_data(data)
-        self.requests.append(data)
+        print(f"Incoming data: {data[:6]}...")
+        # self._collect_incoming_data(data) # ??
+        self.buffer.append(data)
 
     def found_terminator(self):
-        self.parse_request(self.requests[0])
+        self.parse_request(b"".join(self.buffer))
 
     def parse_request(self, raw_request):
         
-        request = raw_request.decode('utf-8')
-        print(request, '\n\n\n')
+        request = HTTPRequest(raw_request)
+        print(f'got {request.command} request')
+        
+        # print('\n\n', request.headers)
+        print('\n\n', raw_request)
+        # self.headers = request.headers
+        # self.rfile = request.rfile
         
         
-        request = request.splitlines()
-        # Break down the request line into components
-        (request_method,  # GET
-         path,            # /hello
-         request_version  # HTTP/1.1
-        ) = request[0].split()
         
-        (_, 
-         host             # IP and port of a host  
-        ) = request[1].split()
-        
-        (_,  
-         connection # Connection (e.g: keep-alive)
-        ) = request[2].split()
-        
-        (_,  
-         max_age # Cache-Control
-        ) = request[3].split()
-        
-        print('printing...')
-        print(f'++{request_method}++{path}++{request_version}++')
-        print(f'++{host}++')
-        print(f'++{connection}++')
-        print(f'++{max_age}++')
+    
 
-        if not self.headers_parsed:
-            self.parse_headers()
-            # if wrong headers 
-            #   bad request 400
-            if request_method == 'POST':
-                if request.find('Content-Length'):
-                    pass
+        if not self.headers_are_read:
+            self.headers_are_read = True
+            if request.error_code == '400':
+                self.send_error(400)
+                self.handle_close()
                 
-    def parse_headers(self):
-        self.headers_parsed = True
+            if request.command == 'POST':
+                if 'Content-Length' in request.headers:
+                    content_length = int(request.headers.get('Content-Length'))
+                    self.set_terminator(content_length)
+                        
+                else:
+                    # self.set_terminator(None)
+                    self.handle_request()
+            else:
+                self.handle_request()
+        else: 
+            # body = parse(request.headers, b"".join(self.buffer))
+            print('test parse:')
+            print(request.headers, '\n\n\n\n\n')
+            print(b"".join(self.buffer), '\n\n\n\n\n')
+            # self.do_POST()
+        
+    def do_POST(self):
+        print('DOING POST ----------->')
+        # extract HTTP message body
+        content_len = int(self.headers.get('Content-Length'))
+        post_body = self.rfile.read(content_len)
+        print(post_body)    
+                    
+        
+    def handle_request(self):
+        print('handling request (??)')
+        # method_name = 'do_' + self.method
+        # if not hasattr(self, method_name):
+        #     self.send_error(405)
+        #     self.handle_close()
+        #     return
+        # handler = getattr(self, method_name)
+        # handler()
+        pass
         
         
 class AsyncHTTPServer(asyncore.dispatcher):
