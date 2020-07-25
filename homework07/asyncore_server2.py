@@ -34,7 +34,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
     def collect_incoming_data(self, data):
         print(f"Incoming data: {data[:6]}...")
-        # self._collect_incoming_data(data) # ??
         self.buffer.append(data)
 
     def found_terminator(self):
@@ -43,13 +42,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def parse_request(self, raw_request):
         
         request = HTTPRequest(raw_request)
-        print(f'got {request.command} request')
-        
-        # print('\n\n', request.headers)
-        print('\n\n', raw_request)
-        # self.headers = request.headers
-        # self.rfile = request.rfile
-        
+           
         
         
     
@@ -70,32 +63,30 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
                     self.handle_request()
             else:
                 self.handle_request()
-        else: 
-            # body = parse(request.headers, b"".join(self.buffer))
-            print('test parse:')
-            print(request.headers, '\n\n\n\n\n')
-            print(b"".join(self.buffer), '\n\n\n\n\n')
-            # self.do_POST()
-        
+        else:
+            content_length = int(request.headers.get('Content-Length'))
+            body = raw_request[len(raw_request)-content_length:]
+            print(body)
+            
+            
     def do_POST(self):
-        print('DOING POST ----------->')
-        # extract HTTP message body
-        content_len = int(self.headers.get('Content-Length'))
-        post_body = self.rfile.read(content_len)
-        print(post_body)    
-                    
+        print('why am i (do_POST) called??')
         
     def handle_request(self):
         print('handling request (??)')
-        # method_name = 'do_' + self.method
-        # if not hasattr(self, method_name):
-        #     self.send_error(405)
-        #     self.handle_close()
-        #     return
-        # handler = getattr(self, method_name)
-        # handler()
+        method_name = 'do_' + self.method
+        if not hasattr(self, method_name):
+            self.send_error(405)
+            self.handle_close()
+            return
+        handler = getattr(self, method_name)
+        handler()
         pass
-        
+
+    def send_error(self, code, message=None):
+        pass
+    
+    def
         
 class AsyncHTTPServer(asyncore.dispatcher):
 
