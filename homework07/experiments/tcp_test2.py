@@ -3,7 +3,7 @@ import socket
 def server(host, port):
     # Create TCP IPv4 internet socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # Make so you don't have to wait for shutdown of socket from previos use
+    # Make so you don't have to wait for shutdown of socket from previous use
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
     # Set host IP and port 
     sock.bind((host, port))
