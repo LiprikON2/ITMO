@@ -114,8 +114,8 @@ class TestAsyncHTTPServer(unittest.TestCase):
         self.assertIn("hello", data)
 
     def test_post_method(self):
-        """Post method forbidden"""
-        r = requests.post(f"{self.host}:{self.port}/dir1/page.html")
+        """Delete method forbidden"""
+        r = requests.delete(f"{self.host}:{self.port}/dir1/page.html")
         self.assertIn(int(r.status_code), (400, 405))
 
     def test_head_method(self):

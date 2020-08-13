@@ -129,8 +129,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
             print(' ++ headers are read')
             # Extract the body of the request
             content_length = int(self.request.headers.get('Content-Length'))
-            body = raw_request[len(raw_request)-content_length:]
-            print(' ++ body detected:', body)
+            self.request.body = raw_request[len(raw_request)-content_length:].decode("utf-8")
             
             self.set_terminator(None) # browsers sometimes over-send
             self.handle_request(self.request.command)
@@ -142,9 +141,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         size = file.tell()
         file.seek(prev_pos)
         return size
-        
-    def do_GET(self):
-        print(' ++ do_GET is called')
+    
+    def handle_url(self):
         
         raw_url = './public' + url_normalize(self.request.path)
         # Parse GET queries
@@ -152,6 +150,13 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
         # Decode spaces
         url = parsed.path.replace('%20', ' ')
+        
+        queries = parse_qs(parsed.query)
+        
+        return (url, queries)
+    
+    def handle_open(self, url):
+        
         
         try:
             # 'rb' (byte stream) for consistent prediction of content length
@@ -183,22 +188,43 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
                 self.send_error(403)
                 self.handle_close()
                 return
+        
+        file_metadata = {
+            'file': f,
+            'size': self.get_size(f),
+            'guessed_type': mimetypes.guess_type(url)[0],
+            'last_modified': os.stat(url)
+        }
+        
+        return file_metadata
+    
+    
+    def do_GET(self):
+        print(' ++ do_GET is called')
                 
         # For some reason in my windows registry mime type
         # of .js is defined as text/plain (???)
         #
-        # print(mimetypes.guess_type('hello.js'))
-        # >>> ('text/plain', None)
+        #   >>> print(mimetypes.guess_type('hello.js'))
+        #   ('text/plain', None)
         
         
-        producer = FileProducer(f)
+        url, queries = self.handle_url()
+        
+        file_metadata = self.handle_open(url)
+        
+        # Abort if file wasn't opened successfully
+        if file_metadata == None:
+            return
+            
+        producer = FileProducer(file_metadata['file'])
         
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
-        # self.send_header('Last-Modified', '?')
-        self.send_header('Content-Length', self.get_size(f))
-        self.send_header('Content-Type', mimetypes.guess_type(url)[0])
+        self.send_header('Last-Modified', file_metadata['last_modified'])
+        self.send_header('Content-Length', file_metadata['size'])
+        self.send_header('Content-Type', file_metadata['guessed_type'])
         self.send_header('Connection', 'close')
         self.end_headers()
         
@@ -214,9 +240,54 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
     def do_HEAD(self):
         print(' ++ do_HEAD is called')
-            
+        
+        url, _ = self.handle_url()
+        
+        file_metadata = self.handle_open(url)
+        
+        # Abort if file wasn't opened successfully
+        if file_metadata == None:
+            return
+
+        
+        self.send_response(200, 'OK')
+        self.send_header('Date', self.date_time_string())
+        self.send_header('Server', 'Asyncore_server')
+        self.send_header('Last-Modified', file_metadata['last_modified'])
+        self.send_header('Content-Length', file_metadata['size'])
+        self.send_header('Content-Type', file_metadata['guessed_type'])
+        self.send_header('Connection', 'close')
+        self.end_headers()
+        
+        self.handle_close()
+        
     def do_POST(self):
         print(' ++ do_POST is called')
+        
+        url, _ = self.handle_url()
+        queries = parse_qs(self.request.body)
+        
+        file_metadata = self.handle_open(url)
+        
+        # Abort if file wasn't opened successfully
+        if file_metadata == None:
+            return
+        
+            
+        producer = FileProducer(file_metadata['file'])
+        
+        self.send_response(200, 'OK')
+        self.send_header('Date', self.date_time_string())
+        self.send_header('Server', 'Asyncore_server')
+        self.send_header('Last-Modified', file_metadata['last_modified'])
+        self.send_header('Content-Length', file_metadata['size'])
+        self.send_header('Content-Type', file_metadata['guessed_type'])
+        self.send_header('Connection', 'close')
+        self.end_headers()
+        
+        self.push_with_producer(producer)
+        self.handle_close()
+        
         
     # Calls do_POST, do_GET... depending on request
     def handle_request(self, method):
