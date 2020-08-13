@@ -12,6 +12,17 @@ from wsgiref.handlers import format_date_time
 from datetime import datetime
 from time import mktime
 
+# For file management
+import os
+
+# For parsing GET queries
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
+
+# For determining mime media types to send in responses
+import mimetypes
+
+
 # Prevents user from going off sandbox
 def url_normalize(path):
     if path.startswith("."):
@@ -43,6 +54,7 @@ class FileProducer(object):
             self.file.close()
             self.file = None
         return ""
+    
 
 # For parsing http headers
 class HTTPRequest(BaseHTTPRequestHandler):
@@ -91,55 +103,109 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         if not self.headers_are_read:
             print(' ++ headers are not read')
             self.headers_are_read = True
-            request = HTTPRequest(raw_request)
+            self.request = HTTPRequest(raw_request)
             
             # Mainly error 400
-            if request.error_code:
-                self.send_error(request.error_code, request.error_message)
+            if self.request.error_code:
+                self.send_error(self.request.error_code, self.request.error_message)
                 self.handle_close()
                 
-            if request.command == 'POST':
+            if self.request.command == 'POST':
                 print('  ++ command == POST')
                 # Read additional bytes of the request, that amounts to length of the content (body)
-                if 'Content-Length' in request.headers:
-                    content_length = int(request.headers.get('Content-Length'))
+                if 'Content-Length' in self.request.headers:
+                    content_length = int(self.request.headers.get('Content-Length'))
                     self.set_terminator(content_length)
                         
                 else:
                     self.set_terminator(None) # browsers sometimes over-send
-                    self.handle_request(request.command)
+                    self.handle_request(self.request.command)
             else:
                 print('  ++ command is not POST')
                 
                 self.set_terminator(None) # browsers sometimes over-send
-                self.handle_request(request.command)
+                self.handle_request(self.request.command)
         else:
             print(' ++ headers are read')
             # Extract the body of the request
-            content_length = int(request.headers.get('Content-Length'))
+            content_length = int(self.request.headers.get('Content-Length'))
             body = raw_request[len(raw_request)-content_length:]
             print(' ++ body detected:', body)
             
             self.set_terminator(None) # browsers sometimes over-send
-            self.handle_request(request.command)
-            
+            self.handle_request(self.request.command)
+    
+    def get_size(self, file):
+        """ Returns size of the opened file in bytes """
+        prev_pos = file.tell()
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(prev_pos)
+        return size
+        
     def do_GET(self):
         print(' ++ do_GET is called')
         
-        body = '<html><body><h1>well hello there</h1></body></html>'.encode("utf-8")
+        raw_url = './public' + url_normalize(self.request.path)
+        # Parse GET queries
+        parsed = urlparse.urlparse(raw_url)
+        
+        # Decode spaces
+        url = parsed.path.replace('%20', ' ')
+        
+        try:
+            # 'rb' (byte stream) for consistent prediction of content length
+            f = open(url, 'rb')
+            
+        except FileNotFoundError:
+            print(' ++ sent error 404 (not found) ')
+            
+            self.send_error(404)
+            self.handle_close()
+            return
+        
+        # Correct attempt to open directory as file
+        except PermissionError:
+            print(' ++ permission error. attempting something... ')
+            index_file_found = False
+            for index_file in ['index.html', 'index.htm', 'page.html', 'page.htm']:
+                index_path = url + index_file
+                if os.path.exists(index_path):
+                    url = index_path
+                    
+                    f = open(url, 'rb')
+                    index_file_found = True
+                    print('  ++ success')
+                    break
+                
+            if not index_file_found:
+                print('  ++ fail')
+                self.send_error(403)
+                self.handle_close()
+                return
+                
+        # For some reason in my windows registry mime type
+        # of .js is defined as text/plain (???)
+        #
+        # print(mimetypes.guess_type('hello.js'))
+        # >>> ('text/plain', None)
+        
+        
+        producer = FileProducer(f)
         
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
         # self.send_header('Last-Modified', '?')
-        self.send_header('Content-Length', len(body))
-        self.send_header('Content-Type', 'text/html')
+        self.send_header('Content-Length', self.get_size(f))
+        self.send_header('Content-Type', mimetypes.guess_type(url)[0])
         self.send_header('Connection', 'close')
         self.end_headers()
         
-        self.push(body)
+        self.push_with_producer(producer)
+        self.handle_close()
         
-        
+    
     
     def date_time_string(self):
         now = datetime.now()
@@ -148,18 +214,16 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
     def do_HEAD(self):
         print(' ++ do_HEAD is called')
-        self.send_header('Server', 'nigga-bitch')
             
     def do_POST(self):
         print(' ++ do_POST is called')
-        self.send_header('Server', 'nigga-bitch')
         
     # Calls do_POST, do_GET... depending on request
     def handle_request(self, method):
         print('\n\n++ handling request (??)')
         method_name = 'do_' + method
         if not hasattr(self, method_name):
-            print(' ++ sent 405 error (not allowed method)')
+            print(' ++ sent error 405 (not allowed method)')
             self.send_error(405)
             self.handle_close()
             return
@@ -186,6 +250,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.push(body)
+        self.handle_close()
     
     
     def send_header(self, keyword, value):
