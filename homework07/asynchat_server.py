@@ -1,7 +1,9 @@
 import asyncore
 import asynchat
+import multiprocessing
 
-from pprint import pprint as pp
+import logging
+import argparse
 
 # For HTTP request parse
 from http.server import BaseHTTPRequestHandler
@@ -78,16 +80,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.received_data = []
         self.headers_are_read = False
         
-        self.responses = {
-        200: ('OK', 'Request fulfilled, document follows'),
-        400: ('Bad Request',
-            'Bad request syntax or unsupported method'),
-        403: ('Forbidden',
-            'Request forbidden -- authorization will not help'),
-        404: ('Not Found', 'Nothing matches the given URI'),
-        405: ('Method Not Allowed',
-            'Specified method is invalid for this resource.'),
-    }
 
     def collect_incoming_data(self, data):
         # print(f"Incoming data: {data[:6]}...")
@@ -189,6 +181,12 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
                 self.handle_close()
                 return
         
+        # For some reason in my windows registry mime type
+        # of .js extension is defined as text/plain
+        #
+        #   >>> print(mimetypes.guess_type('hello.js'))
+        #   ('text/plain', None)
+        
         file_metadata = {
             'file': f,
             'size': self.get_size(f),
@@ -202,11 +200,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def do_GET(self):
         print(' ++ do_GET is called')
                 
-        # For some reason in my windows registry mime type
-        # of .js is defined as text/plain (???)
-        #
-        #   >>> print(mimetypes.guess_type('hello.js'))
-        #   ('text/plain', None)
+        
         
         
         url, queries = self.handle_url()
@@ -218,6 +212,13 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
             return
             
         producer = FileProducer(file_metadata['file'])
+        
+        # 1. HOW TO CLOSE THE FILE WITHOUT CRASHING PRODUCER (?)
+        # 2. PRINT IN CHAT LINK TO THE SERVER
+        
+        
+        # file_metadata['file'].close()
+        
         
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
@@ -275,6 +276,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
             
         producer = FileProducer(file_metadata['file'])
+        
+
         
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
@@ -339,6 +342,17 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
     def handle_close(self):
         self.close_when_done()
+        
+    responses = {
+        200: ('OK', 'Request fulfilled, document follows'),
+        400: ('Bad Request',
+            'Bad request syntax or unsupported method'),
+        403: ('Forbidden',
+            'Request forbidden -- authorization will not help'),
+        404: ('Not Found', 'Nothing matches the given URI'),
+        405: ('Method Not Allowed',
+            'Specified method is invalid for this resource.'),
+    }
     
 class AsyncHTTPServer(asyncore.dispatcher):
 
@@ -346,7 +360,7 @@ class AsyncHTTPServer(asyncore.dispatcher):
         super().__init__()
         self.create_socket()
         
-        # Make so you don't have to wait for shutdown of socket from previous use
+        # Make so you don't have to wait for shutdown of a socket from previous use
         self.set_reuse_addr()
         # Set host IP and port 
         self.bind((host, port))
@@ -366,3 +380,36 @@ try:
     asyncore.loop(timeout=0.5)
 except KeyboardInterrupt:
     print("Crtl+C pressed. Shutting down.")
+    
+    
+# def parse_args():
+#     parser = argparse.ArgumentParser("Simple asynchronous web-server")
+#     parser.add_argument("--host", dest="host", default="127.0.0.1")
+#     parser.add_argument("--port", dest="port", type=int, default=9000)
+#     parser.add_argument("--log", dest="loglevel", default="info")
+#     parser.add_argument("--logfile", dest="logfile", default=None)
+#     parser.add_argument("-w", dest="nworkers", type=int, default=1)
+#     parser.add_argument("-r", dest="document_root", default=".")
+#     return parser.parse_args()
+
+# def run():
+#     # server = AsyncServer(host=args.host, port=args.port)
+#     # server.serve_forever()
+    
+#     server = AsyncHTTPServer()
+#     asyncore.loop(timeout=0.5)
+
+
+# if __name__ == "__main__":
+#     args = parse_args()
+
+#     logging.basicConfig(
+#         filename=args.logfile,
+#         level=getattr(logging, args.loglevel.upper()),
+#         format="%(name)s: %(process)d %(message)s")
+#     log = logging.getLogger(__name__)
+
+#     DOCUMENT_ROOT = args.document_root
+#     for _ in range(args.nworkers):
+#         p = multiprocessing.Process(target=run)
+#         p.start()
