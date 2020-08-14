@@ -24,6 +24,9 @@ from urllib.parse import parse_qs
 # For determining mime media types to send in responses
 import mimetypes
 
+# For coloring console text
+from bcolors import bcolors
+
 
 # Prevents user from going off sandbox
 def url_normalize(path):
@@ -183,8 +186,9 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
         # For some reason in my windows registry mime type
         # of .js extension is defined as text/plain
-        #
-        #   >>> print(mimetypes.guess_type('hello.js'))
+        #   
+        #   >>> import mimetypes
+        #   >>> mimetypes.guess_type('hello.js')
         #   ('text/plain', None)
         
         file_metadata = {
@@ -200,9 +204,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def do_GET(self):
         print(' ++ do_GET is called')
                 
-        
-        
-        
         url, queries = self.handle_url()
         
         file_metadata = self.handle_open(url)
@@ -212,12 +213,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
             return
             
         producer = FileProducer(file_metadata['file'])
-        
-        # 1. HOW TO CLOSE THE FILE WITHOUT CRASHING PRODUCER (?)
-        # 2. PRINT IN CHAT LINK TO THE SERVER
-        
-        
-        # file_metadata['file'].close()
         
         
         self.send_response(200, 'OK')
@@ -366,50 +361,59 @@ class AsyncHTTPServer(asyncore.dispatcher):
         self.bind((host, port))
         # Listen for N clients at a time
         self.listen(5)
+        if host == "":
+            link = f'{bcolors.OKBLUE}http://localhost:{port}{bcolors.ENDC}'
+        else: 
+            link = f'{bcolors.OKBLUE}http://{host}:{port}{bcolors.ENDC}'
+        print(f'Asynchat server online at {link}')
 
     def handle_accepted(self, sock, addr):
         print(f"Incoming connection from {addr}")
         AsyncHTTPRequestHandler(sock)
 
-    # def handle_close(self)
-    #     self.close()
+    def handle_close(self):
+        self.close()
 
-
-server = AsyncHTTPServer()
-try:
-    asyncore.loop(timeout=0.5)
-except KeyboardInterrupt:
-    print("Crtl+C pressed. Shutting down.")
     
+def parse_args():
+    parser = argparse.ArgumentParser("Simple asynchronous web-server")
+    parser.add_argument("--host", dest="host", default="")
+    parser.add_argument("--port", dest="port", type=int, default=8181)
+    parser.add_argument("--log", dest="loglevel", default="info")
+    parser.add_argument("--logfile", dest="logfile", default=None)
+    parser.add_argument("-w", dest="nworkers", type=int, default=1)
+    parser.add_argument("-r", dest="document_root", default=".")
+    return parser.parse_args()
+
+def run(args):
+    # server = AsyncServer(host=args.host, port=args.port)
+    # server.serve_forever()
     
-# def parse_args():
-#     parser = argparse.ArgumentParser("Simple asynchronous web-server")
-#     parser.add_argument("--host", dest="host", default="127.0.0.1")
-#     parser.add_argument("--port", dest="port", type=int, default=9000)
-#     parser.add_argument("--log", dest="loglevel", default="info")
-#     parser.add_argument("--logfile", dest="logfile", default=None)
-#     parser.add_argument("-w", dest="nworkers", type=int, default=1)
-#     parser.add_argument("-r", dest="document_root", default=".")
-#     return parser.parse_args()
+    server = AsyncHTTPServer(host=args.host, port=args.port)
+    try:
+        asyncore.loop(timeout=0.5)
+    except KeyboardInterrupt:
+        server.handle_close()
 
-# def run():
-#     # server = AsyncServer(host=args.host, port=args.port)
-#     # server.serve_forever()
+
+
+if __name__ == "__main__":
     
-#     server = AsyncHTTPServer()
-#     asyncore.loop(timeout=0.5)
+    args = parse_args()
 
+    logging.basicConfig(
+        filename=args.logfile,
+        level=getattr(logging, args.loglevel.upper()),
+        format="%(name)s: %(process)d %(message)s")
+    log = logging.getLogger(__name__)
 
-# if __name__ == "__main__":
-#     args = parse_args()
-
-#     logging.basicConfig(
-#         filename=args.logfile,
-#         level=getattr(logging, args.loglevel.upper()),
-#         format="%(name)s: %(process)d %(message)s")
-#     log = logging.getLogger(__name__)
-
-#     DOCUMENT_ROOT = args.document_root
-#     for _ in range(args.nworkers):
-#         p = multiprocessing.Process(target=run)
-#         p.start()
+    DOCUMENT_ROOT = args.document_root
+    for _ in range(args.nworkers):
+        
+        try:
+            p = multiprocessing.Process(target=run, args=(args,))
+            p.start()
+            p.join()
+        except KeyboardInterrupt:
+            print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
+        
