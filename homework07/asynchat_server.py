@@ -28,7 +28,7 @@ import mimetypes
 from bcolors import bcolors
 
 
-# Prevents user from going off sandbox
+# Prevents user from leaving sandbox
 def url_normalize(path):
     if path.startswith("."):
         path = "/" + path
@@ -59,7 +59,7 @@ class FileProducer(object):
             self.file.close()
             self.file = None
         return ""
-    
+
 
 # For parsing http headers
 class HTTPRequest(BaseHTTPRequestHandler):
@@ -72,63 +72,62 @@ class HTTPRequest(BaseHTTPRequestHandler):
     def send_error(self, code, message):
         self.error_code = code
         self.error_message = message
-    
+
 
 class AsyncHTTPRequestHandler(asynchat.async_chat):
     """ Обработчик клиентских запросов """
 
     def __init__(self, sock):
         super().__init__(sock)
+
+        self.log = logging.getLogger(__name__)
+
         self.set_terminator(b"\r\n\r\n")
         self.received_data = []
         self.headers_are_read = False
-        
 
     def collect_incoming_data(self, data):
-        # print(f"Incoming data: {data[:6]}...")
         self.received_data.append(data)
 
     def found_terminator(self):
         self.parse_request(b"".join(self.received_data))
 
     def parse_request(self, raw_request):
-        
-           
-        print('\n\n++ checking headers')
+        self.log.info('Parsing request')
+
         if not self.headers_are_read:
-            print(' ++ headers are not read')
             self.headers_are_read = True
             self.request = HTTPRequest(raw_request)
-            
+
             # Mainly error 400
             if self.request.error_code:
-                self.send_error(self.request.error_code, self.request.error_message)
-                self.handle_close()
-                
+                self.log.info(f'Sent error {self.request.error_code}')
+                self.send_error(self.request.error_code,
+                                self.request.error_message)
+
             if self.request.command == 'POST':
-                print('  ++ command == POST')
                 # Read additional bytes of the request, that amounts to length of the content (body)
                 if 'Content-Length' in self.request.headers:
-                    content_length = int(self.request.headers.get('Content-Length'))
+                    content_length = int(
+                        self.request.headers.get('Content-Length'))
                     self.set_terminator(content_length)
-                        
+
                 else:
-                    self.set_terminator(None) # browsers sometimes over-send
+                    self.set_terminator(None)  # browsers sometimes over-send
                     self.handle_request(self.request.command)
             else:
-                print('  ++ command is not POST')
-                
-                self.set_terminator(None) # browsers sometimes over-send
+                self.set_terminator(None)  # browsers sometimes over-send
                 self.handle_request(self.request.command)
         else:
-            print(' ++ headers are read')
+            self.log.info('POST body detected. Extracting...')
             # Extract the body of the request
             content_length = int(self.request.headers.get('Content-Length'))
-            self.request.body = raw_request[len(raw_request)-content_length:].decode("utf-8")
-            
-            self.set_terminator(None) # browsers sometimes over-send
+            self.request.body = raw_request[len(
+                raw_request)-content_length:].decode("utf-8")
+
+            self.set_terminator(None)  # browsers sometimes over-send
             self.handle_request(self.request.command)
-    
+
     def get_size(self, file):
         """ Returns size of the opened file in bytes """
         prev_pos = file.tell()
@@ -136,85 +135,81 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         size = file.tell()
         file.seek(prev_pos)
         return size
-    
+
     def handle_url(self):
-        
-        raw_url = './public' + url_normalize(self.request.path)
+
+        # Provided in args. Default is './public'
+        raw_url = DOCUMENT_ROOT + url_normalize(self.request.path)
         # Parse GET queries
         parsed = urlparse.urlparse(raw_url)
-        
+
         # Decode spaces
         url = parsed.path.replace('%20', ' ')
-        
+
         queries = parse_qs(parsed.query)
-        
+
         return (url, queries)
-    
+
     def handle_open(self, url):
-        
-        
+
         try:
             # 'rb' (byte stream) for consistent prediction of content length
             f = open(url, 'rb')
-            
+
         except FileNotFoundError:
-            print(' ++ sent error 404 (not found) ')
-            
+            self.log.info('Sent error 404')
+
             self.send_error(404)
-            self.handle_close()
             return
-        
+
         # Correct attempt to open directory as file
         except PermissionError:
-            print(' ++ permission error. attempting something... ')
+            self.log.info('Attempting to find directory index file...')
             index_file_found = False
             for index_file in ['index.html', 'index.htm', 'page.html', 'page.htm']:
                 index_path = url + index_file
                 if os.path.exists(index_path):
                     url = index_path
-                    
+
                     f = open(url, 'rb')
                     index_file_found = True
-                    print('  ++ success')
+                    self.log.info('...success')
                     break
-                
+
             if not index_file_found:
-                print('  ++ fail')
+                self.log.info('...fail. Sent error 403')
                 self.send_error(403)
-                self.handle_close()
                 return
-        
+
         # For some reason in my windows registry mime type
         # of .js extension is defined as text/plain
-        #   
+        #
         #   >>> import mimetypes
         #   >>> mimetypes.guess_type('hello.js')
         #   ('text/plain', None)
-        
+
         file_metadata = {
             'file': f,
             'size': self.get_size(f),
             'guessed_type': mimetypes.guess_type(url)[0],
             'last_modified': os.stat(url)
         }
-        
+
         return file_metadata
-    
-    
+
     def do_GET(self):
-        print(' ++ do_GET is called')
-                
+        self.log.info('Processing GET request')
+
         url, queries = self.handle_url()
-        
+
         file_metadata = self.handle_open(url)
-        
+
         # Abort if file wasn't opened successfully
         if file_metadata == None:
             return
-            
+
         producer = FileProducer(file_metadata['file'])
-        
-        
+
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
@@ -222,30 +217,27 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_header('Content-Length', file_metadata['size'])
         self.send_header('Content-Type', file_metadata['guessed_type'])
         self.send_header('Connection', 'close')
+
         self.end_headers()
-        
         self.push_with_producer(producer)
         self.handle_close()
-        
-    
-    
+
     def date_time_string(self):
         now = datetime.now()
         stamp = mktime(now.timetuple())
         return format_date_time(stamp)
-        
+
     def do_HEAD(self):
-        print(' ++ do_HEAD is called')
-        
+        self.log.info('Processing HEAD request')
+
         url, _ = self.handle_url()
-        
+
         file_metadata = self.handle_open(url)
-        
+
         # Abort if file wasn't opened successfully
         if file_metadata == None:
             return
 
-        
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
@@ -253,27 +245,26 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_header('Content-Length', file_metadata['size'])
         self.send_header('Content-Type', file_metadata['guessed_type'])
         self.send_header('Connection', 'close')
+
         self.end_headers()
-        
         self.handle_close()
-        
+
     def do_POST(self):
-        print(' ++ do_POST is called')
-        
+        self.log.info('Processing POST request')
+
         url, _ = self.handle_url()
-        queries = parse_qs(self.request.body)
-        
+        # Check for empty POST request
+        if hasattr(self.request, 'body'):
+            queries = parse_qs(self.request.body)
+
         file_metadata = self.handle_open(url)
-        
+
         # Abort if file wasn't opened successfully
         if file_metadata == None:
             return
-        
-            
-        producer = FileProducer(file_metadata['file'])
-        
 
-        
+        producer = FileProducer(file_metadata['file'])
+
         self.send_response(200, 'OK')
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
@@ -281,26 +272,22 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_header('Content-Length', file_metadata['size'])
         self.send_header('Content-Type', file_metadata['guessed_type'])
         self.send_header('Connection', 'close')
+
         self.end_headers()
-        
         self.push_with_producer(producer)
         self.handle_close()
-        
-        
+
     # Calls do_POST, do_GET... depending on request
     def handle_request(self, method):
-        print('\n\n++ handling request (??)')
+        self.log.info('Handling request')
         method_name = 'do_' + method
         if not hasattr(self, method_name):
-            print(' ++ sent error 405 (not allowed method)')
+            self.log.info('Sent error 405')
             self.send_error(405)
-            self.handle_close()
             return
         handler = getattr(self, method_name)
         handler()
 
-
-    
     def send_error(self, code, message=None):
         try:
             short_msg, long_msg = self.responses[code]
@@ -309,62 +296,60 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         if message is None:
             message = short_msg
 
-        body = f'<html><body><h1>{code}</h1> <h3>{message}</h3></body></html>'.encode("utf-8")
-        
+        body = f'<html><body><h1>{code}</h1> <h3>{message}</h3></body></html>'.encode(
+            "utf-8")
+
         self.send_response(code, message)
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
         self.send_header('Content-Length', len(body))
         self.send_header("Connection", "close")
         self.send_header("Content-Type", "text/html")
+        self.send_header('Connection', 'close')
+
         self.end_headers()
         self.push(body)
         self.handle_close()
-    
-    
-    def send_header(self, keyword, value):
-        print('  ++ send_header is called')
-        self.push(f'{keyword}: {value}\r\n'.encode("utf-8"))
-        self.handle_close()
-    
-    def end_headers(self):
-        print('  ++ end_headers is called')
-        self.push(f'\r\n'.encode("utf-8"))
-    
+
     def send_response(self, code, message=None):
-        print('  ++ send_response is called')
         self.push(f'HTTP/1.1 {code} {message}\r\n'.encode("utf-8"))
-        
-    def handle_close(self):
-        self.close_when_done()
-        
+
+    def send_header(self, keyword, value):
+        self.push(f'{keyword}: {value}\r\n'.encode("utf-8"))
+
+    def end_headers(self):
+        self.push(f'\r\n'.encode("utf-8"))
+
     responses = {
         200: ('OK', 'Request fulfilled, document follows'),
         400: ('Bad Request',
-            'Bad request syntax or unsupported method'),
+              'Bad request syntax or unsupported method'),
         403: ('Forbidden',
-            'Request forbidden -- authorization will not help'),
+              'Request forbidden -- authorization will not help'),
         404: ('Not Found', 'Nothing matches the given URI'),
         405: ('Method Not Allowed',
-            'Specified method is invalid for this resource.'),
+              'Specified method is invalid for this resource.'),
     }
-    
+
+
 class AsyncHTTPServer(asyncore.dispatcher):
 
     def __init__(self, host="", port=8181):
         super().__init__()
         self.create_socket()
-        
+
         # Make so you don't have to wait for shutdown of a socket from previous use
         self.set_reuse_addr()
-        # Set host IP and port 
+        # Set host IP and port
         self.bind((host, port))
         # Listen for N clients at a time
         self.listen(5)
+        
         if host == "":
             link = f'{bcolors.OKBLUE}http://localhost:{port}{bcolors.ENDC}'
-        else: 
+        else:
             link = f'{bcolors.OKBLUE}http://{host}:{port}{bcolors.ENDC}'
+            
         print(f'Asynchat server online at {link}')
 
     def handle_accepted(self, sock, addr):
@@ -374,21 +359,30 @@ class AsyncHTTPServer(asyncore.dispatcher):
     def handle_close(self):
         self.close()
 
-    
+
 def parse_args():
+
     parser = argparse.ArgumentParser("Simple asynchronous web-server")
     parser.add_argument("--host", dest="host", default="")
     parser.add_argument("--port", dest="port", type=int, default=8181)
     parser.add_argument("--log", dest="loglevel", default="info")
     parser.add_argument("--logfile", dest="logfile", default=None)
     parser.add_argument("-w", dest="nworkers", type=int, default=1)
-    parser.add_argument("-r", dest="document_root", default=".")
+    parser.add_argument("-r", dest="document_root", default="./public")
+
     return parser.parse_args()
 
+
 def run(args):
-    # server = AsyncServer(host=args.host, port=args.port)
-    # server.serve_forever()
-    
+
+    logging.basicConfig(
+        filename=args.logfile,
+        level=getattr(logging, args.loglevel.upper()),
+        format="%(name)s: %(process)d %(message)s")
+
+    global DOCUMENT_ROOT
+    DOCUMENT_ROOT = args.document_root
+
     server = AsyncHTTPServer(host=args.host, port=args.port)
     try:
         asyncore.loop(timeout=0.5)
@@ -396,24 +390,15 @@ def run(args):
         server.handle_close()
 
 
-
 if __name__ == "__main__":
-    
+
     args = parse_args()
 
-    logging.basicConfig(
-        filename=args.logfile,
-        level=getattr(logging, args.loglevel.upper()),
-        format="%(name)s: %(process)d %(message)s")
-    log = logging.getLogger(__name__)
-
-    DOCUMENT_ROOT = args.document_root
     for _ in range(args.nworkers):
-        
+
         try:
             p = multiprocessing.Process(target=run, args=(args,))
             p.start()
             p.join()
         except KeyboardInterrupt:
             print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
-        
