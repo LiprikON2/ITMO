@@ -344,13 +344,16 @@ class AsyncHTTPServer(asyncore.dispatcher):
         self.bind((host, port))
         # Listen for N clients at a time
         self.listen(5)
+
+        if __name__ == "__main__":
+            link = self.get_link(host, port)
+            print(f'Asynchat server online at {link}')
         
+    def get_link(self, host, port):
         if host == "":
-            link = f'{bcolors.OKBLUE}http://localhost:{port}{bcolors.ENDC}'
+            return f'{bcolors.OKBLUE}http://localhost:{port}{bcolors.ENDC}'
         else:
-            link = f'{bcolors.OKBLUE}http://{host}:{port}{bcolors.ENDC}'
-            
-        print(f'Asynchat server online at {link}')
+            return f'{bcolors.OKBLUE}http://{host}:{port}{bcolors.ENDC}'
 
     def handle_accepted(self, sock, addr):
         print(f"Incoming connection from {addr}")
@@ -358,6 +361,9 @@ class AsyncHTTPServer(asyncore.dispatcher):
 
     def handle_close(self):
         self.close()
+        
+    def serve_forever(self, timeout=0.5):
+        asyncore.loop(timeout=timeout)
 
 
 def parse_args():
@@ -385,7 +391,7 @@ def run(args):
 
     server = AsyncHTTPServer(host=args.host, port=args.port)
     try:
-        asyncore.loop(timeout=0.5)
+        server.serve_forever()
     except KeyboardInterrupt:
         server.handle_close()
 
