@@ -79,11 +79,11 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
     def __init__(self, sock, host=None, port=None):
         super().__init__(sock)
-        
+
         self.server_title = 'Asyncore_server'
         self.host = host
         self.port = port
-        
+
         self.log = logging.getLogger(__name__)
 
         self.set_terminator(b"\r\n\r\n")
@@ -146,8 +146,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         # TEMPORARY (?)
         # raw_url = DOCUMENT_ROOT + url_normalize(self.request.path)
         raw_url = './public' + url_normalize(self.request.path)
-        
-        
+
         # Parse GET queries
         parsed = urlparse.urlparse(raw_url)
 
@@ -219,7 +218,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         producer = FileProducer(file_metadata['file'])
 
         self.send_response(200, 'OK')
-        self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
+        self.send_head(file_metadata['last_modified'],
+                       file_metadata['size'], file_metadata['guessed_type'])
 
         self.push_with_producer(producer)
         self.handle_close()
@@ -241,9 +241,9 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
             return
 
         self.send_response(200, 'OK')
-        self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
+        self.send_head(file_metadata['last_modified'],
+                       file_metadata['size'], file_metadata['guessed_type'])
 
-        
         self.handle_close()
 
     def do_POST(self):
@@ -263,7 +263,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         producer = FileProducer(file_metadata['file'])
 
         self.send_response(200, 'OK')
-        self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
+        self.send_head(file_metadata['last_modified'],
+                       file_metadata['size'], file_metadata['guessed_type'])
 
         self.push_with_producer(producer)
         self.handle_close()
@@ -306,7 +307,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
     def send_header(self, keyword, value):
         self.push(f'{keyword}: {value}\r\n'.encode("utf-8"))
-        
+
     def send_head(self, last_modified, content_length, content_type):
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', self.server_title)
@@ -318,8 +319,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
     def end_headers(self):
         self.push(f'\r\n'.encode("utf-8"))
-    
-    # Waits for file producer before closing connection    
+
+    # Waits for file producer before closing connection
     # Without this only part of the image will be sent
     def handle_close(self):
         self.close_when_done()
@@ -340,7 +341,7 @@ class AsyncHTTPServer(asyncore.dispatcher):
 
     def __init__(self, host="", port=8181, request_handler=AsyncHTTPRequestHandler):
         super().__init__()
-        
+
         self.create_socket()
         # Make so you don't have to wait for shutdown of a socket from previous use
         self.set_reuse_addr()
@@ -348,13 +349,12 @@ class AsyncHTTPServer(asyncore.dispatcher):
         self.bind((host, port))
         # Listen for N clients at a time
         self.listen(5)
-        
+
         self.request_handler = request_handler
 
-        
         link = self.get_link(host, port)
         print(f'Asynchat server online at {link}')
-        
+
     def get_link(self, host, port):
         if host == "":
             return f'{bcolors.OKBLUE}http://localhost:{port}{bcolors.ENDC}'
@@ -367,7 +367,7 @@ class AsyncHTTPServer(asyncore.dispatcher):
 
     def handle_close(self):
         self.close()
-        
+
     def serve_forever(self, timeout=0.5):
         asyncore.loop(timeout=timeout)
 
@@ -405,7 +405,7 @@ def run(args):
 if __name__ == "__main__":
 
     args = parse_args()
-    
+
     for _ in range(args.nworkers):
 
         try:

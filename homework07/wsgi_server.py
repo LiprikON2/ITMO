@@ -7,7 +7,7 @@ from asynchat_server import AsyncHTTPServer, AsyncHTTPRequestHandler
 
 
 class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
-    
+
     def __init__(self, sock, host, port):
         super().__init__(sock, host=host, port=port)
         self.headers_set = []
@@ -46,63 +46,65 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
 
         # Hardcoded name of class instance (?)
         self.application = httpd.get_app()
-        
-        # Call application callable and get back a
-        # result that will become HTTP response body
+
+        # Call application callable and get back a result that will become HTTP response body
         result = self.application(env, self.start_response)
 
         # Construct a response and send it back to the client
         self.finish_response(result)
 
     def finish_response(self, result):
-        
+
         [body] = result
         code, message = self.headers_set[0].split(' ')
-        
+
         self.send_response(code, message=message)
         for header in self.headers_set[1]:
             keyword, value = header
             self.send_header(keyword, value)
         self.end_headers()
         self.push(body)
-        
+
         self.close()
-    
-    
+
+
 class AsyncWSGIServer(AsyncHTTPServer):
 
     def __init__(self, host='', port=8181, request_handler=AsyncWSGIRequestHandler):
         super().__init__(host=host, port=port, request_handler=request_handler)
         # # Return headers set by Web framework/Web application
         # self.headers_set = []
-        
+
     def set_app(self, application):
         self.application = application
 
     def get_app(self):
         return self.application
-    
+
+
 def make_server(application, host='', port=8181):
     server = AsyncWSGIServer(host=host, port=port)
     server.set_app(application)
-    
+
     return server
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        sys.exit('Provide a WSGI application object as module:callable (application file : name of its function)')
+        sys.exit(
+            'Provide a WSGI application object as module:callable (application file : name of its function)')
     app_path = sys.argv[1]
     module, application = app_path.split(':')
     module = __import__(module)
     application = getattr(module, application)  # wsgi_application.application
-    
+
     # httpd - HTTP Daemon
-    httpd = make_server(application, host='', port=8181)  
+    httpd = make_server(application, host='', port=8181)
     httpd.serve_forever()
-    
 
 
 # TODO
 # - implement multiprocessing (call run)
 # - Catch CTRL + C
+# - Fix hardcoded name
+# - Fix DOCUMENT_ROOT
