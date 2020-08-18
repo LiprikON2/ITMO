@@ -77,9 +77,13 @@ class HTTPRequest(BaseHTTPRequestHandler):
 class AsyncHTTPRequestHandler(asynchat.async_chat):
     """ Обработчик клиентских запросов """
 
-    def __init__(self, sock):
+    def __init__(self, sock, host=None, port=None):
         super().__init__(sock)
-
+        
+        self.server_title = 'Asyncore_server'
+        self.host = host
+        self.port = port
+        
         self.log = logging.getLogger(__name__)
 
         self.set_terminator(b"\r\n\r\n")
@@ -114,10 +118,10 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
                 else:
                     self.set_terminator(None)  # browsers sometimes over-send
-                    self.handle_request(self.request.command)
+                    self.handle_request()
             else:
                 self.set_terminator(None)  # browsers sometimes over-send
-                self.handle_request(self.request.command)
+                self.handle_request()
         else:
             self.log.info('POST body detected. Extracting...')
             # Extract the body of the request
@@ -126,7 +130,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
                 raw_request)-content_length:].decode("utf-8")
 
             self.set_terminator(None)  # browsers sometimes over-send
-            self.handle_request(self.request.command)
+            self.handle_request()
 
     def get_size(self, file):
         """ Returns size of the opened file in bytes """
@@ -139,7 +143,11 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def handle_url(self):
 
         # Provided in args. Default is './public'
-        raw_url = DOCUMENT_ROOT + url_normalize(self.request.path)
+        # TEMPORARY (?)
+        # raw_url = DOCUMENT_ROOT + url_normalize(self.request.path)
+        raw_url = './public' + url_normalize(self.request.path)
+        
+        
         # Parse GET queries
         parsed = urlparse.urlparse(raw_url)
 
@@ -213,7 +221,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_response(200, 'OK')
         self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
 
-        self.end_headers()
         self.push_with_producer(producer)
         self.handle_close()
 
@@ -236,7 +243,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_response(200, 'OK')
         self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
 
-        self.end_headers()
+        
         self.handle_close()
 
     def do_POST(self):
@@ -258,14 +265,13 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_response(200, 'OK')
         self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
 
-        self.end_headers()
         self.push_with_producer(producer)
         self.handle_close()
 
     # Calls do_POST, do_GET... depending on request
-    def handle_request(self, method):
+    def handle_request(self):
         self.log.info('Handling request')
-        method_name = 'do_' + method
+        method_name = 'do_' + self.request.command
         if not hasattr(self, method_name):
             self.log.info('Sent error 405')
             self.send_error(405)
@@ -286,7 +292,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
         self.send_response(code, message)
         self.send_header('Date', self.date_time_string())
-        self.send_header('Server', 'Asyncore_server')
+        self.send_header('Server', self.server_title)
         self.send_header('Content-Length', len(body))
         self.send_header("Content-Type", "text/html")
         self.send_header('Connection', 'close')
@@ -303,14 +309,20 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         
     def send_head(self, last_modified, content_length, content_type):
         self.send_header('Date', self.date_time_string())
-        self.send_header('Server', 'Asyncore_server')
+        self.send_header('Server', self.server_title)
         self.send_header('Last-Modified', last_modified)
         self.send_header('Content-Length', content_length)
         self.send_header('Content-Type', content_type)
         self.send_header('Connection', 'close')
+        self.end_headers()
 
     def end_headers(self):
         self.push(f'\r\n'.encode("utf-8"))
+    
+    # Waits for file producer before closing connection    
+    # Without this only part of the image will be sent
+    def handle_close(self):
+        self.close_when_done()
 
     responses = {
         200: ('OK', 'Request fulfilled, document follows'),
@@ -326,21 +338,22 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
 class AsyncHTTPServer(asyncore.dispatcher):
 
-    def __init__(self, host="", port=8181):
+    def __init__(self, host="", port=8181, request_handler=AsyncHTTPRequestHandler):
         super().__init__()
+        
         self.create_socket()
-
         # Make so you don't have to wait for shutdown of a socket from previous use
         self.set_reuse_addr()
         # Set host IP and port
         self.bind((host, port))
         # Listen for N clients at a time
         self.listen(5)
+        
+        self.request_handler = request_handler
 
         
-        if __name__ == "__mp_main__":
-            link = self.get_link(host, port)
-            print(f'Asynchat server online at {link}')
+        link = self.get_link(host, port)
+        print(f'Asynchat server online at {link}')
         
     def get_link(self, host, port):
         if host == "":
@@ -350,7 +363,7 @@ class AsyncHTTPServer(asyncore.dispatcher):
 
     def handle_accepted(self, sock, addr):
         print(f"Incoming connection from {addr}")
-        AsyncHTTPRequestHandler(sock)
+        self.request_handler(sock, host=addr[0], port=addr[1])
 
     def handle_close(self):
         self.close()
