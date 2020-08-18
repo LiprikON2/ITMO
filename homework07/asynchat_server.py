@@ -211,12 +211,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         producer = FileProducer(file_metadata['file'])
 
         self.send_response(200, 'OK')
-        self.send_header('Date', self.date_time_string())
-        self.send_header('Server', 'Asyncore_server')
-        self.send_header('Last-Modified', file_metadata['last_modified'])
-        self.send_header('Content-Length', file_metadata['size'])
-        self.send_header('Content-Type', file_metadata['guessed_type'])
-        self.send_header('Connection', 'close')
+        self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
 
         self.end_headers()
         self.push_with_producer(producer)
@@ -239,12 +234,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
             return
 
         self.send_response(200, 'OK')
-        self.send_header('Date', self.date_time_string())
-        self.send_header('Server', 'Asyncore_server')
-        self.send_header('Last-Modified', file_metadata['last_modified'])
-        self.send_header('Content-Length', file_metadata['size'])
-        self.send_header('Content-Type', file_metadata['guessed_type'])
-        self.send_header('Connection', 'close')
+        self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
 
         self.end_headers()
         self.handle_close()
@@ -266,12 +256,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         producer = FileProducer(file_metadata['file'])
 
         self.send_response(200, 'OK')
-        self.send_header('Date', self.date_time_string())
-        self.send_header('Server', 'Asyncore_server')
-        self.send_header('Last-Modified', file_metadata['last_modified'])
-        self.send_header('Content-Length', file_metadata['size'])
-        self.send_header('Content-Type', file_metadata['guessed_type'])
-        self.send_header('Connection', 'close')
+        self.send_head(file_metadata['last_modified'], file_metadata['size'], file_metadata['guessed_type'])
 
         self.end_headers()
         self.push_with_producer(producer)
@@ -303,7 +288,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.send_header('Date', self.date_time_string())
         self.send_header('Server', 'Asyncore_server')
         self.send_header('Content-Length', len(body))
-        self.send_header("Connection", "close")
         self.send_header("Content-Type", "text/html")
         self.send_header('Connection', 'close')
 
@@ -316,6 +300,14 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
     def send_header(self, keyword, value):
         self.push(f'{keyword}: {value}\r\n'.encode("utf-8"))
+        
+    def send_head(self, last_modified, content_length, content_type):
+        self.send_header('Date', self.date_time_string())
+        self.send_header('Server', 'Asyncore_server')
+        self.send_header('Last-Modified', last_modified)
+        self.send_header('Content-Length', content_length)
+        self.send_header('Content-Type', content_type)
+        self.send_header('Connection', 'close')
 
     def end_headers(self):
         self.push(f'\r\n'.encode("utf-8"))
@@ -345,7 +337,8 @@ class AsyncHTTPServer(asyncore.dispatcher):
         # Listen for N clients at a time
         self.listen(5)
 
-        if __name__ == "__main__":
+        
+        if __name__ == "__mp_main__":
             link = self.get_link(host, port)
             print(f'Asynchat server online at {link}')
         
@@ -399,7 +392,7 @@ def run(args):
 if __name__ == "__main__":
 
     args = parse_args()
-
+    
     for _ in range(args.nworkers):
 
         try:
