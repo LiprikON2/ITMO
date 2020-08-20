@@ -103,7 +103,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         if not self.headers_are_read:
             self.headers_are_read = True
             self.request = HTTPRequest(raw_request)
-
+            self.request.body = b''
+            
             # Mainly error 400
             if self.request.error_code:
                 self.log.info(f'Sent error {self.request.error_code}')
@@ -128,7 +129,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
             # Extract the body of the request
             content_length = int(self.request.headers.get('Content-Length'))
             self.request.body = raw_request[len(
-                raw_request)-content_length:].decode("utf-8")
+                raw_request)-content_length:]
 
             self.set_terminator(None)  # browsers sometimes over-send
             self.handle_request()
@@ -253,8 +254,6 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         # Check for empty POST request
         if hasattr(self.request, 'body'):
             self.query_string = self.request.body
-        else:
-            self.query_string = ''
 
         file_metadata = self.handle_open(self.url)
 
@@ -274,7 +273,13 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     # Calls do_POST, do_GET... depending on request
     def handle_request(self):
         self.log.info('Handling request')
-        method_name = 'do_' + self.request.command
+        if self.request.command:
+            method_name = 'do_' + self.request.command
+        else:
+            self.log.info('Sent error 400')
+            self.send_error(400)
+            return
+        
         if not hasattr(self, method_name):
             self.log.info('Sent error 405')
             self.send_error(405)

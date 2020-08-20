@@ -33,7 +33,24 @@ python wsgi_server.py wsgi_app:application
 python wsgi_server.py wsgi_app:application -w 50 --log CRITICAL
 ```
 
+
 ## Tests
+
+### Curl
+
+```
+curl -v localhost:8181
+```
+
+```
+curl -v -X HEAD localhost:8181 
+```
+
+```
+curl -v -X POST -d "param1=value1&param2=value2" localhost:8181 
+```
+
+
 
 ### Functionality testing
 1. Launch server on localhost:8181

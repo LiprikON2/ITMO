@@ -3,6 +3,7 @@ import multiprocessing
 import logging
 import argparse
 import sys
+import io
 
 # WSGI server inherits from asynchat_server.py classes
 from asynchat_server import AsyncHTTPServer, AsyncHTTPRequestHandler
@@ -26,19 +27,19 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         # Required WSGI variables
         env['wsgi.version']      = (1, 0)
         env['wsgi.url_scheme']   = 'http'
-        env['wsgi.input']        = sys.stdin.buffer  #io.StringIO(self.request_data)
+        env['wsgi.input']        = io.BytesIO(self.request.body)
         env['wsgi.errors']       = sys.stderr
         env['wsgi.multithread']  = False
-        env['wsgi.multiprocess'] = False
+        env['wsgi.multiprocess'] = True
         env['wsgi.run_once']     = False
         # Required CGI variables
         env['REQUEST_METHOD']    = self.request.command   # GET
-        env['PATH_INFO']         = self.url               # /hello
+        env['PATH_INFO']         = self.request.path      # /hello
         env['SERVER_NAME']       = self.host              # localhost
         env['SERVER_PORT']       = str(self.port)         # 8888
         
         env['QUERY_STRING']      = self.query_string
-        env['SCRIPT_NAME']       = './'
+        env['SCRIPT_NAME']       = ''
         return env
 
     def start_response(self, status, response_headers, exc_info=None):
@@ -61,23 +62,25 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         self.application = httpd.get_app()
 
         # Call application callable and get back a result that will become HTTP response body
-        result = self.application(env, self.start_response)
+        response_body = self.application(env, self.start_response)
 
         # Construct a response and send it back to the client
-        self.finish_response(result)
+        self.finish_response(response_body)
 
-    def finish_response(self, result):
+    def finish_response(self, response_body):
         self.log.info(f'Finishing response')
 
-        [body] = result
-        code, message = self.headers_set[0].split(' ')
+        merged_body = b''.join(x for x in response_body)
+        
+        code = int(self.headers_set[0][:3])
+        message = self.headers_set[0][4:]
 
         self.send_response(code, message=message)
         for header in self.headers_set[1]:
             keyword, value = header
             self.send_header(keyword, value)
         self.end_headers()
-        self.push(body)
+        self.push(merged_body)
 
         self.handle_close()
 
@@ -131,8 +134,8 @@ def run(args):
     application = getattr(module, application)
 
     global httpd
-    httpd = make_server(application, host='', port=8181,
-                        document_root='./public')
+    httpd = make_server(application, host=args.host, port=args.port,
+                        document_root=args.document_root)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
