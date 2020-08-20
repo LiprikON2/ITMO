@@ -20,7 +20,6 @@ import os
 
 # For parsing GET queries
 import urllib.parse as urlparse
-from urllib.parse import parse_qs
 
 # For determining mime media types to send in responses
 import mimetypes
@@ -153,9 +152,10 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         # Decode spaces
         url = parsed.path.replace('%20', ' ')
 
-        queries = parse_qs(parsed.query)
+        query_string = parsed.query
+        
 
-        return (url, queries)
+        return (url, query_string)
 
     def handle_open(self, url):
 
@@ -207,9 +207,9 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def do_GET(self):
         self.log.info('Processing GET request')
 
-        url, queries = self.handle_url()
+        self.url, self.query_string = self.handle_url()
 
-        file_metadata = self.handle_open(url)
+        file_metadata = self.handle_open(self.url)
 
         # Abort if file wasn't opened successfully
         if file_metadata == None:
@@ -232,9 +232,9 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def do_HEAD(self):
         self.log.info('Processing HEAD request')
 
-        url, _ = self.handle_url()
+        self.url, self.query_string = self.handle_url()
 
-        file_metadata = self.handle_open(url)
+        file_metadata = self.handle_open(self.url)
 
         # Abort if file wasn't opened successfully
         if file_metadata == None:
@@ -249,12 +249,14 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def do_POST(self):
         self.log.info('Processing POST request')
 
-        url, _ = self.handle_url()
+        self.url, _ = self.handle_url()
         # Check for empty POST request
         if hasattr(self.request, 'body'):
-            queries = parse_qs(self.request.body)
+            self.query_string = self.request.body
+        else:
+            self.query_string = ''
 
-        file_metadata = self.handle_open(url)
+        file_metadata = self.handle_open(self.url)
 
         # Abort if file wasn't opened successfully
         if file_metadata == None:

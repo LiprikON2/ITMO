@@ -33,9 +33,12 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         env['wsgi.run_once']     = False
         # Required CGI variables
         env['REQUEST_METHOD']    = self.request.command   # GET
-        env['PATH_INFO']         = self.request.path      # /hello
+        env['PATH_INFO']         = self.url               # /hello
         env['SERVER_NAME']       = self.host              # localhost
         env['SERVER_PORT']       = str(self.port)         # 8888
+        
+        env['QUERY_STRING']      = self.query_string
+        env['SCRIPT_NAME']       = './'
         return env
 
     def start_response(self, status, response_headers, exc_info=None):
@@ -49,6 +52,8 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
     def handle_request(self):
         self.log.info(f'Handling request')
 
+        self.url, self.query_string = self.handle_url()
+        
         # Construct environment dictionary using request data
         env = self.get_environ()
 
