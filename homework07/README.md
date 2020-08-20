@@ -6,7 +6,7 @@ python asynchat_server.py
 ```
 
 ```
-python asynchat_server.py -w --log critical
+python asynchat_server.py -w 50 --log critical
 ```
 ### Optional arguments:
 `-h, --help`
