@@ -80,10 +80,9 @@ curl -v -X POST -d "param1=value1&param2=value2" localhost:8181
 
 
 ### Stress testing
-1. Install locust
-```
-pip install locust
-```
+1. Install locust:
+> `pip install locust`
+
 3. Launch server:
 ```
 python asynchat_server.py -w 50 --log critical
