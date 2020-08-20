@@ -7,17 +7,17 @@ python asynchat_server.py
 ### Optional arguments:
 `-h, --help`
 
-`--host HOST` (default '')
+`--host HOST` (default is localhost)
 
-`--port PORT` (default 8181)
+`--port PORT` (default is 8181)
 
-`--log LOGLEVEL` (default INFO)
+`--log LOGLEVEL` (default is INFO)
 
-`--logfile LOGFILE` (default None)
+`--logfile LOGFILE` (default is None)
 
-`-w NWORKERS` (default 1)
+`-w NWORKERS` (default is 1)
 
-`-r DOCUMENT_ROOT` (default './public)
+`-r DOCUMENT_ROOT` (default is './public')
 
 ## WSGI server
 
