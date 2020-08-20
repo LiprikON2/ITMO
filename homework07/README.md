@@ -4,26 +4,33 @@
 ```
 python asynchat_server.py
 ```
+
+```
+python asynchat_server.py -w --log critical
+```
 ### Optional arguments:
 `-h, --help`
 
-`--host HOST` (default is localhost)
+`--host HOST` (default '')
 
-`--port PORT` (default is 8181)
+`--port PORT` (default 8181)
 
-`--log LOGLEVEL` (default is INFO)
+`--log LOGLEVEL` (default INFO)
 
-`--logfile LOGFILE` (default is None)
+`--logfile LOGFILE` (default None)
 
-`-w NWORKERS` (default is 1)
+`-w NWORKERS` (default 1)
 
-`-r DOCUMENT_ROOT` (default is './public')
+`-r DOCUMENT_ROOT` (default './public)
 
 ## WSGI server
 
 ### Running
 ```
 python wsgi_server.py wsgi_app:application
+```
+```
+python wsgi_server.py wsgi_app:application -w 50 --log CRITICAL
 ```
 
 ## Tests
@@ -36,5 +43,8 @@ python wsgi_server.py wsgi_app:application
 ### Stress testing
 1. Install locust
 2. Launch server
-3. Run `python locust.py`
-4. Go to locust GUI: [localhost:8089](http://localhost:8089/)
+3. Run 
+```
+locust -f locustfile.py --host=http://localhost:8181/
+```
+5. Go to locust GUI: [localhost:8089](http://localhost:8089/)

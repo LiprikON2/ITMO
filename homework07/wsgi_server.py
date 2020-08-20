@@ -1,9 +1,11 @@
-import sys
-import logging
+import multiprocessing
 
+import logging
+import argparse
+import sys
 
 # WSGI server inherits from asynchat_server.py classes
-from asynchat_server import AsyncHTTPServer, AsyncHTTPRequestHandler, run
+from asynchat_server import AsyncHTTPServer, AsyncHTTPRequestHandler
 
 # For coloring console text
 from bcolors import bcolors
@@ -92,26 +94,56 @@ def make_server(application, host, port, document_root):
     return server
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        sys.exit(
-            'Provide a WSGI application object as module:callable (application file : name of its function)')
-    app_path = sys.argv[1]
-    module, application = app_path.split(':')
-    module = __import__(module)
-    application = getattr(module, application)  # wsgi_app.application
+def parse_args():
+
+    parser = argparse.ArgumentParser("Simple asynchronous WSGI web-server")
+    parser.add_argument(
+        'wsgi_obj', help='WSGI application object - module:callable')
+    parser.add_argument("--host", dest="host", default="",
+                        help='Default is localhost')
+    parser.add_argument("--port", dest="port", type=int,
+                        default=8181, help='Default is 8181')
+    parser.add_argument("--log", dest="loglevel",
+                        default="info", help='e.g. CRITICAL, INFO')
+    parser.add_argument("--logfile", dest="logfile", default=None)
+    parser.add_argument("-w", dest="nworkers", type=int,
+                        default=1, help='Number of workers (processes)')
+    parser.add_argument("-r", dest="document_root", default="./public")
+
+    return parser.parse_args()
+
+
+def run(args):
 
     logging.basicConfig(
-        filename=None,
-        level=getattr(logging, 'INFO'),
+        filename=args.logfile,
+        level=getattr(logging, args.loglevel.upper()),
         format="%(name)s: %(process)d %(message)s")
 
-    # httpd - HTTP Daemon
+    module, application = args.wsgi_obj.split(':')
+
+    module = __import__(module)
+    application = getattr(module, application)
+
+    global httpd
     httpd = make_server(application, host='', port=8181,
                         document_root='./public')
-
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
         httpd.handle_close()
+
+
+if __name__ == "__main__":
+
+    args = parse_args()
+
+    for _ in range(args.nworkers):
+
+        try:
+            p = multiprocessing.Process(target=run, args=(args,))
+            p.start()
+            p.join()
+        except KeyboardInterrupt:
+            print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
+            sys.exit(0)

@@ -217,7 +217,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
         producer = FileProducer(file_metadata['file'])
 
-        self.send_response(200, 'OK')
+        self.send_response(200)
         self.send_head(file_metadata['last_modified'],
                        file_metadata['size'], file_metadata['guessed_type'])
 
@@ -240,7 +240,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         if file_metadata == None:
             return
 
-        self.send_response(200, 'OK')
+        self.send_response(200)
         self.send_head(file_metadata['last_modified'],
                        file_metadata['size'], file_metadata['guessed_type'])
 
@@ -262,7 +262,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
         producer = FileProducer(file_metadata['file'])
 
-        self.send_response(200, 'OK')
+        self.send_response(200)
         self.send_head(file_metadata['last_modified'],
                        file_metadata['size'], file_metadata['guessed_type'])
 
@@ -288,8 +288,17 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         if message is None:
             message = short_msg
 
-        body = f'<html><body><br><br><br><br><center><h1>{code}</h1> <h3>{message}</h3></center></body></html>'.encode(
-            "utf-8")
+        body = f"""
+            <html>
+                <body>
+                    <br><br><br><br>
+                    <center>
+                        <h1>{code}</h1>
+                        <h3>{message}</h3>
+                    </center>
+                </body>
+            </html>
+        """.encode("utf-8")
 
         self.send_response(code, message)
         self.send_header('Date', self.date_time_string())
@@ -303,6 +312,13 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         self.handle_close()
 
     def send_response(self, code, message=None):
+        try:
+            short_msg, long_msg = self.responses[code]
+        except KeyError:
+            short_msg, long_msg = '???', '???'
+        if message is None:
+            message = short_msg
+
         self.push(f'HTTP/1.1 {code} {message}\r\n'.encode("utf-8"))
 
     def send_header(self, keyword, value):
@@ -320,8 +336,8 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def end_headers(self):
         self.push(f'\r\n'.encode("utf-8"))
 
-    # Waits for file producer before closing connection
-    # Without this only part of the image will be sent
+    # Waits for file producer before closing connection.
+    # Without this, for example, only part of the image will be sent
     def handle_close(self):
         self.close_when_done()
 
@@ -363,7 +379,7 @@ class AsyncHTTPServer(asyncore.dispatcher):
             return f'{bcolors.OKBLUE}http://{host}:{port}{bcolors.ENDC}'
 
     def handle_accepted(self, sock, addr):
-        print(f"Incoming connection from {addr}")
+        print(f"Incoming connection from {addr[0]}:{addr[1]}")
         self.request_handler(
             sock, host=addr[0], port=addr[1], document_root=self.document_root)
 
@@ -377,11 +393,15 @@ class AsyncHTTPServer(asyncore.dispatcher):
 def parse_args():
 
     parser = argparse.ArgumentParser("Simple asynchronous web-server")
-    parser.add_argument("--host", dest="host", default="")
-    parser.add_argument("--port", dest="port", type=int, default=8181)
-    parser.add_argument("--log", dest="loglevel", default="info")
+    parser.add_argument("--host", dest="host", default="",
+                        help='Default is localhost')
+    parser.add_argument("--port", dest="port", type=int,
+                        default=8181, help='Default is 8181')
+    parser.add_argument("--log", dest="loglevel",
+                        default="info", help='e.g. CRITICAL, INFO')
     parser.add_argument("--logfile", dest="logfile", default=None)
-    parser.add_argument("-w", dest="nworkers", type=int, default=1)
+    parser.add_argument("-w", dest="nworkers", type=int,
+                        default=1, help='Number of workers (processes)')
     parser.add_argument("-r", dest="document_root", default="./public")
 
     return parser.parse_args()
@@ -414,5 +434,4 @@ if __name__ == "__main__":
             p.join()
         except KeyboardInterrupt:
             print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
-
             sys.exit(0)
