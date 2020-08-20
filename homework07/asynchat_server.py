@@ -4,6 +4,7 @@ import multiprocessing
 
 import logging
 import argparse
+import sys
 
 # For HTTP request parse
 from http.server import BaseHTTPRequestHandler
@@ -77,12 +78,13 @@ class HTTPRequest(BaseHTTPRequestHandler):
 class AsyncHTTPRequestHandler(asynchat.async_chat):
     """ Обработчик клиентских запросов """
 
-    def __init__(self, sock, host=None, port=None):
+    def __init__(self, sock, host=None, port=None, document_root='./public'):
         super().__init__(sock)
 
         self.server_title = 'Asyncore_server'
         self.host = host
         self.port = port
+        self.document_root = document_root
 
         self.log = logging.getLogger(__name__)
 
@@ -143,9 +145,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
     def handle_url(self):
 
         # Provided in args. Default is './public'
-        # TEMPORARY (?)
-        # raw_url = DOCUMENT_ROOT + url_normalize(self.request.path)
-        raw_url = './public' + url_normalize(self.request.path)
+        raw_url = self.document_root + url_normalize(self.request.path)
 
         # Parse GET queries
         parsed = urlparse.urlparse(raw_url)
@@ -288,7 +288,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
         if message is None:
             message = short_msg
 
-        body = f'<html><body><h1>{code}</h1> <h3>{message}</h3></body></html>'.encode(
+        body = f'<html><body><br><br><br><br><center><h1>{code}</h1> <h3>{message}</h3></center></body></html>'.encode(
             "utf-8")
 
         self.send_response(code, message)
@@ -339,7 +339,7 @@ class AsyncHTTPRequestHandler(asynchat.async_chat):
 
 class AsyncHTTPServer(asyncore.dispatcher):
 
-    def __init__(self, host="", port=8181, request_handler=AsyncHTTPRequestHandler):
+    def __init__(self, host="", port=8181, request_handler=AsyncHTTPRequestHandler, document_root='./public'):
         super().__init__()
 
         self.create_socket()
@@ -351,6 +351,7 @@ class AsyncHTTPServer(asyncore.dispatcher):
         self.listen(5)
 
         self.request_handler = request_handler
+        self.document_root = document_root
 
         link = self.get_link(host, port)
         print(f'Asynchat server online at {link}')
@@ -363,7 +364,8 @@ class AsyncHTTPServer(asyncore.dispatcher):
 
     def handle_accepted(self, sock, addr):
         print(f"Incoming connection from {addr}")
-        self.request_handler(sock, host=addr[0], port=addr[1])
+        self.request_handler(
+            sock, host=addr[0], port=addr[1], document_root=self.document_root)
 
     def handle_close(self):
         self.close()
@@ -392,10 +394,8 @@ def run(args):
         level=getattr(logging, args.loglevel.upper()),
         format="%(name)s: %(process)d %(message)s")
 
-    global DOCUMENT_ROOT
-    DOCUMENT_ROOT = args.document_root
-
-    server = AsyncHTTPServer(host=args.host, port=args.port)
+    server = AsyncHTTPServer(
+        host=args.host, port=args.port, document_root=args.document_root)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -414,3 +414,5 @@ if __name__ == "__main__":
             p.join()
         except KeyboardInterrupt:
             print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
+
+            sys.exit(0)

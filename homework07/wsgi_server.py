@@ -1,15 +1,18 @@
-import io
-import socket
 import sys
+import logging
+
 
 # WSGI server inherits from asynchat_server.py classes
-from asynchat_server import AsyncHTTPServer, AsyncHTTPRequestHandler
+from asynchat_server import AsyncHTTPServer, AsyncHTTPRequestHandler, run
+
+# For coloring console text
+from bcolors import bcolors
 
 
 class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
 
-    def __init__(self, sock, host, port):
-        super().__init__(sock, host=host, port=port)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.headers_set = []
 
     def get_environ(self):
@@ -34,6 +37,7 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         return env
 
     def start_response(self, status, response_headers, exc_info=None):
+        self.log.info(f'Starting response')
         server_headers = [
             ('Date', self.date_time_string()),
             ('Server', self.server_title),
@@ -41,6 +45,8 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         self.headers_set = [status, response_headers + server_headers]
 
     def handle_request(self):
+        self.log.info(f'Handling request')
+
         # Construct environment dictionary using request data
         env = self.get_environ()
 
@@ -54,6 +60,7 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         self.finish_response(result)
 
     def finish_response(self, result):
+        self.log.info(f'Finishing response')
 
         [body] = result
         code, message = self.headers_set[0].split(' ')
@@ -65,15 +72,10 @@ class AsyncWSGIRequestHandler(AsyncHTTPRequestHandler):
         self.end_headers()
         self.push(body)
 
-        self.close()
+        self.handle_close()
 
 
 class AsyncWSGIServer(AsyncHTTPServer):
-
-    def __init__(self, host='', port=8181, request_handler=AsyncWSGIRequestHandler):
-        super().__init__(host=host, port=port, request_handler=request_handler)
-        # # Return headers set by Web framework/Web application
-        # self.headers_set = []
 
     def set_app(self, application):
         self.application = application
@@ -82,8 +84,9 @@ class AsyncWSGIServer(AsyncHTTPServer):
         return self.application
 
 
-def make_server(application, host='', port=8181):
-    server = AsyncWSGIServer(host=host, port=port)
+def make_server(application, host, port, document_root):
+    server = AsyncWSGIServer(
+        host=host, port=port, request_handler=AsyncWSGIRequestHandler, document_root=document_root)
     server.set_app(application)
 
     return server
@@ -96,15 +99,19 @@ if __name__ == '__main__':
     app_path = sys.argv[1]
     module, application = app_path.split(':')
     module = __import__(module)
-    application = getattr(module, application)  # wsgi_application.application
+    application = getattr(module, application)  # wsgi_app.application
+
+    logging.basicConfig(
+        filename=None,
+        level=getattr(logging, 'INFO'),
+        format="%(name)s: %(process)d %(message)s")
 
     # httpd - HTTP Daemon
-    httpd = make_server(application, host='', port=8181)
-    httpd.serve_forever()
+    httpd = make_server(application, host='', port=8181,
+                        document_root='./public')
 
-
-# TODO
-# - implement multiprocessing (call run)
-# - Catch CTRL + C
-# - Fix hardcoded name
-# - Fix DOCUMENT_ROOT
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print(f'{bcolors.WARNING}Crtl+C pressed. Shutting down.{bcolors.ENDC}')
+        httpd.handle_close()

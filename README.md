@@ -1,3 +1,3 @@
-### K3140 - Рейнгеверц Вадим
+### K3140 - Reingeverts Vadim
 
-Решения практических работ с сайта https://dementiy.github.io
+CS102 assignments from https://dementiy.github.io
