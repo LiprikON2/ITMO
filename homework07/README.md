@@ -35,7 +35,7 @@ python wsgi_server.py wsgi_app:application -w 50 --log CRITICAL
 
 ## Tests
 
-### Testing functionality
+### Functionality testing
 1. Launch server on localhost:8181
 2. Run `python test_async_server.py`
 
