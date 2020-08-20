@@ -5,13 +5,13 @@
 python asynchat_server.py
 ```
 ### Optional arguments:
-  `-h, --help`
-  `--host HOST` (default '')
-  `--port PORT` (default 8181)
-  `--log LOGLEVEL` (default INFO)
-  `--logfile LOGFILE` (default None)
-  `-w NWORKERS` (default 1)
-  `-r DOCUMENT_ROOT` (default './public)
+`-h, --help`
+`--host HOST` (default '')
+`--port PORT` (default 8181)
+`--log LOGLEVEL` (default INFO)
+`--logfile LOGFILE` (default None)
+`-w NWORKERS` (default 1)
+`-r DOCUMENT_ROOT` (default './public)
 ## WSGI server
 
 ### Running
