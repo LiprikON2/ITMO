@@ -2,6 +2,7 @@ from django.urls import path
 
 from . import views
 
+app_name = 'polls'
 urlpatterns = [
     path('', views.index, name='index'),
     path('page/', views.my_own_page, name='my_own_page'),

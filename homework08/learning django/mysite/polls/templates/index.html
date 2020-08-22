@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <style>
+            * {font-family: monospace;}
+    </style>
     <title>Document</title>
 </head>
 <body>
     {% if latest_question_list %}
         <ul>
         {% for question in latest_question_list %}
-            <li><a href="/polls/{{ question.id }}/results">{{ question.question_text }}</a></li>
+        <h1><li><a href="{% url 'polls:results' question.id %}">{{ question.question_text }}</a></li></h1>
         {% endfor %}
         </ul>
     {% else %}

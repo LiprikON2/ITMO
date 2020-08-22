@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django.http import Http404
 from django.template import loader
 
 from .models import *
@@ -11,7 +12,7 @@ def index(request):
     context = {
         'latest_question_list': latest_question_list,
     }
-    return HttpResponse(template.render(context, request))
+    return render(request, 'index.html', context)
 
 
 def my_own_page(request):
@@ -26,21 +27,18 @@ def detail(request, question_id):
 
 def results(request, question_id):
 
-    print(request.headers)
-    print(dir(request))
+    # try:
+    #     choices = Question.objects.get(pk=question_id).choice_set.all()
+    # except Question.DoesNotExist:
+    #     raise Http404('Question doesn\'t exists')
 
-    choices = Question.objects.get(pk=question_id).choice_set.all()
+    choices = get_object_or_404(Question, pk=question_id).choice_set.all()
 
-    choice_html = ''
-    for index, choice in enumerate(choices):
-        choice_html += f'\n<h2>{index + 1}. {choice}</h2>'
-
-    response = f"""You're looking at the results of question {question_id}.
-    <h1>{Question.objects.get(pk=question_id)}<h1>
-    {choice_html}
-    """
-
-    return HttpResponse(response)
+    context = {
+        'question': Question.objects.get(pk=question_id),
+        'choices': choices
+    }
+    return render(request, 'results.html', context)
 
 
 def vote(request, question_id):
