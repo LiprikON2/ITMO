@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <style>
+        * {font-family: monospace;}
+    </style>
+    <title>Document</title>
+</head>
+<body>
+
+    
+    <h1>Q: {{ question }}</h1>
+    <form action="{% url 'polls:vote' question.id %}" method="post">
+        {% if error_message %}<p style='color: red'><strong>{{ error_message }}</strong></p>{% endif %}
+        <!-- Cross Site Request Forgeries protection -->
+        {% csrf_token %}
+        {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+            <label for="choice{{ forloop.counter }}">{{ choice }}</label><br>
+        {% endfor %}
+        <br><input type="submit" value="Vote">
+    </form>
+
+    <footer><br><br><a style='font-size: 16px' href="{% url 'polls:result' question.id %}">Results</a></button></footer>
+    <footer><br><br><a style='font-size: 20px' href="{% url 'polls:index' %}">Back</a></button></footer>
+</body>
+</html>

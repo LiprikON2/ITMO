@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <style>
+        * {font-family: monospace;}
+    </style>
+    <title>Document</title>
+</head>
+<body>
+    <h1>{{question}}</h1>
+    <ol>
+    {% for choice in question.choice_set.all %}
+        <h3>
+            <li>
+            {{ choice }}: {{ choice.votes }} vote{{ choice.votes|pluralize }}
+            </li>
+        </h3>
+    {% endfor %}
+    </ol>
+    <footer><br><br><a style='font-size: 20px' href="{% url 'polls:detail' question.id %}">Back</a></button></footer>
+</body>
+</html>
