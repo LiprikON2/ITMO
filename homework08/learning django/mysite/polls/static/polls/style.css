@@ -1,0 +1,42 @@
+* {font-family: monospace;}
+
+body {
+    background-image: url("images/background.jpg");
+    background-color: darkslategrey;
+    color: white;
+    -webkit-text-stroke: 1px black;
+    padding: 50px 25px 50px 25px;
+}
+
+form {
+    font-size: 20px;
+    -webkit-text-stroke: 0px;
+}
+input {
+    background-color: darkslategrey;
+    color: white;
+}
+/* Unvisited link  */
+a {                         
+    color: white;
+    -webkit-text-stroke: 1px black;
+    text-decoration: none;
+}   
+/* Visited link    */      
+a:visited {
+    color: white;
+    -webkit-text-stroke: 1px black;
+} 
+/* Mouse over link */
+a:hover {
+    color: gainsboro;
+    -webkit-text-stroke: 1px black;
+} 
+/* Selected link   */  
+a:active {
+    color:gainsboro;
+    -webkit-text-stroke: 1px black;
+}  
+
+
+

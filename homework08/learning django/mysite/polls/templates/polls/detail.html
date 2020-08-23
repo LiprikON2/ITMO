@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <style>
-        * {font-family: monospace;}
-    </style>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}">
     <title>Question {{ question.id }}</title>
 </head>
 <body>
 
     <h1>Q: {{ question }}</h1>
-    <form style='font-size: 16px' action="{% url 'polls:vote' question.id %}" method="post">
+    <form action="{% url 'polls:vote' question.id %}" method="post">
         {% if error_message %}<p style='color: red'><strong>{{ error_message }}</strong></p>{% endif %}
         <!-- Cross Site Request Forgeries protection -->
         {% csrf_token %}
@@ -23,7 +22,7 @@
         <br><input style='font-size: 20px' type="submit" value="Vote">
     </form>
 
-    <footer><br><br><a style='font-size: 16px' href="{% url 'polls:results' question.id %}">Results</a></button></footer>
-    <footer><br><br><a style='font-size: 20px' href="{% url 'polls:index' %}">Back</a></button></footer>
+    <footer><br><br><a style='font-size: 20px' href="{% url 'polls:results' question.id %}">Results</a></button></footer>
+    <footer><br><br><a style='font-size: 24px' href="{% url 'polls:index' %}">Back</a></button></footer>
 </body>
 </html>
