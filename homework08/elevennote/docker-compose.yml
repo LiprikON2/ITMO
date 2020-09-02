@@ -9,11 +9,10 @@ services:
             - ./deploy/nginx:/etc/nginx/conf.d
         depends_on:
             - web
-        web:
+    web:
         build: .
         container_name: dg01
-        command: bash -c "sleep 5 && python manage.py makemigrations && python manage.py
-        migrate && uwsgi --ini /usr/local/etc/elevennote.ini"
+        command: bash -c "sleep 5 && python manage.py makemigrations && python manage.py migrate && uwsgi --ini /usr/local/etc/elevennote.ini"
         depends_on:
             - db
         volumes:
