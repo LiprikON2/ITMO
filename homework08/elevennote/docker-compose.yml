@@ -16,10 +16,16 @@ services:
         depends_on:
             - db
         volumes:
-            - ./elevennote:/elevennote
+            - ./src:/src
             - ./deploy/uwsgi:/usr/local/etc/
         expose:
             - "8000"
     db:
-        image: postgres:latest
+        image: postgres
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: password
+            POSTGRES_USER: admin
+        ports:
+            - "5432:5432"
         container_name: ps01

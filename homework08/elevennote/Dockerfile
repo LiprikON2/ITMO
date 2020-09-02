@@ -3,5 +3,5 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /config
 COPY requirements /config/requirements
 RUN pip install -r /config/requirements/dev.txt
-RUN mkdir /elevennote;
-WORKDIR /elevennote
+RUN mkdir /src;
+WORKDIR /src
