@@ -20,10 +20,8 @@ DB_HOST=db
 DB_PORT=5432
 ```
 
-!!! attention Secret key
-`%` symbols in `SECRET_KEY` needs to be doubled
 
-!!!
+> **:warning: Warning:** `%` symbols in `SECRET_KEY` needs to be doubled
 
 6. Run commands:
 ```bash
