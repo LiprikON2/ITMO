@@ -1,4 +1,5 @@
-# Homework 08
+# Note taking web app
+> Built with docker and django
 
 ## Running
 
