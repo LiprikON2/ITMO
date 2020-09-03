@@ -1,10 +1,10 @@
 # Homework 08
 
-### Running
+## Running
 
 1. Install [docker](https://docs.docker.com/get-docker/)
 2. Install docker-compose:
-```
+```bash
 pip install docker-compose
 ```
 4. Create `settings.ini` in `elevennote/src/config/settings/`
@@ -26,12 +26,27 @@ DB_PORT=5432
 !!!
 
 6. Run commands:
-```
+```bash
 docker-compose build
 ```
 
-```
+```bash
 docker-compose up
 ```
 
 7. Access server at [localhost:8000](http://localhost:8000/)
+
+
+## Tests
+
+### Run tests
+```bash
+docker-compose run web python manage.py test
+```
+### Check test coverage
+```bash
+docker-compose run web coverage run --source='.' manage.py test notes
+```
+```bashb
+docker-compose run web coverage report
+```
