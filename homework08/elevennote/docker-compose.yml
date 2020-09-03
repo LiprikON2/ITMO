@@ -22,10 +22,6 @@ services:
             - "8000"
     db:
         image: postgres
-        restart: always
-        environment:
-            POSTGRES_PASSWORD: password
-            POSTGRES_USER: admin
-        ports:
-            - "5432:5432"
         container_name: ps01
+        environment:
+            - "POSTGRES_HOST_AUTH_METHOD=trust" # fix for "could not translate host name "db" to address: Unknown host"
