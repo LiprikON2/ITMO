@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'notes/style.css' %}">
+    <title>note {{ note.id }}</title>
+</head>
+<body>
+
+    <h1>Note: {{ note }}</h1>
+        {% if error_message %}<p style='color: red'><strong>{{ error_message }}</strong></p>{% endif %}
+        <p>{{ note.body }}</p>
+    <footer><br><br><a style='font-size: 24px' href="{% url 'notes:index' %}">Back</a></button></footer>
+</body>
+</html>

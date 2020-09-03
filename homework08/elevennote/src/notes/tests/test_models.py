@@ -14,7 +14,6 @@ class NoteModelTests(TestCase):
         note = Note.objects.create(title='Note title', body='Note body')
         self.assertEqual(str(note), 'Note title')
 
-    
     def test_was_published_recently_with_future_note(self):
         """
         was_published_recently() returns False for notes whose pub_date

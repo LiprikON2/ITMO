@@ -17,7 +17,7 @@ class QuestionAdmin(admin.ModelAdmin):
     ]
     inlines = [ChoiceInline]
     list_display = ('question_text', 'pub_date', 'was_published_recently')
-    # Filter options: “Any date”, “Today”, “Past 7 days”, “This month”, “This year”.
+    # Filter options: “Any date”, “Today”, “Past 7 days”, “Tlhis month”, “This year”.
     list_filter = ['pub_date']
     # Search capability
     search_fields = ['question_text']
@@ -26,7 +26,6 @@ admin.site.register(Question, QuestionAdmin)
 
 
 # Change admin template
-
 admin.site.site_title = 'Admin'
 admin.site.site_header = 'Administration'
 admin.site.index_title = 'Polls app'
