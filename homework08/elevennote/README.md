@@ -65,3 +65,8 @@ docker exec -it dg01 bash
 ```bash
 python manage.py createsuperuser
 ```
+
+Or in one line:
+```bash
+docker-compose run web python manage.py createsuperuser
+```
