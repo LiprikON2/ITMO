@@ -19,6 +19,7 @@ services:
         volumes:
             - ./src:/src
             - ./deploy/uwsgi:/usr/local/etc/
+            - ./static:/static
         expose:
             - "8000"
     db:
