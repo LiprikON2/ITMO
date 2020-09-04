@@ -6,7 +6,7 @@ from .models import Note
 
 @login_required
 def IndexView(request):
-    latest_note_list = Note.objects.order_by('-pub_date')[:5]
+    latest_note_list = Note.objects.filter(owner=request.user).order_by('-pub_date')[:5]
     context = {
         'latest_note_list': latest_note_list,
     }
@@ -15,5 +15,5 @@ def IndexView(request):
 
 @login_required
 def DetailView(request, note_id):
-    note = get_object_or_404(Note, pk=note_id)
+    note = get_object_or_404(Note, pk=note_id, owner=request.user)
     return render(request, 'notes/detail.html', {'note': note})

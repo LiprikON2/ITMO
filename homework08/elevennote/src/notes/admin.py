@@ -4,9 +4,9 @@ from .models import Note
 
 
 class NoteAdmin(admin.ModelAdmin):
-    list_display = ('title', 'pub_date', 'was_published_recently')
+    list_display = ('title', 'owner', 'pub_date', 'was_published_recently')
     
-    # Filter options: “Any date”, “Today”, “Past 7 days”, “Tlhis month”, “This year”.
+    # Filter options: “Any date”, “Today”, “Past 7 days”, “This month”, “This year”.
     list_filter = ['pub_date']
     # Search capability
     search_fields = ['title', 'body']
