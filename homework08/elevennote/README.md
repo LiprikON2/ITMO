@@ -46,6 +46,22 @@ docker-compose run web python manage.py test
 ```bash
 docker-compose run web coverage run --source='.' manage.py test notes
 ```
-```bashb
+```bash
 docker-compose run web coverage report
+```
+
+## Creating admin user
+
+1. Run the app:
+```bash
+docker-compose up
+```
+2. Access `dg01`'s bash
+
+```bash
+docker exec -it dg01 bash
+```
+3. Inside bash:
+```bash
+python manage.py createsuperuser
 ```
