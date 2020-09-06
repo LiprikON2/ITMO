@@ -1,9 +1,11 @@
 from django.urls import path
-from . import views
+
+from .views import NoteList, NoteDetail, NoteCreate
 
 app_name = 'notes'
 
 urlpatterns = [
-    path('', views.IndexView, name='index'),
-    path('<int:note_id>/', views.DetailView, name='detail'),
+    path('', NoteList.as_view(), name='index'),
+    path('<int:pk>/', NoteDetail.as_view(), name='detail'),
+    path('new/', NoteCreate.as_view(), name='create'),
 ]
