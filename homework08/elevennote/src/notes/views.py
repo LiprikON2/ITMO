@@ -1,12 +1,15 @@
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView
 from django.utils import timezone
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+from django.views.generic import (
+    ListView, DetailView, CreateView, UpdateView
+)
 
 from .models import Note
 from .forms import NoteForm
+from .mixins import NoteMixin
 
 
 class NoteList(LoginRequiredMixin, ListView):
@@ -35,7 +38,7 @@ class NoteDetail(LoginRequiredMixin, DetailView):
         return Note.objects.filter(owner=self.request.user)
 
 
-class NoteCreate(LoginRequiredMixin, CreateView):
+class NoteCreate(LoginRequiredMixin, NoteMixin, CreateView):
     form_class = NoteForm
     template_name = 'notes/form.html'
     success_url = reverse_lazy('notes:index')
@@ -44,3 +47,17 @@ class NoteCreate(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         form.instance.pub_date = timezone.now()
         return super(NoteCreate, self).form_valid(form)
+
+
+class NoteUpdate(LoginRequiredMixin, NoteMixin, UpdateView):
+    model = Note
+    form_class = NoteForm
+    template_name = 'notes/form.html'
+
+    def get_queryset(self):
+        return Note.objects.filter(owner=self.request.user)
+
+    def get_success_url(self):
+        return reverse('notes:update', kwargs={
+            'pk': self.object.pk
+        })

@@ -170,3 +170,83 @@ class CreateViewTest(TestCase):
         response = self.client.post(create_page_url, {'title': '', 'body': ''})
         self.assertFormError(response, "form", "title", "This field is required.")
         self.assertFormError(response, "form", "body", "This field is required.")
+        
+    def test_response_contains_notes_list(self):
+        self.client.login(email="user@example.com", password="secret")
+        create_page_url = reverse('notes:create')
+        response = self.client.get(create_page_url)
+        self.assertIn('notes', response.context)
+
+
+class UpdateViewTest(TestCase):
+    
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="user@example.com",
+            password="secret")
+        self.note = Note.objects.create(
+            title="Note title", body="Note description", owner=self.user)
+
+    def test_redirect_if_not_logged_in(self):
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.get(update_page_url)
+        self.assertRedirects(response, f"/accounts/login/?next={update_page_url}")
+
+    def test_create_view_status_code(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.get(update_page_url)
+        self.assertEquals(response.status_code, 200)
+
+    def test_uses_correct_template(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.get(update_page_url)
+        self.assertTemplateUsed(response, 'notes/form.html')
+
+    def test_success_url(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.post(update_page_url,
+            {'title': 'New note title', 'body': 'New note body'})
+        self.assertRedirects(response, update_page_url)
+
+    def test_form_success(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        self.client.post(update_page_url,
+            {'title': 'New note title', 'body': 'New note body'})
+        note = Note.objects.first()
+        self.assertEquals(note.title, 'New note title')
+        self.assertEquals(note.body, 'New note body')
+
+    def test_form_invalid(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.post(update_page_url,
+            {'title': '', 'body': ''})
+        self.assertFormError(response, "form", "title", "This field is required.")
+        self.assertFormError(response, "form", "body", "This field is required.")
+
+    def test_only_owner_can_update_note(self):
+        other_user = User.objects.create_user(
+            email="other_user@example.com",
+            password="secret")
+        self.client.login(email="other_user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.post(update_page_url,
+            {'title': 'New note title', 'body': 'New note body'})
+        self.assertEquals(response.status_code, 404)
+        note = Note.objects.first()
+        self.assertEquals(note.title, 'Note title')
+        self.assertEquals(note.body, 'Note description')
+        self.assertEquals(note.owner, self.user)
+
+    def test_response_contains_notes_list(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        response = self.client.get(update_page_url)
+        self.assertIn('notes', response.context)
+        self.assertQuerysetEqual(
+            response.context['notes'],
+            ['<Note: Note title>'])

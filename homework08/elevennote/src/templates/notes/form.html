@@ -2,11 +2,19 @@
 
 {% block content %}
 
+{% if object %}
+<form action="{% url 'notes:update' object.pk %}" method="post" accept-charset="utf-8">
+    
+{% else %}
 <form action="{% url 'notes:create' %}" method="post" accept-charset="utf-8">
     {% csrf_token %}
     {% include 'includes/form.html' %}
     <input type="hidden" name="next" value="{{ next }}" />
     <input class="btn btn-success" type="submit" value="Submit"/>
+    
 </form>
+{% endif %}
 
 {% endblock %}
+
+

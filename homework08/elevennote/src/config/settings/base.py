@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'notes',
     'accounts',
     'widget_tweaks',
+    'django_wysiwyg',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,5 @@ STATICFILES_DIRS = [
 ]
 
 LOGIN_REDIRECT_URL = '/'
+
+DJANGO_WYSIWYG_FLAVOR = 'ckeditor'

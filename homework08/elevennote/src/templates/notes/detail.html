@@ -2,8 +2,12 @@
 
 {% block content %}
 
-<h1>{{ note.title }}</h1>
+<p>
+    <h3><a href="{% url 'notes:update' note.id %}">{{ note.title }}</a></h3><br/>
+    {{ note.body | safe }}
+</p>
+<hr/>
 
-<p>{{ note.body }}</p>
+<a href="{% url 'notes:update' note.id %}">Edit</a>
 
 {% endblock %}
