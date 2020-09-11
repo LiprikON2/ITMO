@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.urls import reverse_lazy, reverse
 from django.views.generic import (
-    ListView, DetailView, CreateView, UpdateView
+    ListView, DetailView, CreateView, UpdateView, DeleteView
 )
 
 from .models import Note
@@ -61,3 +61,11 @@ class NoteUpdate(LoginRequiredMixin, NoteMixin, UpdateView):
         return reverse('notes:update', kwargs={
             'pk': self.object.pk
         })
+
+
+class NoteDelete(LoginRequiredMixin, DeleteView):
+    model = Note
+    success_url = reverse_lazy('notes:create')
+
+    def get_queryset(self):
+        return Note.objects.filter(owner=self.request.user)
