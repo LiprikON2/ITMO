@@ -29,7 +29,9 @@ class IndexTests(TestCase):
                 title=f"Note title {i}",
                 body="Note description",
                 pub_date=now + datetime.timedelta(days=i),
-                owner=self.test_user1))
+                owner=self.test_user1,
+                tags='Note tag'
+            ))
 
     def test_redirect_if_not_logged_in(self):
         index_page_url = reverse('notes:index')
@@ -52,7 +54,6 @@ class IndexTests(TestCase):
         response = self.client.get(index_page_url)
         for note in response.context["latest_note_list"]:
             note_detail_url = reverse('notes:detail', kwargs={'pk': note.pk})
-            print(response.content, '\n\n\n\n')
             self.assertContains(response, f'href="{note_detail_url}"')
 
     def test_notes_ordered_by_pub_dates(self):
@@ -100,7 +101,7 @@ class DetailTests(TestCase):
             email="test_user2@example.com",
             password="secret")
         self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.test_user1)
+            title="Note title", body="Note description", owner=self.test_user1, tags='Note tag')
 
     def test_redirect_if_not_logged_in(self):
         detail_page_url = reverse('notes:detail', kwargs={'pk': self.note.pk})
@@ -152,13 +153,13 @@ class CreateViewTest(TestCase):
         self.client.login(email="user@example.com", password="secret")
         index_page_url = reverse('notes:index')
         create_page_url = reverse('notes:create')
-        response = self.client.post(create_page_url, {'title': 'Note Title', 'body': 'Note body'})
+        response = self.client.post(create_page_url, {'title': 'Note Title', 'body': 'Note body', 'tags': 'Note tag'})
         self.assertRedirects(response, index_page_url)
 
     def test_form_success(self):
         self.client.login(email="user@example.com", password="secret")
         create_page_url = reverse('notes:create')
-        self.client.post(create_page_url, {'title': 'Note title', 'body': 'Note body'})
+        self.client.post(create_page_url, {'title': 'Note title', 'body': 'Note body', 'tags': 'Note tag'})
         note = Note.objects.first()
         self.assertEquals(note.title, 'Note title')
         self.assertEquals(note.body, 'Note body')
@@ -168,7 +169,7 @@ class CreateViewTest(TestCase):
     def test_form_invalid(self):
         self.client.login(email="user@example.com", password="secret")
         create_page_url = reverse('notes:create')
-        response = self.client.post(create_page_url, {'title': '', 'body': ''})
+        response = self.client.post(create_page_url, {'title': '', 'body': '', 'tags': ''})
         self.assertFormError(response, "form", "title", "This field is required.")
         self.assertFormError(response, "form", "body", "This field is required.")
         
@@ -186,7 +187,7 @@ class UpdateViewTest(TestCase):
             email="user@example.com",
             password="secret")
         self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.user)
+            title="Note title", body="Note description", owner=self.user, tags='Note tag')
 
     def test_redirect_if_not_logged_in(self):
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
@@ -208,13 +209,13 @@ class UpdateViewTest(TestCase):
     def test_success_url(self):
         self.client.login(email="user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body'})
+        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'New note tag'})
         self.assertRedirects(response, update_page_url)
 
     def test_form_success(self):
         self.client.login(email="user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body'})
+        self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'New note tag'})
         note = Note.objects.first()
         self.assertEquals(note.title, 'New note title')
         self.assertEquals(note.body, 'New note body')
@@ -222,7 +223,7 @@ class UpdateViewTest(TestCase):
     def test_form_invalid(self):
         self.client.login(email="user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        response = self.client.post(update_page_url, {'title': '', 'body': ''})
+        response = self.client.post(update_page_url, {'title': '', 'body': '', 'tags': ''})
         self.assertFormError(response, "form", "title", "This field is required.")
         self.assertFormError(response, "form", "body", "This field is required.")
 
@@ -232,7 +233,7 @@ class UpdateViewTest(TestCase):
             password="secret")
         self.client.login(email="other_user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body'})
+        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'New note tag'})
         self.assertEquals(response.status_code, 404)
         note = Note.objects.first()
         self.assertEquals(note.title, 'Note title')

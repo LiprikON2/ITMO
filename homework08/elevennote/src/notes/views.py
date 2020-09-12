@@ -48,9 +48,9 @@ class NoteCreate(LoginRequiredMixin, NoteMixin, CreateView):
         form.instance.pub_date = timezone.now()
         
         # tags handling
-        new_note = form.save(commit=False)
-        new_note.save()
-        form.save_m2m()
+        # new_note = form.save(commit=False)
+        # new_note.save()
+        # form.save_m2m()
         
         # return reverse('notes:update', kwargs={
         #     'pk': self.object.pk
@@ -80,12 +80,12 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
         return Note.objects.filter(owner=self.request.user)
 
 
-def tagged(request, slug):
-    tag = get_object_or_404(Tag, slug=slug)
-    # Filter posts by tag name
-    posts = Post.objects.filter(tags=tag)
+def tagged(request, pk):
+    tag = get_object_or_404(Tag, pk=pk)
+    # Filter notes by tag name
+    note = Note.objects.filter(tags=tag)
     context = {
         'tag': tag,
-        'posts': posts,
+        'notes': notes,
     }
     return render(request, 'notes/index.html', context)

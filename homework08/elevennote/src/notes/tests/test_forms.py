@@ -11,7 +11,7 @@ User = get_user_model()
 class NoteFormTests(TestCase):
 
     def test_form_save(self):
-        data = {'title': 'Note Title', 'body': 'Note body'}
+        data = {'title': 'Note Title', 'body': 'Note body', 'tags': 'Note tag'}
         form = NoteForm(data=data)
         self.assertTrue(form.is_valid())
 
