@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'accounts',
     'widget_tweaks',
     'django_wysiwyg',
+    'rest_framework',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -139,3 +141,13 @@ STATICFILES_DIRS = [
 LOGIN_REDIRECT_URL = '/'
 
 DJANGO_WYSIWYG_FLAVOR = 'ckeditor'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+    ),
+}

@@ -22,7 +22,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='notes/'), name='index'),
     # Notes
     path('notes/', include('notes.urls', namespace='notes')),
-    
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls', namespace='api')),
 ]

@@ -5,7 +5,7 @@
     <ul>
     {% for note in latest_note_list %}
 	<p>
-   		<a href="{% url 'notes:update' note.id %}">{{ note.title }}</a><br/>
+   		<a href="{% url 'notes:detail' note.id %}">{{ note.title }}</a> | <a href="{% url 'notes:update' note.id %}">Edit</a><br/>
    		{{ note.body | safe }}
 	</p>
 	<hr />
