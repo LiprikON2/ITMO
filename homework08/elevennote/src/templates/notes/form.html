@@ -10,7 +10,7 @@
     <div class="row">
 
         <div class="col-4">
-            <nav id="sidebar">
+            <nav id="sidebar" class='scrollbar scrollbar-default'>
 
                 <div class="new-note">
                     <a href="{% url 'notes:create' %}" class="new-note btn btn-outline-dark">+ New Note</a>
@@ -24,7 +24,7 @@
 
                             <div style="display:flex">
                                 {% for tag in note.tags.all %}
-                                <a href="" class="mr-1 badge badge-info">#{{ tag }}</a>
+                                <a href="" id='tag' class="mr-1 badge badge-info">#{{ tag }}</a>
                                 {% endfor %}
                             </div>
 
@@ -67,21 +67,24 @@
             {% endfor %}
             <input type="hidden" name="next" value="{{ next }}" />
 
-        {% if object %}
-            <input class="btn btn-outline-dark" type="submit" value="Update Note"/>
-        {% else %}
-            <input class="btn btn-outline-dark" type="submit" value="Create Note"/>
-        {% endif %}
+            <div class="btn-group" role="group">
+            {% if object %}
+                <input class="btn btn-outline-dark" type="submit" value="Update Note"/>
+            {% else %}
+                <input class="btn btn-outline-dark" type="submit" value="Create Note"/>
+            {% endif %}
+
+            {% if object %}
+                <form action="{% url 'notes:delete' object.pk %}" method="post" id="delete-note-form">
+                    {% csrf_token %}
+                    <a style='padding: 10px'class="btn btn-outline-dark" id="delete-note">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </a>
+                </form>
+            {% endif %}
+            </div>  
         </form>
 
-        {% if object %}
-        <form action="{% url 'notes:delete' object.pk %}" method="post" id="delete-note-form">
-            {% csrf_token %}
-            <a class="btn btn-outline-dark" id="delete-note">
-                <i class="fa fa-trash" aria-hidden="true"></i>
-            </a>
-        </form>
-        {% endif %}
         
         </div>
     </div>

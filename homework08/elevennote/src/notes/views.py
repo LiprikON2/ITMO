@@ -50,8 +50,11 @@ class NoteCreate(LoginRequiredMixin, NoteMixin, CreateView):
         # tags handling
         new_note = form.save(commit=False)
         new_note.save()
-        form_class.save_m2m()
+        form.save_m2m()
         
+        # return reverse('notes:update', kwargs={
+        #     'pk': self.object.pk
+        # })
         return super(NoteCreate, self).form_valid(form)
 
 
@@ -67,7 +70,7 @@ class NoteUpdate(LoginRequiredMixin, NoteMixin, UpdateView):
         return reverse('notes:update', kwargs={
             'pk': self.object.pk
         })
-
+        
 
 class NoteDelete(LoginRequiredMixin, DeleteView):
     model = Note
