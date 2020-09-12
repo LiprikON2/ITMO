@@ -260,7 +260,7 @@ class DeleteViewTest(TestCase):
             email="test_user2@example.com",
             password="secret")
         self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.test_user1)
+            title="Note title", body="Note description", owner=self.test_user1, tags="Note tag")
 
     def test_can_delete_note(self):
         self.client.login(email="test_user1@example.com", password="secret")

@@ -80,12 +80,12 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
         return Note.objects.filter(owner=self.request.user)
 
 
-def tagged(request, pk):
-    tag = get_object_or_404(Tag, pk=pk)
-    # Filter notes by tag name
-    note = Note.objects.filter(tags=tag)
-    context = {
-        'tag': tag,
-        'notes': notes,
-    }
-    return render(request, 'notes/index.html', context)
+# def tagged(request, pk):
+#     tag = get_object_or_404(Tag, pk=pk)
+#     # Filter notes by tag name
+#     note = Note.objects.filter(tags=tag)
+#     context = {
+#         'tag': tag,
+#         'notes': notes,
+#     }
+#     return render(request, 'notes/index.html', context)
