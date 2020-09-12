@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import NoteList, NoteDetail, NoteCreate, NoteUpdate, NoteDelete
+from .views import NoteList, NoteDetail, NoteCreate, NoteUpdate, NoteDelete, tagged
 
 app_name = 'notes'
 

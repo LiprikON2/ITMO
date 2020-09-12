@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from taggit.managers import TaggableManager
 import datetime
 
 
@@ -19,3 +20,4 @@ class Note(models.Model):
     body = models.TextField()
     pub_date = models.DateTimeField('date published', auto_now_add=True)
     owner = models.ForeignKey(User, related_name='notes', on_delete=models.CASCADE, default='Nobody')
+    tags = TaggableManager()

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django_wysiwyg',
     'rest_framework',
     'api',
+    'taggit',
 ]
 
 MIDDLEWARE = [

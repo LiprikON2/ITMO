@@ -12,22 +12,29 @@
         <div class="col-4">
             <nav id="sidebar">
 
-              <div class="new-note">
-                <a href="{% url 'notes:create' %}" class="new-note btn btn-outline-dark">+ New Note</a>
-              </div>
+                <div class="new-note">
+                    <a href="{% url 'notes:create' %}" class="new-note btn btn-outline-dark">+ New Note</a>
+                </div>
 
-              <ul id="notes">
-              {% if notes %}
-                  {% for note in notes %}
-                    <li data-url="{% url 'notes:update' note.id %}">
-                        <div class="note-title">{{ note.title }}</div>
-                        <div class="note-body">{{ note.body | safe }}</div>
-                    </li>
-                  {% endfor %}
-                {% else %}
-                  <li>No notes are available.</li>
-              {% endif %}
-              </ul>
+                <ul id="notes">
+                {% if notes %}
+                    {% for note in notes %}
+                        <li data-url="{% url 'notes:update' note.id %}">
+                            <div class="note-title">{{ note.title }}</div>
+
+                            <div style="display:flex">
+                                {% for tag in note.tags.all %}
+                                <a href="" class="mr-1 badge badge-info">#{{ tag }}</a>
+                                {% endfor %}
+                            </div>
+
+                            <div class="note-body">{{ note.body | safe }}</div>
+                        </li>
+                    {% endfor %}
+                    {% else %}
+                    <li>No notes are available.</li>
+                {% endif %}
+                </ul>
             </nav>
         </div>
 
@@ -65,6 +72,7 @@
         {% else %}
             <input class="btn btn-outline-dark" type="submit" value="Create Note"/>
         {% endif %}
+        </form>
 
         {% if object %}
         <form action="{% url 'notes:delete' object.pk %}" method="post" id="delete-note-form">
@@ -75,8 +83,6 @@
         </form>
         {% endif %}
         
-        </form>
-
         </div>
     </div>
 

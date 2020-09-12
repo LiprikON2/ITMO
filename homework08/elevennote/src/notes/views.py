@@ -46,6 +46,12 @@ class NoteCreate(LoginRequiredMixin, NoteMixin, CreateView):
     def form_valid(self, form):
         form.instance.owner = self.request.user
         form.instance.pub_date = timezone.now()
+        
+        # tags handling
+        new_note = form.save(commit=False)
+        new_note.save()
+        form_class.save_m2m()
+        
         return super(NoteCreate, self).form_valid(form)
 
 
@@ -69,3 +75,14 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Note.objects.filter(owner=self.request.user)
+
+
+def tagged(request, slug):
+    tag = get_object_or_404(Tag, slug=slug)
+    # Filter posts by tag name
+    posts = Post.objects.filter(tags=tag)
+    context = {
+        'tag': tag,
+        'posts': posts,
+    }
+    return render(request, 'notes/index.html', context)
