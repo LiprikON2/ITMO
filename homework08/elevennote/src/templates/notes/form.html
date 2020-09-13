@@ -19,7 +19,8 @@
                 <ul id="notes">
                 {% if notes %}
                     {% for note in notes %}
-                        <li data-url="{% url 'notes:update' note.id %}">
+                        {% url 'notes:update' note.id as note_path %}
+                        <li {% if request.path == note_path %}class="active"{% endif %} data-url="{% url 'notes:update' note.id %}">
                             <div class="note-title">{{ note.title }}</div>
 
                             <div style="display:flex">

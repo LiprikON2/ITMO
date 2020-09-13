@@ -109,7 +109,7 @@ ul#notes li:first-of-type {
   border-top: none;
 }
 
-ul#notes li:hover {
+.active, ul#notes li:hover {
   color: black;
   background-color: #f8f8f8;
 }
@@ -123,9 +123,9 @@ ul#notes li:hover a {
   text-decoration: underline;
 }
 
-ul#notes li:hover a#tag {
+ul#notes li:hover div a#tag {
     color: white;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 ul#notes li .note-title {
@@ -228,5 +228,6 @@ span.login {
 /* tag */
 
 #tag {
-    color: #fff;
+    color: white;
+    text-decoration: none;
 }
