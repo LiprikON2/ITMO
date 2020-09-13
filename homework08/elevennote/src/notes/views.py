@@ -3,10 +3,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.urls import reverse_lazy, reverse
+from django.shortcuts import get_object_or_404
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
 
+from taggit.models import Tag
 from .models import Note
 from .forms import NoteForm
 from .mixins import NoteMixin
@@ -62,13 +64,14 @@ class NoteUpdate(LoginRequiredMixin, NoteMixin, UpdateView):
     model = Note
     form_class = NoteForm
     template_name = 'notes/form.html'
-
+    
     def get_queryset(self):
+        
         return Note.objects.filter(owner=self.request.user)
 
     def get_success_url(self):
         return reverse('notes:update', kwargs={
-            'pk': self.object.pk
+            'pk': self.object.pk,
         })
         
 
@@ -80,12 +83,31 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
         return Note.objects.filter(owner=self.request.user)
 
 
-# def tagged(request, pk):
-#     tag = get_object_or_404(Tag, pk=pk)
+class NoteTagList(LoginRequiredMixin, NoteMixin, UpdateView):
+    model = Note
+    form_class = NoteForm
+    template_name = 'notes/form.html'
+    
+    # Determines the list of objects to display
+    def get_queryset(self):
+        slug = self.kwargs['slug']
+        tag = get_object_or_404(Tag, slug=slug)
+        # print('slug:', tag, '---> tag:', tag, f'({tag.pk})')
+        # print(Note.objects.filter(owner=self.request.user, tags=tag))
+        return Note.objects.filter(owner=self.request.user, tags=tag)
+
+    def get_success_url(self):
+        print('\n\n\n\n', self.object.slug)
+        return reverse('notes:update', kwargs={
+            'pk': self.object.pk,
+        })
+    
+# def tagged(request, slug):
+#     tag = get_object_or_404(Tag, slug=slug)
 #     # Filter notes by tag name
 #     note = Note.objects.filter(tags=tag)
 #     context = {
 #         'tag': tag,
 #         'notes': notes,
 #     }
-#     return render(request, 'notes/index.html', context)
+#     return render(request, 'notes/form.html', context)

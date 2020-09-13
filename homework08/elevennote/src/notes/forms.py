@@ -15,4 +15,8 @@ class NoteForm(forms.ModelForm):
         
     def __init__(self, *args, **kwargs):
         super(NoteForm, self).__init__(*args, **kwargs)
-        self.fields['tags'].widget.attrs.update({'id': 'tag-input', 'placeholder': 'Tag your note'})
+        self.fields['tags'].widget.attrs.update({
+            'id': 'tag-input',
+            'placeholder': 'Tag your note',
+            'data-role': "tagsinput"
+        })
