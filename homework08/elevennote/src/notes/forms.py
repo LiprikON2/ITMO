@@ -9,6 +9,10 @@ class NoteForm(forms.ModelForm):
         model = Note
         fields = [
             'title',
-            'body',
             'tags',
+            'body',
         ]
+        
+    def __init__(self, *args, **kwargs):
+        super(NoteForm, self).__init__(*args, **kwargs)
+        self.fields['tags'].widget.attrs.update({'id': 'tag-input', 'placeholder': 'Tag your note'})
