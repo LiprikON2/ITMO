@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.urls import reverse_lazy, reverse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
@@ -83,24 +83,32 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
         return Note.objects.filter(owner=self.request.user)
 
 
-class NoteTagList(LoginRequiredMixin, NoteMixin, UpdateView):
-    model = Note
-    form_class = NoteForm
-    template_name = 'notes/form.html'
+# class NoteTagList(LoginRequiredMixin, NoteMixin, UpdateView):
+#     model = Note
+#     form_class = NoteForm
+#     template_name = 'notes/form.html'
     
-    # Determines the list of objects to display
-    def get_queryset(self):
-        slug = self.kwargs['slug']
-        tag = get_object_or_404(Tag, slug=slug)
-        # print('slug:', tag, '---> tag:', tag, f'({tag.pk})')
-        # print(Note.objects.filter(owner=self.request.user, tags=tag))
-        return Note.objects.filter(owner=self.request.user, tags=tag)
+#     # Determines the list of objects to display
+#     def get_queryset(self):
+#         slug = self.kwargs['slug']
+#         tag = get_object_or_404(Tag, slug=slug)
+#         # print('slug:', tag, '---> tag:', tag, f'({tag.pk})')
+#         # print(Note.objects.filter(owner=self.request.user, tags=tag))
+#         return Note.objects.filter(owner=self.request.user, tags=tag)
 
-    def get_success_url(self):
-        print('\n\n\n\n', self.object.slug)
-        return reverse('notes:update', kwargs={
-            'pk': self.object.pk,
-        })
+#     def get_success_url(self):
+#         print('\n\n\n\n', self.object.slug)
+#         return reverse('notes:update', kwargs={
+#             'pk': self.object.pk,
+#         })
+
+def NoteTagList(request, slug):
+    tag = get_object_or_404(Tag, slug=slug)
+    tagged_notes = Note.objects.filter(owner=request.user, tags=tag)
+    context = {
+        'notes': tagged_notes,
+    }
+    return render(request, 'notes/form.html', context)
     
 # def tagged(request, slug):
 #     tag = get_object_or_404(Tag, slug=slug)
