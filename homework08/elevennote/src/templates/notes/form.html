@@ -10,11 +10,17 @@
     <div class="row">
 
         <div class="col-4">
-            <nav id="sidebar" class='scrollbar scrollbar-default'>
 
-                <div class="new-note">
+            <div class="sidebar-top row">
+                <div class="search-note col-md">
+                    <input type="text" name="tags" placeholder="Search"/>
+                </div>
+                <div class="new-note col-md-auto">
                     <a href="{% url 'notes:create' %}" class="new-note btn btn-outline-dark">New Note</a>
                 </div>
+            </div>
+            <nav id="sidebar" class='scrollbar scrollbar-default'>
+                
 
                 <ul id="notes">
                 {% if notes %}
