@@ -99,12 +99,3 @@ def NoteTagDelete(request, slug, note_pk):
     
     success_url = reverse_lazy('notes:create')
     return HttpResponseRedirect(success_url)
-# def tagged(request, slug):
-#     tag = get_object_or_404(Tag, slug=slug)
-#     # Filter notes by tag name
-#     note = Note.objects.filter(tags=tag)
-#     context = {
-#         'tag': tag,
-#         'notes': notes,
-#     }
-#     return render(request, 'notes/form.html', context)

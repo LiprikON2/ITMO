@@ -11,6 +11,15 @@
     $('#sidebar').css("height", window.innerHeight - 55 );
 
 
+    $('#tag-input').tagsinput({
+        tagClass: 'mr-1 badge badge-info',
+        trimValue: true,
+        itemText: function(item) {
+            // Quotes --> Nothing
+            return `#${item.replace(/['"]+/g, '')}`;
+          }
+    });
+
     $(document).ready(function(){
         $("#delete-note").click(function(e){
             e.preventDefault();
@@ -20,10 +29,28 @@
         });
 
         // deletes tags from note by clicking 'x'
-        $(".bootstrap-tagsinput > span > span").click(function(e){
+        // Event listener on Bootstrap Tags Input generated tags 
+        // $(".bootstrap-tagsinput > span > span").click(function(e){
+        //     e.preventDefault();
+        //     const url = window.location.pathname
+        //     const slug = e.target.parentElement.innerText // not really a slug (e.g. for FTW tag the slug is ftw_1)
+        //     const action = `${url}${slug}/delete-tag`
+            
+        //     const form = $(`<form hidden action="${action}" method="post"/>`).appendTo('body')
+
+        //     // csrf token for form's post request
+        //     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        //     $(`<input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}"/>`).appendTo(form)
+
+        //     form.submit()
+
+        // });
+
+        $('input').on('beforeItemRemove', function(e) {
             e.preventDefault();
             const url = window.location.pathname
-            const slug = e.target.parentElement.innerText // not really a slug (e.g. for FTW tag the slug is ftw_1)
+            // Spaces --> Dashes; Quotes --> Nothing
+            const slug = e.item.replace(/ /g,"-").replace(/['"]+/g, '')
             const action = `${url}${slug}/delete-tag`
 
             const form = $(`<form hidden action="${action}" method="post"/>`).appendTo('body')
@@ -34,7 +61,9 @@
 
             form.submit()
 
-        });
+          });
+
+
     });
 
 
