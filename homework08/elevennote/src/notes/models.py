@@ -20,4 +20,4 @@ class Note(models.Model):
     body = models.TextField()
     pub_date = models.DateTimeField('date published', auto_now_add=True)
     owner = models.ForeignKey(User, related_name='notes', on_delete=models.CASCADE, default='Nobody')
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)

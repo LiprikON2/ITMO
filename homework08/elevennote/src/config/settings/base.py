@@ -152,3 +152,5 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
 }
+
+TAGGIT_CASE_INSENSITIVE = False

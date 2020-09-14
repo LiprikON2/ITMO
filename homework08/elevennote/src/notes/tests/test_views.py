@@ -264,14 +264,14 @@ class DeleteViewTest(TestCase):
 
     def test_can_delete_note(self):
         self.client.login(email="test_user1@example.com", password="secret")
-        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
+        delete_page_url = reverse('notes:note_delete', kwargs={'pk': self.note.pk})
         response = self.client.post(delete_page_url)
         self.assertEquals(Note.objects.count(), 0)
         self.assertRedirects(response, reverse('notes:create'))
 
     def test_only_owner_can_delete_note(self):
         self.client.login(email="test_user2@example.com", password="secret")
-        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
+        delete_page_url = reverse('notes:note_delete', kwargs={'pk': self.note.pk})
         response = self.client.post(delete_page_url)
         self.assertEquals(Note.objects.count(), 1)
         self.assertEquals(response.status_code, 404)

@@ -60,6 +60,7 @@
         {% else %}
         <form action="{% url 'notes:create' %}" method="post" accept-charset="utf-8">
         {% endif %}
+        <!-- <form hidden method="post" id="delete-tag-form">{% csrf_token %}</form> -->
 
             {% csrf_token %}
             {% for field in form %}
@@ -85,7 +86,7 @@
         
         </form>
         {% if object %}
-            <form style="margin: 0; border-left-width: 0" class="btn btn-outline-dark" action="{% url 'notes:delete' object.pk %}" method="post" id="delete-note-form">
+            <form style="margin: 0; border-left-width: 0" class="btn btn-outline-dark" action="{% url 'notes:note_delete' object.pk %}" method="post" id="delete-note-form">
                 {% csrf_token %}
                 <a style='padding: 10px;' id="delete-note">
                     <i class="fa fa-trash" aria-hidden="true"></i>

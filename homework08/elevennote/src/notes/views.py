@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.urls import reverse_lazy, reverse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, HttpResponseRedirect
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
@@ -50,9 +50,9 @@ class NoteCreate(LoginRequiredMixin, NoteMixin, CreateView):
         form.instance.pub_date = timezone.now()
         
         # tags handling
-        # new_note = form.save(commit=False)
-        # new_note.save()
-        # form.save_m2m()
+        new_note = form.save(commit=False)
+        new_note.save()
+        form.save_m2m()
         
         # return reverse('notes:update', kwargs={
         #     'pk': self.object.pk
@@ -81,26 +81,7 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Note.objects.filter(owner=self.request.user)
-
-
-# class NoteTagList(LoginRequiredMixin, NoteMixin, UpdateView):
-#     model = Note
-#     form_class = NoteForm
-#     template_name = 'notes/form.html'
     
-#     # Determines the list of objects to display
-#     def get_queryset(self):
-#         slug = self.kwargs['slug']
-#         tag = get_object_or_404(Tag, slug=slug)
-#         # print('slug:', tag, '---> tag:', tag, f'({tag.pk})')
-#         # print(Note.objects.filter(owner=self.request.user, tags=tag))
-#         return Note.objects.filter(owner=self.request.user, tags=tag)
-
-#     def get_success_url(self):
-#         print('\n\n\n\n', self.object.slug)
-#         return reverse('notes:update', kwargs={
-#             'pk': self.object.pk,
-#         })
 
 def NoteTagList(request, slug):
     tag = get_object_or_404(Tag, slug=slug)
@@ -110,6 +91,14 @@ def NoteTagList(request, slug):
     }
     return render(request, 'notes/form.html', context)
     
+    
+def NoteTagDelete(request, slug, note_pk):
+    note = Note.objects.get(pk=note_pk)
+    tag = get_object_or_404(Tag, slug=slug)
+    note.tags.remove(tag)
+    
+    success_url = reverse_lazy('notes:create')
+    return HttpResponseRedirect(success_url)
 # def tagged(request, slug):
 #     tag = get_object_or_404(Tag, slug=slug)
 #     # Filter notes by tag name
