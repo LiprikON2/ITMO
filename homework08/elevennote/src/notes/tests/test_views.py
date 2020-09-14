@@ -106,7 +106,7 @@ class DetailTests(TestCase):
     def test_redirect_if_not_logged_in(self):
         detail_page_url = reverse('notes:detail', kwargs={'pk': self.note.pk})
         response = self.client.get(detail_page_url)
-        self.assertRedirects(response, f"/accounts/login/?next=/notes/{self.note.pk}/")
+        self.assertRedirects(response, f"/accounts/login/?next=/notes/{self.note.pk}/detail")
 
     def test_detail_view_status_code(self):
         self.client.login(email="test_user1@example.com", password="secret")
@@ -115,7 +115,7 @@ class DetailTests(TestCase):
         self.assertEquals(response.status_code, 200)
 
     def test_detail_url_resolves_detail_view(self):
-        view = resolve(f'/notes/{self.note.pk}/')
+        view = resolve(f'/notes/{self.note.pk}/detail')
         self.assertEquals(view.func.view_class, NoteDetail)
 
     def test_only_owner_can_see_detail_page(self):

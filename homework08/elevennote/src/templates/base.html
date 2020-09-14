@@ -6,10 +6,12 @@
     <link rel="stylesheet" media="all" href='{% static "font-awesome/css/font-awesome.css" %}'>
     <link rel="stylesheet" media="all" href='{% static "bootstrap/css/bootstrap.css" %}'>
     <link rel="stylesheet" media="all" href='{% static "elevennote/main.css" %}'>
+    <link rel="stylesheet" media="all" href='{% static "bootstrap-tagsinput/css/bootstrap-tagsinput.css" %}'>
     <link rel="stylesheet" type="text/css" media="screen"
           href="https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic|Oxygen:300,400,700" />
     <script src="{% static "elevennote/jquery.js" %}"></script>
     <script src="{% static "elevennote/main.js" %}"></script>
+    <script src="{% static "bootstrap-tagsinput/js/bootstrap-tagsinput.min.js" %}"></script>
     {% block extra_head %}{% endblock %}
   </head>
 
@@ -33,15 +35,5 @@
     {% block content %}{% endblock %}
     </main>
 
-    <script>
-        var myCustomScrollbar = document.querySelector('.my-custom-scrollbar');
-        var ps = new PerfectScrollbar(myCustomScrollbar);
-
-        var scrollbarY = myCustomScrollbar.querySelector('.ps__rail-y');
-
-        myCustomScrollbar.onscroll = function () {
-            scrollbarY.style.cssText = `top: ${this.scrollTop}px!important; height: 400px; right: ${-this.scrollLeft}px`;
-        }
-    </script>
   </body>
 </html>
