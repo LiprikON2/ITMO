@@ -97,5 +97,7 @@ def NoteTagDelete(request, slug, note_pk):
     tag = get_object_or_404(Tag, slug=slug)
     note.tags.remove(tag)
     
-    success_url = reverse_lazy('notes:create')
+    success_url = reverse_lazy('notes:update', kwargs={
+        'pk': note_pk,
+    })
     return HttpResponseRedirect(success_url)

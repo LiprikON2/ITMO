@@ -56,9 +56,9 @@
         {% endif %}
 
         {% if object %}
-        <form action="{% url 'notes:update' object.pk %}" method="post" accept-charset="utf-8">
+        <form id="main-form" action="{% url 'notes:update' object.pk %}" method="post" accept-charset="utf-8">
         {% else %}
-        <form action="{% url 'notes:create' %}" method="post" accept-charset="utf-8">
+        <form id="main-form" action="{% url 'notes:create' %}" method="post" accept-charset="utf-8">
         {% endif %}
 
             {% csrf_token %}
@@ -74,11 +74,11 @@
             {% endfor %}
             <input type="hidden" name="next" value="{{ next }}" />
 
-            <div class="btn-group" role="group">
+            <div onmouseenter="$('.bootstrap-tagsinput > input').blur()" class="submit btn-group" role="group">
             {% if object %}
-                <input class="btn btn-outline-dark" type="submit" value="Update Note"/>
+                <input class="submit btn btn-outline-dark" type="submit" value="Update Note"/>
             {% else %}
-                <input class="btn btn-outline-dark" type="submit" value="Create Note"/>
+                <input  class="submit btn btn-outline-dark" type="submit" value="Create Note"/>
             {% endif %}
 
             

@@ -3,12 +3,19 @@
 <html>
   <head>
     <title>Elevennote</title>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static "elevennote/favicon/apple-touch-icon.png" %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static "elevennote/favicon/favicon-32x32.png" %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static "elevennote/favicon/favicon-16x16.png" %}">
+    <link rel="manifest" href="{% static "elevennote/favicon/site.webmanifest" %}">
+    <link rel="shortcut icon" href="{% static "elevennote/favicon/favicon.ico" %}">
+
     <link rel="stylesheet" media="all" href='{% static "font-awesome/css/font-awesome.css" %}'>
     <link rel="stylesheet" media="all" href='{% static "bootstrap/css/bootstrap.css" %}'>
     <link rel="stylesheet" media="all" href='{% static "elevennote/main.css" %}'>
     <link rel="stylesheet" media="all" href='{% static "bootstrap-tagsinput/css/bootstrap-tagsinput.css" %}'>
-    <link rel="stylesheet" type="text/css" media="screen"
-          href="https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic|Oxygen:300,400,700" />
+    <link rel="stylesheet" type="text/css" media="screen" href="https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic|Oxygen:300,400,700" />
+    
     <script src="{% static "elevennote/jquery.js" %}"></script>
     <script src="{% static "elevennote/main.js" %}"></script>
     <script src="{% static "bootstrap-tagsinput/js/bootstrap-tagsinput.min.js" %}"></script>
@@ -16,10 +23,12 @@
   </head>
 
   <body>
-    {% csrf_token %}
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">ElevenNote</a>
+        <a class="navbar-brand" href="/">
+            <img src="{% static "elevennote/favicon/android-chrome-192x192.png" %}" width="30" height="30" class="d-inline-block align-top" alt="">
+            ElevenNote
+        </a>
         {% if user.is_authenticated %}
             <div class="collapse navbar-collapse" id="navbarText">
             <ul class="navbar-nav mr-auto"></ul>
