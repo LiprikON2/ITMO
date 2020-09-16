@@ -8,7 +8,7 @@
     $("#id_title").attr("placeholder", "Title your note");
     
     // set sidebar height
-    $('#sidebar').css("height", window.innerHeight - 55 );
+    $('#sidebar').css("height", window.innerHeight - 165 );
 
     // Bootstrap Tags Input config
     $('#tag-input').tagsinput({

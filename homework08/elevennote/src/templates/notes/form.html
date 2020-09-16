@@ -12,9 +12,9 @@
         <div class="col-4">
 
             <div class="sidebar-top row">
-                <div class="search-note col-md">
-                    <input type="text" name="tags" placeholder="Search"/>
-                </div>
+                <form class="search-note col-md" type="get" action="{% url 'notes:search' %}" style='margin-block-end: 0;'>
+                    <input id='search-box' type="text" name="q" placeholder="Search" required value="{{ query }}"/>
+                </form>
                 <div class="new-note col-md-auto">
                     <a href="{% url 'notes:create' %}" class="new-note btn btn-outline-dark">New Note</a>
                 </div>
@@ -74,6 +74,11 @@
             {% endfor %}
             <input type="hidden" name="next" value="{{ next }}" />
 
+            <!-- 
+                Jquery when told to set onmouseenter event listener
+                sets onmouseover instead for some reason 
+                which doesn't work for disabled children
+             -->
             <div onmouseenter="$('.bootstrap-tagsinput > input').blur()" class="submit btn-group" role="group">
             {% if object %}
                 <input class="submit btn btn-outline-dark" type="submit" value="Update Note"/>

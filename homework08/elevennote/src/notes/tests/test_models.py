@@ -49,3 +49,8 @@ class NoteModelTests(TestCase):
         time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
         recent_note = Note(pub_date=time)
         self.assertIs(recent_note.was_published_recently(), True)
+
+    def test_can_create_note_with_tags(self):
+        pass
+    
+    
