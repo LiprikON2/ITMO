@@ -1,7 +1,9 @@
 (function($) { $(function() {
     // allow whole list item to note to be clickable
     $("#notes li").click(function(){
-        location.assign($(this).attr("data-url"));
+        if ($(this).hasClass('active')) {
+            location.assign($(this).attr("data-url"));
+        }
     });
     
     // add Title placeholder

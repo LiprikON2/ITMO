@@ -111,7 +111,7 @@ ul#notes li:first-of-type {
 
 .active, ul#notes li:hover {
   color: black;
-  background-color: #f8f8f8;
+  background-color: #17a3b827;
 }
 
 ul#notes li:hover .note-title {

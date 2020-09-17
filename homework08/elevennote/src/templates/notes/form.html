@@ -20,10 +20,10 @@
                 </div>
             </div>
             <nav id="sidebar" class='scrollbar scrollbar-default'>
-                
 
                 <ul id="notes">
                 {% if notes %}
+                    {% load widget_tweaks %}
                     {% for note in notes %}
                         {% url 'notes:update' note.id as note_path %}
                         <li {% if request.path == note_path %}class="active"{% endif %} data-url="{% url 'notes:update' note.id %}">
@@ -31,7 +31,7 @@
 
                             <div style="display:flex">
                                 {% for tag in note.tags.all %}
-                                <a href="/notes/search/?q={{ tag }}" id='tag' class="mr-1 badge badge-info">#{{ tag }}</a>
+                                <a href="/notes/search/?q={{ tag|urlencode }}" id='tag' class="mr-1 badge badge-info">#{{ tag }}</a>
                                 {% endfor %}
                             </div>
 

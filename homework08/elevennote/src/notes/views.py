@@ -59,9 +59,6 @@ class NoteCreate(LoginRequiredMixin, NoteMixin, CreateView):
         new_note.save()
         form.save_m2m()
         
-        # return reverse('notes:update', kwargs={
-        #     'pk': self.object.pk
-        # })
         return super(NoteCreate, self).form_valid(form)
 
 
