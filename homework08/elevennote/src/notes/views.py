@@ -12,9 +12,11 @@ from django.views.generic import (
 # For search
 from django.db.models import Q
 import re
+# For sharing notes
+import hashlib 
 
 from taggit.models import Tag
-from .models import Note
+from .models import Note, Permalink
 from .forms import NoteForm
 from .mixins import NoteMixin
 
@@ -85,7 +87,7 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
     
     
 def NoteTagDelete(request, slug, note_pk):
-    note = Note.objects.get(pk=note_pk)
+    note = Note.objects.get(owner=self.request.user, pk=note_pk)
     tag = get_object_or_404(Tag, slug=slug)
     note.tags.remove(tag)
     
@@ -152,3 +154,28 @@ def get_query(query_string, search_fields):
         else:
             query = query & or_query
     return query
+
+
+def share_note(request, note_pk):
+    note = Note.objects.get(owner=request.user, pk=note_pk)
+    share_key = hashlib.md5(note.title.encode('utf-8')).hexdigest()[:8]
+    note = Note.objects.get(pk=note_pk)
+    permalink = Permalink(key=share_key, refersTo=note)
+    permalink.save()
+    
+    request.session['share_key'] = share_key
+    success_url = reverse_lazy('notes:update', kwargs={
+        'pk': note_pk,
+    })
+    return HttpResponseRedirect(success_url)
+
+
+class SharedNote(DetailView):
+    template_name = 'notes/detail.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(SharedNote, self).dispatch(*args, **kwargs)
+
+    def get_object(self):
+        return Permalink.objects.get(key=self.kwargs['slug']).refersTo

@@ -21,3 +21,8 @@ class Note(models.Model):
     pub_date = models.DateTimeField('date published', auto_now_add=True)
     owner = models.ForeignKey(User, related_name='notes', on_delete=models.CASCADE, default='Nobody')
     tags = TaggableManager(blank=True)
+
+
+class Permalink(models.Model):
+    key = models.CharField(primary_key=True, max_length=8)
+    refersTo = models.ForeignKey(Note, unique=True, on_delete=models.CASCADE)

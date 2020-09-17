@@ -98,7 +98,16 @@
             </form>
         {% endif %}
             </div>  
-        
+            
+            <form style="margin: 0; border-left-width: 0" class="btn btn-outline-dark" action="{% url 'notes:share_note' object.pk %}" method="post" id="share-note-form">
+                {% csrf_token %}
+                <a style='padding: 10px;' id="share-note">
+                    <i class="fa" aria-hidden="true"></i>
+                </a>
+            </form>
+            {% if share_key %}
+                {{ share_key }}
+            {% endif %}
         </div>
     </div>
 

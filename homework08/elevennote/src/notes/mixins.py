@@ -8,5 +8,10 @@ class NoteMixin(object):
         context.update({
             'notes': Note.objects.filter(owner=self.request.user).order_by('-pub_date'),
         })
-
+        
+        if 'share_key' in self.request.session:
+            context.update({
+                'share_key': self.request.session['share_key']
+            })
+            
         return context

@@ -1,7 +1,10 @@
 (function($) { $(function() {
     // allow whole list item to note to be clickable
     $("#notes li").click(function(){
-        if ($(this).hasClass('active')) {
+        var attr = $(this).attr('data-url');
+        // For some browsers, `attr` is undefined; for others,
+        // `attr` is false.  Check for both.
+        if (typeof attr !== typeof undefined && attr !== false) {
             location.assign($(this).attr("data-url"));
         }
     });
@@ -46,6 +49,13 @@
         }).blur(function(){
             //enable btn when bluring the input
             $(".submit.btn").prop('disabled', false);
+        });
+
+        $("#share-note").click(function(e){
+            e.preventDefault();
+            if (window.confirm("Are you sure?")) {
+                $("#share-note-form").submit();
+            }
         });
     });
     
