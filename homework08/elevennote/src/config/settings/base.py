@@ -135,9 +135,9 @@ STATIC_ROOT = '/static'
 
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = [
-    '/src/static',
-]
+# STATICFILES_DIRS = [
+#     '/src/static',
+# ]
 
 LOGIN_REDIRECT_URL = '/'
 

@@ -23,7 +23,6 @@
 
     
     
-    
     $(document).ready(function(){
         $("#delete-note").click(function(e){
             e.preventDefault();

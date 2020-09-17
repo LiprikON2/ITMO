@@ -13,7 +13,7 @@
 
             <div class="sidebar-top row">
                 <form class="search-note col-md" type="get" action="{% url 'notes:search' %}" style='margin-block-end: 0;'>
-                    <input id='search-box' type="text" name="q" placeholder="Search" required value="{{ query }}"/>
+                    <input id='search-box' type="text" name="q" placeholder="Search" value="{{ query }}"/>
                 </form>
                 <div class="new-note col-md-auto">
                     <a href="{% url 'notes:create' %}" class="new-note btn btn-outline-dark">New Note</a>
@@ -31,7 +31,7 @@
 
                             <div style="display:flex">
                                 {% for tag in note.tags.all %}
-                                <a href="{% url 'notes:tags' tag.slug %}" id='tag' class="mr-1 badge badge-info">#{{ tag }}</a>
+                                <a href="/notes/search/?q={{ tag }}" id='tag' class="mr-1 badge badge-info">#{{ tag }}</a>
                                 {% endfor %}
                             </div>
 

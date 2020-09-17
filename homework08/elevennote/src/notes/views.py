@@ -86,26 +86,30 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         return Note.objects.filter(owner=self.request.user)
     
-
-# def SearchView(request):
-#     query = request.GET.get('q', None)
     
-#     notes = Note.objects.filter(body__search=query)
-#     context = {
-#         'notes': notes,
-#         'query': query,
-#     }
-#     return render(request, 'notes/form.html', context)
+def NoteTagDelete(request, slug, note_pk):
+    note = Note.objects.get(pk=note_pk)
+    tag = get_object_or_404(Tag, slug=slug)
+    note.tags.remove(tag)
+    
+    success_url = reverse_lazy('notes:update', kwargs={
+        'pk': note_pk,
+    })
+    return HttpResponseRedirect(success_url)
 
 
 def SearchView(request):
     query_string = ''
     if ('q' in request.GET) and request.GET['q'].strip():
         query_string = request.GET['q']
-        entry_query = get_query(query_string, ['title', 'body'])
-        notes = Note.objects.filter(entry_query).order_by('-pub_date')
+        entry_query = get_query(query_string, ['title', 'body', 'tags__name'])
+        notes = Note.objects.filter(entry_query, owner=request.user).distinct().order_by('-pub_date')
     else:
-        notes = Note.objects.all()
+        success_url = reverse_lazy('notes:update', kwargs={
+            'pk': Note.objects.first().pk,
+        })
+        return HttpResponseRedirect(success_url)
+        
     context = {
         'notes': notes,
         'query': query_string,
@@ -151,23 +155,3 @@ def get_query(query_string, search_fields):
         else:
             query = query & or_query
     return query
-
-
-def NoteTagList(request, slug):
-    tag = get_object_or_404(Tag, slug=slug)
-    tagged_notes = Note.objects.filter(owner=request.user, tags=tag)
-    context = {
-        'notes': tagged_notes,
-    }
-    return render(request, 'notes/form.html', context)
-    
-    
-def NoteTagDelete(request, slug, note_pk):
-    note = Note.objects.get(pk=note_pk)
-    tag = get_object_or_404(Tag, slug=slug)
-    note.tags.remove(tag)
-    
-    success_url = reverse_lazy('notes:update', kwargs={
-        'pk': note_pk,
-    })
-    return HttpResponseRedirect(success_url)
