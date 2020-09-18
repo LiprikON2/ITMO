@@ -106,12 +106,12 @@
                                 class="btn btn-outline-dark"
                                 id="share-note"
                                 data-toggle="popover"
-                                data-poload="{% url 'notes:share_note' object.pk %}"
-                                title="Public link">
-                                Share<i class="icon far fa-share-square" aria-hidden="true"></i>
+                                data-poload="{% url 'notes:share_note' object.pk %}">
+                                    Share<i class="icon far fa-share-square" aria-hidden="true"></i>
                             </button>
                         </form>
                     </div>
+                    
                 {% endif %}
         </div>
     </div>

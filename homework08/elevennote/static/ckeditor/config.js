@@ -18,4 +18,5 @@ CKEDITOR.editorConfig = function( config ) {
 
 	config.removeButtons = 'Cut,Undo,Redo,Copy,Paste,PasteFromWord,PasteText,Find,Replace,SelectAll,Scayt,Textarea,TextField,Select,Button,ImageButton,HiddenField,Radio,Checkbox,Form,Blockquote,CreateDiv,BidiLtr,BidiRtl,Language,Unlink,Anchor,Flash,Iframe,ShowBlocks,Maximize,About,Source,NewPage,Preview,Templates,Save,PageBreak,HorizontalRule,Smiley';
     config.extraPlugins = 'tab';
+    config.tabSpaces = 4;
 };

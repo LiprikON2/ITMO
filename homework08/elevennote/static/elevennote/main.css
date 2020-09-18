@@ -237,7 +237,6 @@ span.login {
     scrollbar-color: #17a2b8 #F5F5F5;
 }
 
-/* tag */
 
 #tag {
     color: white;
@@ -272,11 +271,6 @@ span.login {
     width: 100%;
 }
 
-/* .submit.btn-group {
-    display: flex;
-    justify-content: space-between;
-} */
-
 
 a > i.icon {
     padding: 10px;
@@ -289,7 +283,6 @@ button > i.icon {
     min-width: 22rem;
 }
 
-/* form.btn.btn-outline-dark { */
 div.submit.btn-group > .btn:not(:first-child) {
     margin: 0;
     border-left-width: 0;
@@ -303,7 +296,30 @@ div.submit.btn-group > .btn {
     font-size: initial;
 }
 
-input[readonly]
-{
-    background-color:white;
+
+
+.popover {
+    max-width: unset;
+}
+
+.popover-header {
+    display: flex;
+    justify-content: space-between;
+}
+.popover-body {
+    font-size: 1.2rem;
+}
+.popover-header > .popover-title {
+    line-height: normal;
+}
+
+.popover-header > .copy.badge {
+    font-family: Oxygen, Helvetica, Arial, sans-serif;
+    font-weight: 800;
+    line-height: normal;
+}
+
+.popover-body > .badge {
+    font-weight: 400;
+
 }
