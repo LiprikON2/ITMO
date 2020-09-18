@@ -4,6 +4,12 @@
 
 <h1>{{ note.title }}</h1>
 
+<div style="display:flex">
+        {% for tag in note.tags.all %}
+        <a href="/notes/search/?q={{ tag|urlencode }}" id='tag' class="mr-1 badge badge-info">#{{ tag }}</a>
+        {% endfor %}
+</div>
+
 <p>{{ note.body | safe }}</p>
 
 {% endblock %}

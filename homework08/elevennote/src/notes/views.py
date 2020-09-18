@@ -4,11 +4,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import (
-    get_object_or_404, render, HttpResponseRedirect, redirect
+    get_object_or_404, render, HttpResponseRedirect, redirect, HttpResponse
 )
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
+from django.http import JsonResponse
+
 # For search
 from django.db.models import Q
 import re
@@ -163,17 +165,20 @@ def share_note(request, note_pk):
     permalink = Permalink(key=share_key, refersTo=note)
     permalink.save()
     
-    request.session['share_key'] = share_key
-    success_url = reverse_lazy('notes:update', kwargs={
-        'pk': note_pk,
-    })
-    return HttpResponseRedirect(success_url)
+    # request.session['share_key'] = share_key
+    # success_url = reverse_lazy('notes:update', kwargs={
+    #     'pk': note_pk,
+    # })
+    # return HttpResponseRedirect(success_url)
+    response = {
+        'share_key': share_key,
+    }
+    return JsonResponse(response)
 
 
 class SharedNote(DetailView):
     template_name = 'notes/detail.html'
 
-    @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(SharedNote, self).dispatch(*args, **kwargs)
 

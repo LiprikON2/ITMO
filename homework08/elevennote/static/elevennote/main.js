@@ -27,7 +27,6 @@
     });
 
     
-    
     $(document).ready(function(){
         $("#delete-note").click(function(e){
             e.preventDefault();
@@ -51,11 +50,33 @@
             $(".submit.btn").prop('disabled', false);
         });
 
-        $("#share-note").click(function(e){
-            e.preventDefault();
-            if (window.confirm("Are you sure?")) {
-                $("#share-note-form").submit();
-            }
+        // Share button popover
+        $('*[data-poload]').click(function() {
+            var e=$(this);
+            e.off('click');
+            const share_url = window.location.origin + '/notes/shared/'
+            $.get(e.data('poload'),function(data) {
+                e.popover({content: share_url + data['share_key']}).popover('show');
+            });
+        });
+        
+        // Click outside popover closes it
+        $(document).on("shown.bs.popover",'[data-toggle="popover"]', function(){
+            $(this).attr('someattr','1');
+        });
+        $(document).on("hidden.bs.popover",'[data-toggle="popover"]', function(){
+            $(this).attr('someattr','0');
+        });
+        $(document).on('click', function (e) {
+            $('[data-toggle="popover"],[data-original-title]').each(function () {
+                //the 'is' for buttons that trigger popups
+                //the 'has' for icons within a button that triggers a popup
+                if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                    if($(this).attr('someattr')=="1"){
+                        $(this).popover("toggle");
+                    }
+                }
+            });
         });
     });
     

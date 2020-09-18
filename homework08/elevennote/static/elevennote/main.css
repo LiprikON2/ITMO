@@ -271,3 +271,39 @@ span.login {
 .bootstrap-tagsinput {
     width: 100%;
 }
+
+/* .submit.btn-group {
+    display: flex;
+    justify-content: space-between;
+} */
+
+
+a > i.icon {
+    padding: 10px;
+}
+button > i.icon {
+    padding: 10px 0 10px 10px
+}
+
+.share-link {
+    min-width: 22rem;
+}
+
+/* form.btn.btn-outline-dark { */
+div.submit.btn-group > .btn:not(:first-child) {
+    margin: 0;
+    border-left-width: 0;
+}
+
+div.submit.btn-group > .btn {
+    margin: 0;
+}
+
+.bootstrap-tagsinput > input { 
+    font-size: initial;
+}
+
+input[readonly]
+{
+    background-color:white;
+}

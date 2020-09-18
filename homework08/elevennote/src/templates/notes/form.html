@@ -38,7 +38,7 @@
                             <div class="note-body">{{ note.body | safe }}</div>
                         </li>
                     {% endfor %}
-                    {% else %}
+                {% else %}
                     <li>No notes are available.</li>
                 {% endif %}
                 </ul>
@@ -56,58 +56,63 @@
         {% endif %}
 
         {% if object %}
-        <form id="main-form" action="{% url 'notes:update' object.pk %}" method="post" accept-charset="utf-8">
+            <form id="main-form" action="{% url 'notes:update' object.pk %}" method="post" accept-charset="utf-8">
         {% else %}
-        <form id="main-form" action="{% url 'notes:create' %}" method="post" accept-charset="utf-8">
+            <form id="main-form" action="{% url 'notes:create' %}" method="post" accept-charset="utf-8">
         {% endif %}
+                {% csrf_token %}
+                {% for field in form %}
+                    <p>
+                        {% if field.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ field.errors }}
+                        </div>
+                        {% endif %}
+                        {{ field }}
+                    </p>
+                {% endfor %}
+                <input type="hidden" name="next" value="{{ next }}"/>
 
-            {% csrf_token %}
-            {% for field in form %}
-            <p>
-                {% if field.errors %}
-            	<div class="alert alert-danger" role="alert">
-                    {{ field.errors }}
-            	</div>
+                <!-- 
+                    Jquery when told to set onmouseenter event listener
+                    sets onmouseover instead for some reason 
+                    which doesn't work for disabled children
+                -->
+                <div onmouseenter="$('.bootstrap-tagsinput > input').blur()" class="submit btn-group" role="group"/>
+                {% if object %}
+                    <input class="submit btn btn-outline-dark" type="submit" value="Update Note"/>
+                {% else %}
+                    <input  class="submit btn btn-outline-dark" type="submit" value="Create Note"/>
                 {% endif %}
-                {{ field }}
-            </p>
-            {% endfor %}
-            <input type="hidden" name="next" value="{{ next }}" />
-
-            <!-- 
-                Jquery when told to set onmouseenter event listener
-                sets onmouseover instead for some reason 
-                which doesn't work for disabled children
-             -->
-            <div onmouseenter="$('.bootstrap-tagsinput > input').blur()" class="submit btn-group" role="group">
-            {% if object %}
-                <input class="submit btn btn-outline-dark" type="submit" value="Update Note"/>
-            {% else %}
-                <input  class="submit btn btn-outline-dark" type="submit" value="Create Note"/>
-            {% endif %}
-
-            
+            </form>
         
-        </form>
-        {% if object %}
-            <form style="margin: 0; border-left-width: 0" class="btn btn-outline-dark" action="{% url 'notes:note_delete' object.pk %}" method="post" id="delete-note-form">
-                {% csrf_token %}
-                <a style='padding: 10px;' id="delete-note">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                </a>
-            </form>
-        {% endif %}
-            </div>  
-            
-            <form style="margin: 0; border-left-width: 0" class="btn btn-outline-dark" action="{% url 'notes:share_note' object.pk %}" method="post" id="share-note-form">
-                {% csrf_token %}
-                <a style='padding: 10px;' id="share-note">
-                    <i class="fa" aria-hidden="true"></i>
-                </a>
-            </form>
-            {% if share_key %}
-                {{ share_key }}
-            {% endif %}
+        
+
+
+                {% if object %}
+                    <form class="btn btn-outline-dark" action="{% url 'notes:note_delete' object.pk %}" method="post" id="delete-note-form">
+                        {% csrf_token %}
+                        <a id="delete-note">
+                            <i class="icon fa fa-trash-alt" aria-hidden="true"></i>
+                        </a>
+                    </form>
+                    </div>
+                    <br>
+                    <div class="submit btn-group" role="group">
+                        <form type="button" id="share-note-form">
+                            {% csrf_token %}
+                            <button 
+                                type="button"
+                                class="btn btn-outline-dark"
+                                id="share-note"
+                                data-toggle="popover"
+                                data-poload="{% url 'notes:share_note' object.pk %}"
+                                title="Public link">
+                                Share<i class="icon far fa-share-square" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
         </div>
     </div>
 
