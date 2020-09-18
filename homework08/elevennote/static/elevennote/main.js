@@ -28,7 +28,8 @@
 
     
     $(document).ready(function(){
-        $("#delete-note").click(function(e){
+        $("#delete-note-form").click(function(e){
+            console.log('you are trash');
             e.preventDefault();
             if (window.confirm("Are you sure?")) {
                 $("#delete-note-form").submit();

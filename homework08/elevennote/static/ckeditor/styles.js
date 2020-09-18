@@ -43,8 +43,7 @@ CKEDITOR.stylesSet.add( 'default', [
 			background: '#eee',
 			border: '1px solid #ccc'
 		}
-	},
-
+    },
 	/* Inline styles */
 
 	// These are core styles available as toolbar buttons. You may opt enabling

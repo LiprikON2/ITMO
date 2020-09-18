@@ -14,8 +14,9 @@ CKEDITOR.editorConfig = function( config ) {
 		{ name: 'others', groups: [ 'others' ] },
 		{ name: 'about', groups: [ 'about' ] },
 		{ name: 'document', groups: [ 'mode', 'document', 'doctools' ] }
-	];
-
+    ];
+    
+    config.enterMode = CKEDITOR.ENTER_BR
 	config.removeButtons = 'Cut,Undo,Redo,Copy,Paste,PasteFromWord,PasteText,Find,Replace,SelectAll,Scayt,Textarea,TextField,Select,Button,ImageButton,HiddenField,Radio,Checkbox,Form,Blockquote,CreateDiv,BidiLtr,BidiRtl,Language,Unlink,Anchor,Flash,Iframe,ShowBlocks,Maximize,About,Source,NewPage,Preview,Templates,Save,PageBreak,HorizontalRule,Smiley';
     config.extraPlugins = 'tab';
     config.tabSpaces = 4;

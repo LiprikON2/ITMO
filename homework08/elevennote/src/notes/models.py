@@ -25,4 +25,4 @@ class Note(models.Model):
 
 class Permalink(models.Model):
     key = models.CharField(primary_key=True, max_length=8)
-    refersTo = models.ForeignKey(Note, unique=True, on_delete=models.CASCADE)
+    refersTo = models.OneToOneField(Note, on_delete=models.CASCADE)
