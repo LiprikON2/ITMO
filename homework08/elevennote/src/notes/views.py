@@ -86,17 +86,6 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Note.objects.filter(owner=self.request.user)
-    
-    
-def NoteTagDelete(request, slug, note_pk):
-    note = Note.objects.get(owner=self.request.user, pk=note_pk)
-    tag = get_object_or_404(Tag, slug=slug)
-    note.tags.remove(tag)
-    
-    success_url = reverse_lazy('notes:update', kwargs={
-        'pk': note_pk,
-    })
-    return HttpResponseRedirect(success_url)
 
 
 def SearchView(request):
@@ -183,4 +172,5 @@ class SharedNote(DetailView):
         return super(SharedNote, self).dispatch(*args, **kwargs)
 
     def get_object(self):
-        return Permalink.objects.get(key=self.kwargs['slug']).refersTo
+        note = get_object_or_404(Permalink, key=self.kwargs['slug']).refersTo
+        return note

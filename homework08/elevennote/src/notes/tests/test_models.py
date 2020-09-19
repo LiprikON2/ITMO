@@ -16,11 +16,11 @@ class NoteModelTests(TestCase):
             password="secret")
     
     def test_can_create_a_new_note(self):
-        note = Note.objects.create(title='Note title', body='Note body', owner=self.test_user)
+        note = Note.objects.create(title='Note title', body='Note body', owner=self.test_user, tags='tag1 tag2 "third tag"')
         self.assertTrue(note)
 
     def test_string_representation(self):
-        note = Note.objects.create(title='Note title', body='Note body', owner=self.test_user)
+        note = Note.objects.create(title='Note title', body='Note body', owner=self.test_user, tags='tag1 tag2 "third tag"')
         self.assertEqual(str(note), 'Note title')
 
     def test_was_published_recently_with_future_note(self):
@@ -51,6 +51,9 @@ class NoteModelTests(TestCase):
         self.assertIs(recent_note.was_published_recently(), True)
 
     def test_can_create_note_with_tags(self):
-        pass
-    
-    
+        note = Note.objects.create(title='Note title', body='Note body', owner=self.test_user)
+        note.tags.add('tag1', 'tag2', "third tag")
+        self.assertEquals(note.tags.count(), 3)
+        self.assertEquals(note.tags.names()[0], 'tag1')
+        self.assertEquals(note.tags.names()[1], 'tag2')
+        self.assertEquals(note.tags.names()[2], 'third tag')

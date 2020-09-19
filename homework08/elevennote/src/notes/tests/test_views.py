@@ -25,13 +25,14 @@ class IndexTests(TestCase):
         self.n = 10
         self.paginate_by = 5
         for i in range(self.n):
-            self.notes.append(Note.objects.create(
+            note = Note.objects.create(
                 title=f"Note title {i}",
                 body="Note description",
                 pub_date=now + datetime.timedelta(days=i),
                 owner=self.test_user1,
-                tags='Note tag'
-            ))
+            )
+            note.tags.add('tag1', 'tag2', "third tag")
+            self.notes.append(note)
 
     def test_redirect_if_not_logged_in(self):
         index_page_url = reverse('notes:index')
@@ -101,7 +102,8 @@ class DetailTests(TestCase):
             email="test_user2@example.com",
             password="secret")
         self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.test_user1, tags='Note tag')
+            title="Note title", body="Note description", owner=self.test_user1)
+        self.note.tags.add('tag1', 'tag2', "third tag")
 
     def test_redirect_if_not_logged_in(self):
         detail_page_url = reverse('notes:detail', kwargs={'pk': self.note.pk})
@@ -153,17 +155,21 @@ class CreateViewTest(TestCase):
         self.client.login(email="user@example.com", password="secret")
         index_page_url = reverse('notes:index')
         create_page_url = reverse('notes:create')
-        response = self.client.post(create_page_url, {'title': 'Note Title', 'body': 'Note body', 'tags': 'Note tag'})
+        response = self.client.post(create_page_url, {'title': 'Note Title', 'body': 'Note body', 'tags': 'tag1 tag2 "third tag"'})
         self.assertRedirects(response, index_page_url)
 
     def test_form_success(self):
         self.client.login(email="user@example.com", password="secret")
         create_page_url = reverse('notes:create')
-        self.client.post(create_page_url, {'title': 'Note title', 'body': 'Note body', 'tags': 'Note tag'})
+        self.client.post(create_page_url, {'title': 'Note title', 'body': 'Note body', 'tags': 'tag1 tag2 "third tag"'})
         note = Note.objects.first()
         self.assertEquals(note.title, 'Note title')
         self.assertEquals(note.body, 'Note body')
         self.assertEquals(note.owner, self.user)
+        self.assertEquals(note.tags.count(), 3)
+        self.assertEquals(note.tags.names()[0], 'tag1')
+        self.assertEquals(note.tags.names()[1], 'tag2')
+        self.assertEquals(note.tags.names()[2], 'third tag')
         self.assertTrue(note.was_published_recently())
 
     def test_form_invalid(self):
@@ -187,7 +193,8 @@ class UpdateViewTest(TestCase):
             email="user@example.com",
             password="secret")
         self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.user, tags='Note tag')
+            title="Note title", body="Note description", owner=self.user)
+        self.note.tags.add('tag1', 'tag2', "third tag")
 
     def test_redirect_if_not_logged_in(self):
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
@@ -209,16 +216,20 @@ class UpdateViewTest(TestCase):
     def test_success_url(self):
         self.client.login(email="user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'New note tag'})
+        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'new_tag1 new_tag2 "new third tag"'})
         self.assertRedirects(response, update_page_url)
 
     def test_form_success(self):
         self.client.login(email="user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'New note tag'})
+        self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'new_tag1 new_tag2 "new third tag"'})
         note = Note.objects.first()
         self.assertEquals(note.title, 'New note title')
         self.assertEquals(note.body, 'New note body')
+        self.assertEquals(note.tags.count(), 3)
+        self.assertEquals(note.tags.names()[0], 'new_tag1')
+        self.assertEquals(note.tags.names()[1], 'new_tag2')
+        self.assertEquals(note.tags.names()[2], 'new third tag')
 
     def test_form_invalid(self):
         self.client.login(email="user@example.com", password="secret")
@@ -233,12 +244,16 @@ class UpdateViewTest(TestCase):
             password="secret")
         self.client.login(email="other_user@example.com", password="secret")
         update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
-        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'New note tag'})
+        response = self.client.post(update_page_url, {'title': 'New note title', 'body': 'New note body', 'tags': 'new_tag1 new_tag2 "new third tag"'})
         self.assertEquals(response.status_code, 404)
         note = Note.objects.first()
         self.assertEquals(note.title, 'Note title')
         self.assertEquals(note.body, 'Note description')
         self.assertEquals(note.owner, self.user)
+        self.assertEquals(note.tags.count(), 3)
+        self.assertEquals(note.tags.names()[0], 'tag1')
+        self.assertEquals(note.tags.names()[1], 'tag2')
+        self.assertEquals(note.tags.names()[2], 'third tag')
 
     def test_response_contains_notes_list(self):
         self.client.login(email="user@example.com", password="secret")
@@ -260,7 +275,8 @@ class DeleteViewTest(TestCase):
             email="test_user2@example.com",
             password="secret")
         self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.test_user1, tags="Note tag")
+            title="Note title", body="Note description", owner=self.test_user1)
+        self.note.tags.add('tag1', 'tag2', "third tag")
 
     def test_can_delete_note(self):
         self.client.login(email="test_user1@example.com", password="secret")
