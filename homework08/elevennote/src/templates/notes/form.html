@@ -90,7 +90,7 @@
 
 
                 {% if object %}
-                    <form class="btn btn-outline-dark" action="{% url 'notes:note_delete' object.pk %}" method="post" id="delete-note-form">
+                    <form class="btn btn-outline-dark" action="{% url 'notes:delete' object.pk %}" method="post" id="delete-note-form">
                         {% csrf_token %}
                         <a id="delete-note">
                             <i class="icon fa fa-trash-alt" aria-hidden="true"></i>
@@ -106,7 +106,7 @@
                                 class="btn btn-outline-dark"
                                 id="share-note"
                                 data-toggle="popover"
-                                data-poload="{% url 'notes:share_note' object.pk %}">
+                                data-poload="{% url 'notes:share' object.pk %}">
                                     Share<i class="icon far fa-share-square" aria-hidden="true"></i>
                             </button>
                         </form>

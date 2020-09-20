@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 import datetime
 
-from notes.models import Note
+from notes.models import Note, Permalink
 
 User = get_user_model()
 
@@ -57,3 +57,11 @@ class NoteModelTests(TestCase):
         self.assertEquals(note.tags.names()[0], 'tag1')
         self.assertEquals(note.tags.names()[1], 'tag2')
         self.assertEquals(note.tags.names()[2], 'third tag')
+
+    def test_can_create_permalink(self):
+        note = Note.objects.create(title='Note title', body='Note body', owner=self.test_user)
+        note.tags.add('tag1', 'tag2', "third tag")
+        link = Permalink.objects.create(key='12345678', refersTo=note)
+        self.assertEquals(note, link.refersTo)
+        link2 = Permalink.objects.get(key='12345678')
+        self.assertEquals(note, link2.refersTo)

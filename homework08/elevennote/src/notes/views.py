@@ -15,7 +15,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 import re
 # For sharing notes
-import hashlib 
+import hashlib
 
 from taggit.models import Tag
 from .models import Note, Permalink
@@ -147,18 +147,12 @@ def get_query(query_string, search_fields):
     return query
 
 
+@login_required
 def share_note(request, note_pk):
-    note = Note.objects.get(owner=request.user, pk=note_pk)
+    note = get_object_or_404(Note, owner=request.user, pk=note_pk)
     share_key = hashlib.md5(note.title.encode('utf-8')).hexdigest()[:8]
-    note = Note.objects.get(pk=note_pk)
     permalink = Permalink(key=share_key, refersTo=note)
     permalink.save()
-    
-    # request.session['share_key'] = share_key
-    # success_url = reverse_lazy('notes:update', kwargs={
-    #     'pk': note_pk,
-    # })
-    # return HttpResponseRedirect(success_url)
     response = {
         'share_key': share_key,
     }

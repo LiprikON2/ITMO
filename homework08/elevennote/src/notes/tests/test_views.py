@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 import datetime
 
 from notes.models import Note
-from notes.views import NoteList, NoteDetail
+from notes.views import NoteList, NoteDetail, SharedNote
 
 User = get_user_model()
 
@@ -263,7 +263,69 @@ class UpdateViewTest(TestCase):
         self.assertQuerysetEqual(
             response.context['notes'],
             ['<Note: Note title>'])
+    
+    def test_can_remove_tags(self):
+        self.client.login(email="user@example.com", password="secret")
+        update_page_url = reverse('notes:update', kwargs={'pk': self.note.pk})
+        self.client.post(update_page_url, {'title': self.note.title, 'body': self.note.body, 'tags': 'tag1 tag2'})
+        note = Note.objects.first()
+        self.assertEquals(note.tags.count(), 2)
+        self.assertEquals(note.tags.names()[0], 'tag1')
+        self.assertEquals(note.tags.names()[1], 'tag2')
 
+
+class ShareNoteViewTest(TestCase):
+    
+    def setUp(self):
+        self.test_user1 = User.objects.create_user(
+            email="test_user1@example.com",
+            password="secret")
+        self.test_user2 = User.objects.create_user(
+            email="test_user2@example.com",
+            password="secret")
+        self.note = Note.objects.create(
+            title="Note title", body="Note description", owner=self.test_user1)
+        self.note.tags.add('tag1', 'tag2', "third tag")
+        
+    def test_can_share_note(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        response = self.client.post(f'/notes/share/{self.note.pk}')
+        self.assertEqual(response.status_code, 200)
+        json = response.json()
+        self.assertEqual('share_key' in json, True)
+        self.assertEqual(len(json['share_key']), 8)
+    
+    def test_only_owner_can_share_note(self):
+        self.client.login(email="test_user2@example.com", password="secret")
+        response = self.client.post(f'/notes/share/{self.note.pk}')
+        self.assertEqual(response.status_code, 404)
+        
+    def test_guest_cant_share_note(self):
+        response = self.client.post(f'/notes/share/{self.note.pk}')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_can_access_shared_note(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        view = resolve(f'/notes/shared/{json["share_key"]}')
+        self.assertEquals(view.func.view_class, SharedNote)
+        
+    def test_guest_can_access_shared_note(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        self.client.logout()
+        view = resolve(f'/notes/shared/{json["share_key"]}')
+        self.assertEquals(view.func.view_class, SharedNote)
+    
+    def test_deleted_shared_note_not_accessible(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
+        self.client.post(delete_page_url)
+        url = reverse('notes:shared', kwargs={'slug': json['share_key']})
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 404)
+        
 
 class DeleteViewTest(TestCase):
 
@@ -280,14 +342,14 @@ class DeleteViewTest(TestCase):
 
     def test_can_delete_note(self):
         self.client.login(email="test_user1@example.com", password="secret")
-        delete_page_url = reverse('notes:note_delete', kwargs={'pk': self.note.pk})
+        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
         response = self.client.post(delete_page_url)
         self.assertEquals(Note.objects.count(), 0)
         self.assertRedirects(response, reverse('notes:create'))
 
     def test_only_owner_can_delete_note(self):
         self.client.login(email="test_user2@example.com", password="secret")
-        delete_page_url = reverse('notes:note_delete', kwargs={'pk': self.note.pk})
+        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
         response = self.client.post(delete_page_url)
         self.assertEquals(Note.objects.count(), 1)
         self.assertEquals(response.status_code, 404)
