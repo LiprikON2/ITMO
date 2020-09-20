@@ -17,7 +17,7 @@
 
     // Bootstrap Tags Input config
     $('#tag-input').tagsinput({
-        tagClass: 'mr-1 badge badge-info',
+        tagClass: 'mr-1 mb-1 badge badge-info',
         trimValue: true,
         confirmKeys: [13, 188],
         itemText: function(item) {

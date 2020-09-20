@@ -274,59 +274,6 @@ class UpdateViewTest(TestCase):
         self.assertEquals(note.tags.names()[1], 'tag2')
 
 
-class ShareNoteViewTest(TestCase):
-    
-    def setUp(self):
-        self.test_user1 = User.objects.create_user(
-            email="test_user1@example.com",
-            password="secret")
-        self.test_user2 = User.objects.create_user(
-            email="test_user2@example.com",
-            password="secret")
-        self.note = Note.objects.create(
-            title="Note title", body="Note description", owner=self.test_user1)
-        self.note.tags.add('tag1', 'tag2', "third tag")
-        
-    def test_can_share_note(self):
-        self.client.login(email="test_user1@example.com", password="secret")
-        response = self.client.post(f'/notes/share/{self.note.pk}')
-        self.assertEqual(response.status_code, 200)
-        json = response.json()
-        self.assertEqual('share_key' in json, True)
-        self.assertEqual(len(json['share_key']), 8)
-    
-    def test_only_owner_can_share_note(self):
-        self.client.login(email="test_user2@example.com", password="secret")
-        response = self.client.post(f'/notes/share/{self.note.pk}')
-        self.assertEqual(response.status_code, 404)
-        
-    def test_guest_cant_share_note(self):
-        response = self.client.post(f'/notes/share/{self.note.pk}')
-        self.assertEqual(response.status_code, 302)
-        
-    def test_can_access_shared_note(self):
-        self.client.login(email="test_user1@example.com", password="secret")
-        json = self.client.post(f'/notes/share/{self.note.pk}').json()
-        view = resolve(f'/notes/shared/{json["share_key"]}')
-        self.assertEquals(view.func.view_class, SharedNote)
-        
-    def test_guest_can_access_shared_note(self):
-        self.client.login(email="test_user1@example.com", password="secret")
-        json = self.client.post(f'/notes/share/{self.note.pk}').json()
-        self.client.logout()
-        view = resolve(f'/notes/shared/{json["share_key"]}')
-        self.assertEquals(view.func.view_class, SharedNote)
-    
-    def test_deleted_shared_note_not_accessible(self):
-        self.client.login(email="test_user1@example.com", password="secret")
-        json = self.client.post(f'/notes/share/{self.note.pk}').json()
-        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
-        self.client.post(delete_page_url)
-        url = reverse('notes:shared', kwargs={'slug': json['share_key']})
-        response = self.client.get(url)
-        self.assertEquals(response.status_code, 404)
-        
-
 class DeleteViewTest(TestCase):
 
     def setUp(self):
@@ -353,3 +300,121 @@ class DeleteViewTest(TestCase):
         response = self.client.post(delete_page_url)
         self.assertEquals(Note.objects.count(), 1)
         self.assertEquals(response.status_code, 404)
+
+
+class ShareNoteViewTest(TestCase):
+    
+    def setUp(self):
+        self.test_user1 = User.objects.create_user(
+            email="test_user1@example.com",
+            password="secret")
+        self.test_user2 = User.objects.create_user(
+            email="test_user2@example.com",
+            password="secret")
+        self.note = Note.objects.create(
+            title="Note title", body="Note description", owner=self.test_user1)
+        self.note.tags.add('tag1', 'tag2', "third tag")
+        
+    def test_can_share_note(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        response = self.client.post(f'/notes/share/{self.note.pk}')
+        self.assertEqual(response.status_code, 200)
+        json = response.json()
+        self.assertEqual('share_key' in json, True)
+        self.assertEqual(len(json['share_key']), 8)
+    
+    def test_only_owner_can_share_note(self):
+        self.client.login(email="test_user2@example.com", password="secret")
+        response = self.client.post(f'/notes/share/{self.note.pk}')
+        self.assertEqual(response.status_code, 404)
+        
+    def test_redirect_if_not_logged_in(self):
+        response = self.client.post(f'/notes/share/{self.note.pk}')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_can_access_shared_note(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        view = resolve(f'/notes/shared/{json["share_key"]}')
+        self.assertEquals(view.func.view_class, SharedNote)
+        
+    def test_guest_can_access_shared_note(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        self.client.logout()
+        view = resolve(f'/notes/shared/{json["share_key"]}')
+        self.assertEquals(view.func.view_class, SharedNote)
+    
+    def test_deleted_shared_note_not_accessible(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
+        self.client.post(delete_page_url)
+        url = reverse('notes:shared', kwargs={'slug': json['share_key']})
+        response = self.client.get(url)
+        self.assertEquals(response.status_code, 404)
+        
+
+class SearchViewTest(TestCase):
+    
+    def setUp(self):
+        self.test_user1 = User.objects.create_user(
+            email="test_user1@example.com",
+            password="secret")
+        self.test_user2 = User.objects.create_user(
+            email="test_user2@example.com",
+            password="secret")
+        
+        self.note1 = Note.objects.create(
+            title="Nice title", body="Cool body", owner=self.test_user1)
+        self.note1.tags.add('good', 'bad', "maybe (meh)")
+        
+        self.note2 = Note.objects.create(
+            title="Just title", body="Body", owner=self.test_user1)
+        self.note2.tags.add('tag1')
+        
+    def test_redirect_if_not_logged_in(self):
+        search_url = reverse('notes:search')
+        response = self.client.get(search_url, {'q': 'Nice title'})
+        self.assertEquals(response.status_code, 302)
+        
+    def test_search_note_title(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        search_url = reverse('notes:search')
+        response = self.client.get(search_url, {'q': 'Nice title'})
+        self.assertContains(response, 'Nice title')
+        
+    def test_search_note_body(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        search_url = reverse('notes:search')
+        response = self.client.get(search_url, {'q': 'Cool body'})
+        self.assertContains(response, 'Nice title')
+        
+    def test_search_note_tag(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        search_url = reverse('notes:search')
+        response1 = self.client.get(search_url, {'q': 'good'})
+        self.assertContains(response1, 'Nice title')
+        response2 = self.client.get(search_url, {'q': 'bad'})
+        self.assertContains(response2, 'Nice title')
+        response3 = self.client.get(search_url, {'q': 'maybe (meh)'})
+        self.assertContains(response3, 'Nice title')
+        
+    def test_search_keywords(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        search_url = reverse('notes:search')
+        response1 = self.client.get(search_url, {'q': 'Title'})
+        self.assertContains(response1, 'Nice title')
+        self.assertContains(response1, 'Just title')
+        
+    def test_search_no_results(self):
+        self.client.login(email="test_user1@example.com", password="secret")
+        search_url = reverse('notes:search')
+        response = self.client.get(search_url, {'q': 'I dont exist'})
+        self.assertContains(response, 'No notes are available.')
+        
+    def test_cant_find_other_user_notes(self):
+        self.client.login(email="test_user2@example.com", password="secret")
+        search_url = reverse('notes:search')
+        response = self.client.get(search_url, {'q': 'Nice title'})
+        self.assertContains(response, 'No notes are available.')

@@ -88,6 +88,7 @@ class NoteDelete(LoginRequiredMixin, DeleteView):
         return Note.objects.filter(owner=self.request.user)
 
 
+@login_required
 def SearchView(request):
     query_string = ''
     if ('q' in request.GET) and request.GET['q'].strip():
