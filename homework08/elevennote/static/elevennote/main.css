@@ -269,6 +269,10 @@ p > .bootstrap-tagsinput {
     padding: 0.25rem 0.30rem 0 0.30rem
 }
 
+p > .bootstrap-tagsinput > input {
+    padding-bottom: 0.35rem
+}
+
 
 a > i.icon {
     padding: 10px;

@@ -127,7 +127,7 @@ def normalize_query(
 def get_query(query_string, search_fields):
 
     '''
-    Returns a query, that is a combination of Q objects. 
+    Returns a query, that is a combination of Q objects.
     That combination aims to search keywords within a model by testing the given search fields.
     '''
 
