@@ -19,7 +19,7 @@
             {% include 'includes/form.html' %}
             <input type="hidden" name="next" value="{{ next }}" />
             <input class="btn btn-outline-success" type="submit" value="Sign in"/>
-            <span class="login">Don't have an account? <a href="{% url 'accounts:register' %}">Sign up!</a></span>
+            <span class="login">Don't have an account? <a href="{% url 'accounts:signup' %}">Sign up!</a></span>
         </form>
         </main>
     </div>

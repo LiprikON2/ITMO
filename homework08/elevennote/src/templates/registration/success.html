@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container" style="margin-top: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-md-5 shadow-sm p-3 mb-5 bg-white rounded">
+            <h3>Confirmation email sent at <a href="mailto:{{ email }}">{{ email }}</a></h3>
+            <p>Please confirm your email address to complete the registration</p>
+        </div>  
+    </div>  
+</div>  
+
+{% endblock %}

@@ -2,8 +2,8 @@ from django.test import TestCase
 from django.urls import reverse, resolve
 from django.contrib.auth import get_user_model
 
-from accounts.views import RegisterView
-from accounts.forms import UserCreationForm
+from accounts.views import signup
+from accounts.forms import SignUpForm
 
 
 User = get_user_model()
@@ -11,32 +11,31 @@ User = get_user_model()
 
 class RegisterViewTests(TestCase):
     def setUp(self):
-        url = reverse('accounts:register')
+        url = reverse('accounts:signup')
         self.response = self.client.get(url)
         
     def test_signup_status_code(self):
         self.assertEquals(self.response.status_code, 200)
         
     def test_signup_url_resolves_signup_view(self):
-        view = resolve('/accounts/register/')
-        self.assertEquals(view.func.view_class, RegisterView)
+        view = resolve('/accounts/signup/')
+        self.assertEquals(view.func, signup)
     
     def test_csrf(self):
         self.assertContains(self.response, 'csrfmiddlewaretoken')
     
     def test_contains_form(self):
-        form = self.response.context.get('form')
-        self.assertIsInstance(form, UserCreationForm)
+        self.assertContains(self.response, '<form', 1)
     
     def test_form_inputs(self):
-        self.assertContains(self.response, '<input', 6)
+        self.assertContains(self.response, '<input', 4)
         self.assertContains(self.response, 'type="email"', 1)
         self.assertContains(self.response, 'type="password"', 2)
     
     class SuccessfulSignUpTests(TestCase):
             
         def setUp(self):
-            url = reverse('accounts:register')
+            url = reverse('accounts:signup')
             data = {
                 'email': 'user@example.com',
                 'password1': 'secret',
@@ -61,7 +60,7 @@ class RegisterViewTests(TestCase):
 class InvalidSingUpTests(TestCase):
     
     def setUp(self):
-        url = reverse('accounts:register')
+        url = reverse('accounts:signup')
         self.response = self.client.post(url, {})
     
     def test_signup_status_code(self):
