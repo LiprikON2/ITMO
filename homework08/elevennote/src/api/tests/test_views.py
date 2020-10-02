@@ -26,7 +26,7 @@ class NoteViewTest(TestCase):
                 title=f"Note title {i}",
                 body="Note body",
                 owner=self.test_user1)
-            note.tags.add('user1', 'tag2', "third tag")
+            note.tags.add('user_first', 'tag2', "third tag")
             self.notes.append(note)
 
         self.test_user2_note = Note.objects.create(
@@ -120,22 +120,32 @@ class NoteViewTest(TestCase):
         self.assertEquals(Note.objects.filter(owner=self.test_user2).count(), 1)
 
     def test_api_search_note_title(self):
-        # self._authenticate()
-        # response = self.client.get(reverse('api:note-list'))
-        print(reverse('api:note-list'))
-        # print(reverse('api:note-detail', kwargs={"pk": 1}))
-        # self.assertEquals(len(response.json()), self.n)
-        pass
+        self._authenticate()
+        response = self.client.get(reverse('api:note-search'), {'q': '1'})
+        self.assertEquals(len(response.json()), 1)
+        self.assertContains(response, 'Note title 1')
     
     def test_api_search_note_body(self):
-        pass
+        self._authenticate()
+        response = self.client.get(reverse('api:note-search'), {'q': 'body'})
+        self.assertEquals(len(response.json()), 5)
+        self.assertContains(response, 'Note body')
     
     def test_api_search_note_tag(self):
-        pass
+        self._authenticate()
+        response = self.client.get(reverse('api:note-search'), {'q': 'user_first'})
+        self.assertEquals(len(response.json()), 5)
+        self.assertContains(response, 'Note title 1')
     
-    def test_cant_find_other_user_notes(self):
-        pass
+    def test_cant_search_other_user_notes(self):
+        self._authenticate()
+        response = self.client.get(reverse('api:note-search'), {'q': 'user2'})
+        self.assertEquals(len(response.json()), 0)
     
+    def test_search_no_results(self):
+        self._authenticate()
+        response = self.client.get(reverse('api:note-search'), {'q': 'I don\'t exist'})
+        self.assertEquals(len(response.json()), 0)
     
     def test_api_can_share_note(self):
         pass

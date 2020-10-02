@@ -413,7 +413,7 @@ class SearchViewTest(TestCase):
         response = self.client.get(search_url, {'q': 'I dont exist'})
         self.assertContains(response, 'No notes are available.')
         
-    def test_cant_find_other_user_notes(self):
+    def test_cant_search_other_user_notes(self):
         self.client.login(email="test_user2@example.com", password="secret")
         search_url = reverse('notes:search')
         response = self.client.get(search_url, {'q': 'Nice title'})
