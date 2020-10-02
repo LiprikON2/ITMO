@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 import datetime
 
 from notes.models import Note
-from notes.views import NoteList, NoteDetail, SharedNote
+from notes.views import NoteList, NoteDetail, SharedNoteView
 
 User = get_user_model()
 
@@ -317,7 +317,7 @@ class ShareNoteViewTest(TestCase):
         
     def test_can_share_note(self):
         self.client.login(email="test_user1@example.com", password="secret")
-        response = self.client.post(f'/notes/share/{self.note.pk}')
+        response = self.client.post(reverse('notes:share', args=[self.note.pk]))
         self.assertEqual(response.status_code, 200)
         json = response.json()
         self.assertEqual('share_key' in json, True)
@@ -325,32 +325,32 @@ class ShareNoteViewTest(TestCase):
     
     def test_only_owner_can_share_note(self):
         self.client.login(email="test_user2@example.com", password="secret")
-        response = self.client.post(f'/notes/share/{self.note.pk}')
+        response = self.client.post(reverse('notes:share', args=[self.note.pk]))
         self.assertEqual(response.status_code, 404)
         
     def test_redirect_if_not_logged_in(self):
-        response = self.client.post(f'/notes/share/{self.note.pk}')
+        response = self.client.post(reverse('notes:share', args=[self.note.pk]))
         self.assertEqual(response.status_code, 302)
         
     def test_can_access_shared_note(self):
         self.client.login(email="test_user1@example.com", password="secret")
-        json = self.client.post(f'/notes/share/{self.note.pk}').json()
-        view = resolve(f'/notes/shared/{json["share_key"]}')
-        self.assertEquals(view.func.view_class, SharedNote)
+        json = self.client.post(reverse('notes:share', args=[self.note.pk])).json()
+        view = resolve(reverse('notes:shared', args=[json["share_key"]]))
+        self.assertEquals(view.func.view_class, SharedNoteView)
         
     def test_guest_can_access_shared_note(self):
         self.client.login(email="test_user1@example.com", password="secret")
-        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        json = self.client.post(reverse('notes:share', args=[self.note.pk])).json()
         self.client.logout()
-        view = resolve(f'/notes/shared/{json["share_key"]}')
-        self.assertEquals(view.func.view_class, SharedNote)
+        view = resolve(reverse('notes:shared', args=[json["share_key"]]))
+        self.assertEquals(view.func.view_class, SharedNoteView)
     
     def test_deleted_shared_note_not_accessible(self):
         self.client.login(email="test_user1@example.com", password="secret")
-        json = self.client.post(f'/notes/share/{self.note.pk}').json()
+        json = self.client.post(reverse('notes:share', args=[self.note.pk])).json()
         delete_page_url = reverse('notes:delete', kwargs={'pk': self.note.pk})
         self.client.post(delete_page_url)
-        url = reverse('notes:shared', kwargs={'slug': json['share_key']})
+        url = reverse('notes:shared', args=[json["share_key"]])
         response = self.client.get(url)
         self.assertEquals(response.status_code, 404)
         

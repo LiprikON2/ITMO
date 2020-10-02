@@ -160,11 +160,11 @@ def share_note(request, note_pk):
     return JsonResponse(response)
 
 
-class SharedNote(DetailView):
+class SharedNoteView(DetailView):
     template_name = 'notes/detail.html'
 
     def dispatch(self, *args, **kwargs):
-        return super(SharedNote, self).dispatch(*args, **kwargs)
+        return super(SharedNoteView, self).dispatch(*args, **kwargs)
 
     def get_object(self):
         note = get_object_or_404(Permalink, key=self.kwargs['slug']).refersTo

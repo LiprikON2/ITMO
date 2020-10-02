@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import NoteList, NoteDetail, NoteCreate, NoteUpdate, NoteDelete, SearchView, share_note, SharedNote
+from .views import NoteList, NoteDetail, NoteCreate, NoteUpdate, NoteDelete, SearchView, share_note, SharedNoteView
 
 app_name = 'notes'
 
@@ -12,5 +12,5 @@ urlpatterns = [
     path('<int:pk>/delete/', NoteDelete.as_view(), name='delete'),
     path('search/', SearchView, name='search'),
     path('share/<int:note_pk>', share_note, name='share'),
-    path('shared/<slug:slug>', SharedNote.as_view(), name='shared'),
+    path('shared/<slug:slug>', SharedNoteView.as_view(), name='shared'),
 ]

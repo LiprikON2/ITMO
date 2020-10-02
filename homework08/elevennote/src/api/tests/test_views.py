@@ -148,16 +148,26 @@ class NoteViewTest(TestCase):
         self.assertEquals(len(response.json()), 0)
     
     def test_api_can_share_note(self):
-        pass
+        self._authenticate()
+        response = self.client.post(reverse('api:note-share', args=[self.notes[0].pk]))
+        self.assertEqual(response.status_code, 200)
+        json = response.json()
+        self.assertEqual('share_key' in json, True)
+        self.assertEqual(len(json['share_key']), 8)
     
     def test_api_only_owner_can_share_note(self):
-        pass
+        response = self.client.post(reverse('api:note-share', args=[self.notes[0].pk]))
+        self.assertEqual(response.status_code, 401)
     
     def test_api_can_access_shared_note(self):
-        pass
-    
-    def test_api_guest_can_access_shared_note(self):
-        pass
-    
+        self._authenticate()
+        json = self.client.post(reverse('api:note-share', args=[self.notes[0].pk])).json()
+        response = self.client.get(reverse('api:note-shared', args=[json["share_key"]]))
+        self.assertContains(response, 'Note title 0')
+              
     def test_api_deleted_shared_note_not_accessible(self):
-        pass
+        self._authenticate()
+        json = self.client.post(reverse('api:note-share', args=[self.notes[0].pk])).json()
+        self.client.delete(reverse('api:note-detail', args=[self.notes[0].pk]))
+        response = self.client.get(reverse('api:note-shared', args=[json["share_key"]]))
+        self.assertEquals(response.status_code, 404)

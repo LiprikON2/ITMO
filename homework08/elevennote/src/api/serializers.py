@@ -13,8 +13,8 @@ class NoteSerializer(TaggitSerializer, serializers.ModelSerializer):
         fields = ('id', 'title', 'tags', 'body', 'pub_date')
         
 
-class PermalinkSerializer(serializers.ModelSerializer):
+# class PermalinkSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model = Permalink
-        fields = ('key', 'refersTo')
+#     class Meta:
+#         model = Permalink
+#         fields = ('key', 'refersTo')
