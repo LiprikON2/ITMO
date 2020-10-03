@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="container" style="margin-top: 50px;">
+        <div class="row justify-content-center">
+            <div class="col-md-5 shadow-sm p-3 mb-5 bg-white rounded">
+                <h2>Logged out</h2><br>
+                You can now <a href="{% url 'accounts:login' %}">log in with different account</a>
+            </div>  
+        </div>  
+    </div>
+
+{% endblock %}
