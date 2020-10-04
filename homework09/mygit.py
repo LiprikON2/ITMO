@@ -42,14 +42,13 @@ def hash_object(file):
 
 def cat_file(hash_sum):
     
-    if '-p' in sys.argv:
+    
         foldername = hash_sum[:2]
         filename = hash_sum[2:]
         folder_path = f'.git/objects/{foldername}'
         
         try:
             with open(os.path.join(folder_path, filename), 'rb') as blob_file:
-                print(os.path.join(folder_path, filename))
                 blob = zlib.decompress(blob_file.read())
                 header_len = blob.find(b'\x00') + 1
                 
@@ -62,10 +61,22 @@ def cat_file(hash_sum):
                 # blob 25\x00789c4bcac94f...
                 #            ^^^^^^^^^^^^^^^
                 content = blob[header_len:header_len + content_len].decode('ascii')
+                # blob 25\x00789c4bcac94f...
+                # ^^^^
+                blob_type = header[:blob.find(b' ')].decode('ascii')
                 
-                print(content)
+                if '-p' in sys.argv:
+                    print(content)
+                if '-t' in sys.argv:
+                    print(blob_type)
+                if '-s' in sys.argv:
+                    print(content_len)
+                    
         except FileNotFoundError:
             print(f'Not a valid object name {hash_sum}')
+            
+    
+        
     
 def check_if_init():
     if not os.path.exists('.git'):
