@@ -22,14 +22,15 @@ def write_tree():
 def object_sha():
     pass
 
-def hash_object(file):
+def hash_object(file, print=True):
     content = file.read()
     # `\0` or `\x00` is a null character, used to separate header and content
     header = f'blob {len(content)}\0'
     
     blob = header + content
     sha = hashlib.sha1(blob.encode()).hexdigest()
-    print(sha)
+    if print:
+        print(sha)
     
     if '-w' in sys.argv:
         foldername = sha[:2]
@@ -82,8 +83,10 @@ def cat_file(sha):
             
 def update_index(file):
     content = file.read()
+    file.seek(0)
+    
     stat = os.stat(file.name)
-    sha = hash_object(file)
+    sha = hash_object(file, print=False)
     
     entry = textwrap.dedent(f'''\
         <ctime {stat.st_ctime}>
@@ -104,15 +107,17 @@ def update_index(file):
     entry_count = '1'
     
     if not os.path.exists('.git/index'):
-        with open('.git/index', 'w') as index_file:
+        with open('.git/index', 'wb') as index_file:
             header = f'DIRC {version} {entry_count}\n'
-            
             index = header + entry
-            index_file.write(index)
+            
+            compressed_index = zlib.compress(index.encode())
+            index_file.write(compressed_index)
             
     else:
-        with open('.git/index', 'r+') as index_file:
-            old_index = index_file.read()
+        with open('.git/index', 'rb+') as index_file:
+            compressed_old_index = index_file.read()
+            old_index = zlib.decompress(compressed_old_index).decode('ascii')
             
             if not is_already_in_index(old_index, sha, file.name):
                 
@@ -133,9 +138,11 @@ def update_index(file):
                 # Add entry
                 new_index = new_index[:insert_pos] + entry + new_index[insert_pos:] 
                 
+                compressed_new_index = zlib.compress(new_index.encode())
                 index_file.seek(0)
-                index_file.write(new_index)
+                index_file.write(compressed_new_index)
                 index_file.truncate()
+                
             else:
                 print('No changes detected')
 
