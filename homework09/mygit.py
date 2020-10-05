@@ -115,7 +115,6 @@ def update_index(file):
                 header = f'DIRC {version} {entry_count}\n'
                 content = header + entry
                 index_content_sha = get_sha1_hash_sum(content)
-                # SHA-1 over the content of the index file before this checksum
                 footer = f'<sha {index_content_sha}>'
                 
                 index = content + footer
@@ -124,44 +123,58 @@ def update_index(file):
                 
         else:
             with open('.git/index', 'r+') as index_file:
-                old_index = index_file.read()
+                index = index_file.read()
                 
-                if not is_already_in_index(old_index, sha, file.name):
+                if not is_already_in_index(index, file.name):
                     
-                    entry_count_end = old_index.find('\n')
-                    entry_count_start = old_index.rfind(' ', 0, entry_count_end) + 1
-                    
-                    # DIRC 1.12 1\n
-                    #            ^
-                    entry_count = str(int(old_index[entry_count_start:entry_count_end]) + 1)
-                    
-                    # Update entry count number
-                    new_index = old_index[:entry_count_start] + entry_count + old_index[entry_count_end:]
-                    
-                    # DIRC 1.12 1\n
-                    #              ^
-                    entry_start = new_index.find('\n') + 1
-                    
-                    # Add entry
-                    new_index = new_index[:entry_start] + entry + new_index[entry_start:] 
-                    
-                    # <sha 789c4bcac94f..
-                    # ^
-                    footer_start = new_index.find('<sha')
-                    # Update footer sha
-                    new_index = new_index[:footer_start] + f'<sha {get_sha1_hash_sum(new_index[:footer_start])}>'
+                    new_index = increment_index_entry_count(index)
+                    new_index = add_index_entry(new_index, entry)
+                    new_index = update_index_footer(new_index)
                     
                     index_file.seek(0)
                     index_file.write(new_index)
                     index_file.truncate()
+                    
                     print(f'Added {file.name}')
+                
+                elif has_changed(index, sha, file.name):
+                    print('File changed')
+                    pass
                     
                 else:
                     print('No changes detected')
     else:
         print('--add is mandatory')
         
+        
+def add_index_entry(index, entry):
+    """ Adds entry to mygit index """
+    # DIRC 1.12 1\n
+    #              ^
+    entry_start = index.find('\n') + 1
     
+    return index[:entry_start] + entry + index[entry_start:] 
+
+def increment_index_entry_count(index):
+    """ Increments entry count number in mygit index header """
+    entry_count_end = index.find('\n')
+    entry_count_start = index.rfind(' ', 0, entry_count_end) + 1
+    
+    # DIRC 1.12 1\n
+    #            ^
+    entry_count = str(int(index[entry_count_start:entry_count_end]) + 1)
+    
+    return index[:entry_count_start] + entry_count + index[entry_count_end:]
+    
+    
+def update_index_footer(index, sha=''):
+    """ Updates mygit index footer - SHA-1 over the content of the index file before this checksum """
+    footer_start = index.find('<sha')
+    
+    if not sha:
+        sha = get_sha1_hash_sum(index[:footer_start])
+        
+    return index[:footer_start] + f'<sha {sha}>'
 
 
 def list_entries(index):
@@ -171,7 +184,7 @@ def list_entries(index):
     
     entry_positions = []
     for i, entry_start in enumerate(entry_start_list):
-        # Position of the first <ctime> in the entry is entry start point
+        # Position of the first <ctime> in the entry is the entry starting point
         if i % 2 == 0:
             entry_positions.append(entry_start.start())
     
@@ -210,15 +223,26 @@ def get_entry_tag_value(entry, tag, second_one=False):
     return tag_val
 
 
-def is_already_in_index(index, file_sha, file_name):
-    """ Checks whether or not file is already in the mygit index """
+def is_already_in_index(index, file_name):
+    """ Checks whether or not same file is already in the mygit index """
+    entries = list_entries(index)
+    
+    for entry in entries:
+        name = get_entry_tag_value(entry, 'name')
+        
+        if name == file_name:
+            return True
+    return False
+
+def has_changed(index, file_sha, file_name):
+    """ Checks whether or not file has not changed form the one in mygit index """
     entries = list_entries(index)
     
     for entry in entries:
         sha = get_entry_tag_value(entry, 'SHA')
         name = get_entry_tag_value(entry, 'name')
         
-        if sha == file_sha and name == file_name:
+        if sha != file_sha and name == file_name:
             return True
     return False
     
