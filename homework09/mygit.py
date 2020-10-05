@@ -4,6 +4,8 @@ import os
 import pathlib
 import zlib
 import io
+import textwrap
+import re
 
 def object_read():
     pass
@@ -17,7 +19,7 @@ def tree_parse_one():
 def write_tree():
     pass
 
-def object_sho():
+def object_sha():
     pass
 
 def hash_object(file):
@@ -26,12 +28,12 @@ def hash_object(file):
     header = f'blob {len(content)}\0'
     
     blob = header + content
-    hash_sum = hashlib.sha1(blob.encode()).hexdigest()
-    print(hash_sum)
+    sha = hashlib.sha1(blob.encode()).hexdigest()
+    print(sha)
     
     if '-w' in sys.argv:
-        foldername = hash_sum[:2]
-        filename = hash_sum[2:]
+        foldername = sha[:2]
+        filename = sha[2:]
         folder_path = f'.git/objects/{foldername}'
         
         os.makedirs(folder_path, exist_ok=True)
@@ -39,50 +41,155 @@ def hash_object(file):
         with open(os.path.join(folder_path, filename), 'wb') as blob_file:
             compressed_blob = zlib.compress(blob.encode())
             blob_file.write(compressed_blob)
+    else:
+        return sha
 
-def cat_file(hash_sum):
+def cat_file(sha):
+    foldername = sha[:2]
+    filename = sha[2:]
+    folder_path = f'.git/objects/{foldername}'
     
+    try:
+        with open(os.path.join(folder_path, filename), 'rb') as blob_file:
+            blob = zlib.decompress(blob_file.read())
+            header_len = blob.find(b'\x00') + 1
+            
+            # blob 25\x00789c4bcac94f...
+            # ^^^^^^^^^^^
+            header = blob[:header_len]
+            
+            # blob 25\x00789c4bcac94f...
+            #      ^^
+            content_len = int(header[blob.find(b' '):blob.find(b'\x00')].decode('ascii'))
+            
+            # blob 25\x00789c4bcac94f...
+            #            ^^^^^^^^^^^^^^^
+            content = blob[header_len:header_len + content_len].decode('ascii')
+            
+            # blob 25\x00789c4bcac94f...
+            # ^^^^
+            blob_type = header[:blob.find(b' ')].decode('ascii')
+            
+            if '-p' in sys.argv:
+                print(content)
+            if '-t' in sys.argv:
+                print(blob_type)
+            if '-s' in sys.argv:
+                print(content_len)
+
+    except FileNotFoundError:
+        print(f'Not a valid object name {sha}')
+            
+def update_index(file):
+    content = file.read()
+    stat = os.stat(file.name)
+    sha = hash_object(file)
     
-        foldername = hash_sum[:2]
-        filename = hash_sum[2:]
-        folder_path = f'.git/objects/{foldername}'
+    entry = textwrap.dedent(f'''\
+        <ctime {stat.st_ctime}>
+        <ctime {0}>
+        <mtime {stat.st_ctime}>
+        <mtime {0}>
+        <dev {stat.st_dev}>
+        <ino {stat.st_ino}>
+        <mode {stat.st_mode}>
+        <uid {stat.st_uid}>
+        <gid {stat.st_gid}>
+        <size {stat.st_size}>
+        <SHA {sha}>
+        <flags {'gg'}>
+        <name {file.name}>''')
+    
+    version = '1.21.21'
+    entry_count = '1'
+    
+    if not os.path.exists('.git/index'):
+        with open('.git/index', 'w') as index_file:
+            print('CREATING')
+            
+            header = f'DIRC {version} {entry_count}\n'
+            footer = f'\n{sha}'
+            
+            index = header + entry + footer
+            index_file.write(index)
+            
+            print(f'<SHA {sha}>', 'created')
+            print(f'<name {file.name}>', 'created')
+            
+    else:
+        with open('.git/index', 'r+') as index_file:
+            print('UPDATING')
+            
+            old_index = index_file.read()
+            
+            if not is_in_index_already(old_index, sha, file.name):
+                # DIRC 1.21.21 1\n
+                #                 ^
+                insert_pos = old_index.find('\n') + 1
+                
+                new_index = old_index[:insert_pos] + entry + old_index[insert_pos:]
+                
+                index_file.write(new_index)
+            else:
+                print('No changes detected')
+
+
+def list_entries(index):
+    entries_beginings = re.finditer(f'<ctime', index)
+    last_entry_end = index.rfind('>') + 1
+    
+    entry_positions = []
+    
+    for i, entry_start in enumerate(entries_beginings):
+        # Only position of the first <ctime> in the entry
+        if i % 2 == 0:
+            entry_positions.append(entry_start.start())
+    
+    entry_positions.append(last_entry_end)
+    # print(entry_positions)
+    
+    entries = []
+    
+    for i in range(len(entry_positions) - 1):
+        entry = index[entry_positions[i]:entry_positions[i + 1]]
+        entries.append(entry)
+    
+    # print('len:', len(entries))
+    return entries
+
+
+def is_in_index_already(index, new_sha, new_name):
+    
+    entries = list_entries(index)
+    
+    for entry in entries:
+        sha_start = entry.find('<SHA ') + 5
+        sha_end = entry.find('>', sha_start)
+        sha = entry[sha_start:sha_end]
         
-        try:
-            with open(os.path.join(folder_path, filename), 'rb') as blob_file:
-                blob = zlib.decompress(blob_file.read())
-                header_len = blob.find(b'\x00') + 1
-                
-                # blob 25\x00789c4bcac94f...
-                # ^^^^^^^^^^^
-                header = blob[:header_len]
-                # blob 25\x00789c4bcac94f...
-                #      ^^
-                content_len = int(header[blob.find(b' '):blob.find(b'\x00')].decode('ascii'))
-                # blob 25\x00789c4bcac94f...
-                #            ^^^^^^^^^^^^^^^
-                content = blob[header_len:header_len + content_len].decode('ascii')
-                # blob 25\x00789c4bcac94f...
-                # ^^^^
-                blob_type = header[:blob.find(b' ')].decode('ascii')
-                
-                if '-p' in sys.argv:
-                    print(content)
-                if '-t' in sys.argv:
-                    print(blob_type)
-                if '-s' in sys.argv:
-                    print(content_len)
-                    
-        except FileNotFoundError:
-            print(f'Not a valid object name {hash_sum}')
+        
+        name_start = entry.find('<name ') + 6
+        name_end = entry.find('>', name_start)
+        name = entry[name_start:name_end]
+        
+        print(repr(sha), 'vs', repr(new_sha), '\n', repr(name), 'vs', repr(new_name))
+        if sha == new_sha and name == new_name:
+            return True
+    return False
+    
+
+def ls_files():
+    pass
             
     
         
     
-def check_if_init():
+def is_init():
     if not os.path.exists('.git'):
         print('git is not initialized in this directory')
-        sys.exit(0)
-    
+        return False
+    return True
+
 def main():
     command = sys.argv[1]
     if command == 'init':
@@ -97,16 +204,26 @@ def main():
             pass
         
     elif command == 'cat-file':
-        check_if_init()
-        hash_sum = sys.argv[2]
-        cat_file(hash_sum)
+        if is_init():
+            sha = sys.argv[2]
+            cat_file(sha)
+            
     elif command == 'hash-object':
-        check_if_init()
-        file_path = sys.argv[2]
-        with open(file_path, 'r') as f:
-            hash_object(f)
-        
-        
+        if is_init():
+            file_path = sys.argv[2]
+            with open(file_path, 'r') as f:
+                hash_object(f)
+    
+    elif command == 'update-index':
+        if is_init():
+            file_path = sys.argv[2]
+            with open(file_path, 'r') as f:
+                update_index(f)
+                
+    elif command == 'ls-files':
+        if is_init():
+            pass
+    
     elif command == 'is-tree':
         pass
     elif command == 'write-tree':
@@ -117,4 +234,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
