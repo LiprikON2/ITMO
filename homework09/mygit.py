@@ -29,7 +29,7 @@ def hash_object(file):
     
     blob = header + content
     sha = hashlib.sha1(blob.encode()).hexdigest()
-    # print(sha) # UNCOMMENT ME ___________________________________________________________
+    print(sha)
     
     if '-w' in sys.argv:
         foldername = sha[:2]
@@ -110,37 +110,29 @@ def update_index(file):
             index = header + entry
             index_file.write(index)
             
-            # print(index)
-            
     else:
         with open('.git/index', 'r+') as index_file:
             old_index = index_file.read()
             
             if not is_already_in_index(old_index, sha, file.name):
                 
-                # print(f'ENTRY IS HERE:\n{entry}\n------------------------')
                 entry_count_end = old_index.find('\n')
                 entry_count_start = old_index.rfind(' ', 0, entry_count_end) + 1
-                # DIRC 1.21.21 1\n
-                #              ^
-                entry_count = str(int(old_index[entry_count_start:entry_count_end]) + 1)
                 
-                print('count:', entry_count)
+                # DIRC 1.12 1\n
+                #            ^
+                entry_count = str(int(old_index[entry_count_start:entry_count_end]) + 1)
                 
                 # Update entry count number
                 new_index = old_index[:entry_count_start] + entry_count + old_index[entry_count_end:]
-                print(f'OLD IS HERE:\n{old_index}\n------------------------')
-                print(f'INDEX IS HERE:\n{new_index}\n------------------------')
-                print(file.name)
-                # DIRC 1.21.21 1\n
-                #                 ^
+                
+                # DIRC 1.12 1\n
+                #              ^
                 insert_pos = new_index.find('\n') + 1
                 
                 # Add entry
                 new_index = new_index[:insert_pos] + entry + new_index[insert_pos:] 
                 
-                print(f'VERY NEW INDEX IS HERE:\n{new_index}\n------------------------')
-                               
                 index_file.seek(0)
                 index_file.write(new_index)
                 index_file.truncate()
@@ -154,7 +146,7 @@ def list_entries(index):
     
     entry_positions = []
     for i, entry_start in enumerate(entries_beginings):
-        # Only position of the first <ctime> in the entry
+        # Position of the first <ctime> in the entry is entry start point
         if i % 2 == 0:
             entry_positions.append(entry_start.start())
     
@@ -181,7 +173,6 @@ def is_already_in_index(index, new_sha, new_name):
         name_end = entry.find('>', name_start)
         name = entry[name_start:name_end]
         
-        # print(repr(sha), 'vs', repr(new_sha), '\n', repr(name), 'vs', repr(new_name))
         if sha == new_sha and name == new_name:
             return True
     return False
