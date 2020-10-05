@@ -109,42 +109,39 @@ def update_index(file):
     version = '1.12' # TODO
     entry_count = '1'
     
-    if '--add' in sys.argv:
-        if not os.path.exists('.git/index'):
-            with open('.git/index', 'w') as index_file:
-                header = f'DIRC {version} {entry_count}\n'
-                content = header + entry
-                index_content_sha = get_sha1_hash_sum(content)
-                footer = f'<sha {index_content_sha}>'
-                
-                index = content + footer
-                save_index_file(index_file, index)
-                print(f'Added {file.name}')
-                
-        else:
-            with open('.git/index', 'r+') as index_file:
-                index = index_file.read()
-                
-                if not is_already_in_index(index, file.name):
-                    new_index = add_index_entry(index, entry)
-                    new_index = update_index_footer(new_index)
-                    
-                    save_index_file(index_file, new_index)
-                    
-                    print(f'Added {file.name}')
-                
-                elif has_changed(index, sha, file.name):
-                    new_index = update_index_entry(index, entry)
-                    new_index = update_index_footer(new_index)
-                    
-                    save_index_file(index_file, new_index)
-                    
-                    print(f'Updated {file.name}')
-                    
-                else:
-                    print('No changes detected')
+    if not os.path.exists('.git/index'):
+        with open('.git/index', 'w') as index_file:
+            header = f'DIRC {version} {entry_count}\n'
+            content = header + entry
+            index_content_sha = get_sha1_hash_sum(content)
+            footer = f'<sha {index_content_sha}>'
+            
+            index = content + footer
+            save_index_file(index_file, index)
+            print(f'Added {file.name}')
+            
     else:
-        print('--add is mandatory')
+        with open('.git/index', 'r+') as index_file:
+            index = index_file.read()
+            
+            if is_not_in_index(index, file.name) and '--add' in sys.argv:
+                new_index = add_index_entry(index, entry)
+                new_index = update_index_footer(new_index)
+                
+                save_index_file(index_file, new_index)
+                
+                print(f'Added {file.name}')
+            
+            elif has_changed(index, sha, file.name):
+                new_index = update_index_entry(index, entry)
+                new_index = update_index_footer(new_index)
+                
+                save_index_file(index_file, new_index)
+                
+                print(f'Updated {file.name}')
+                
+            else:
+                print('No changes detected')
 
 def save_index_file(file, index):
     file.seek(0)
@@ -265,7 +262,7 @@ def get_entry_tag_value(entry, tag, second_one=False):
     return tag_val
 
 
-def is_already_in_index(index, file_name):
+def is_not_in_index(index, file_name):
     """ Checks whether or not same file is already in the mygit index """
     entries = list_entries(index)
     
@@ -273,8 +270,8 @@ def is_already_in_index(index, file_name):
         name = get_entry_tag_value(entry, 'name')
         
         if name == file_name:
-            return True
-    return False
+            return False
+    return True
 
 def has_changed(index, file_sha, file_name):
     """ Checks whether or not file has not changed form the one in mygit index """

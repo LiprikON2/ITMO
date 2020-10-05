@@ -34,3 +34,15 @@ python mygit.py cat-file <hash_sum> -t
 ```bash
 python mygit.py cat-file <hash_sum> -s
 ```
+
+### Updating index
+
+#### Update file in the index
+```bash
+python mygit.py update-index <file>
+```
+
+#### Add file to the index
+```bash
+python mygit.py update-index <file> --add
+```
