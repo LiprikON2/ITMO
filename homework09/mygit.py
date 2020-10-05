@@ -118,7 +118,7 @@ def update_index(file):
                 footer = f'<sha {index_content_sha}>'
                 
                 index = content + footer
-                index_file.write(index)
+                save_index_file(index_file, index)
                 print(f'Added {file.name}')
                 
         else:
@@ -126,49 +126,91 @@ def update_index(file):
                 index = index_file.read()
                 
                 if not is_already_in_index(index, file.name):
-                    
-                    new_index = increment_index_entry_count(index)
-                    new_index = add_index_entry(new_index, entry)
+                    new_index = add_index_entry(index, entry)
                     new_index = update_index_footer(new_index)
                     
-                    index_file.seek(0)
-                    index_file.write(new_index)
-                    index_file.truncate()
+                    save_index_file(index_file, new_index)
                     
                     print(f'Added {file.name}')
                 
                 elif has_changed(index, sha, file.name):
-                    print('File changed')
-                    pass
+                    new_index = update_index_entry(index, entry)
+                    new_index = update_index_footer(new_index)
+                    
+                    save_index_file(index_file, new_index)
+                    
+                    print(f'Updated {file.name}')
                     
                 else:
                     print('No changes detected')
     else:
         print('--add is mandatory')
-        
+
+def save_index_file(file, index):
+    file.seek(0)
+    file.write(index)
+    file.truncate()
         
 def add_index_entry(index, entry):
-    """ Adds entry to mygit index """
+    """ Return new index with added entry to mygit index """
+    new_index = increment_index_entry_count(index)
+    
     # DIRC 1.12 1\n
     #              ^
-    entry_start = index.find('\n') + 1
+    entry_start = new_index.find('\n') + 1
+    new_index = new_index[:entry_start] + entry + new_index[entry_start:]
     
-    return index[:entry_start] + entry + index[entry_start:] 
+    return new_index
 
-def increment_index_entry_count(index):
-    """ Increments entry count number in mygit index header """
+def remove_index_entry(index, entry):
+    """ Return new index with removed mygit index entry """
+    new_index = increment_index_entry_count(index, decrement=True)
+    
+    entry_start = index.find(entry)
+    entry_end = entry_start + len(entry)
+    
+    new_index = new_index[:entry_start] + new_index[entry_end:]
+    
+    return new_index
+
+def update_index_entry(index, new_entry):
+    """ Return new index with updated mygit index entry """
+    
+    entries = list_entries(index)
+    
+    name_1 = get_entry_tag_value(new_entry, 'name')
+    
+    for entry in entries:
+        name_2 = get_entry_tag_value(entry, 'name')
+        if name_1 == name_2:
+            new_index = remove_index_entry(index, entry)
+            new_index = add_index_entry(new_index, new_entry)
+    
+    return new_index
+    
+
+def increment_index_entry_count(index, decrement=False):
+    """ Returns new index with incremented entry count number in mygit index header """
     entry_count_end = index.find('\n')
     entry_count_start = index.rfind(' ', 0, entry_count_end) + 1
     
     # DIRC 1.12 1\n
     #            ^
-    entry_count = str(int(index[entry_count_start:entry_count_end]) + 1)
+    entry_count = index[entry_count_start:entry_count_end]
+    
+    if not decrement:
+        entry_count = str(int(entry_count) + 1)
+    else:
+        entry_count = str(int(entry_count) - 1)
     
     return index[:entry_count_start] + entry_count + index[entry_count_end:]
     
     
 def update_index_footer(index, sha=''):
-    """ Updates mygit index footer - SHA-1 over the content of the index file before this checksum """
+    """ 
+    Return new index with updated mygit index footer - SHA-1 
+    over the content of the index file before this checksum 
+    """
     footer_start = index.find('<sha')
     
     if not sha:
@@ -178,7 +220,7 @@ def update_index_footer(index, sha=''):
 
 
 def list_entries(index):
-    """ Creates a list of plain text entries from mygit index file """
+    """ Returns list of plain text entries from mygit index """
     entry_start_list = re.finditer(f'<ctime', index)
     last_entry_end = index.rfind('>') + 2
     
@@ -204,7 +246,7 @@ def get_entry_tag_value(entry, tag, second_one=False):
     Possible tags: 'ctime', 'mtime', 'dev', 'ino',
     'mode', 'uid', 'gid', 'size', 'SHA', 'flags'.
     
-    second_one=True/Flase - determines whether return value of second tag occurence or not
+    second_one=True/Flase - determines whether return value of second tag occurence or the first
     
     """
     find_query = f'<{tag} '
