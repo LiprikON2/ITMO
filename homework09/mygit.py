@@ -28,7 +28,7 @@ def hash_object(file, print=True):
     header = f'blob {len(content)}\0'
     
     blob = header + content
-    sha = hashlib.sha1(blob.encode()).hexdigest()
+    sha = get_sha1_hash_sum(blob)
     if print:
         print(sha)
     
@@ -44,6 +44,9 @@ def hash_object(file, print=True):
             blob_file.write(compressed_blob)
     else:
         return sha
+
+def get_sha1_hash_sum(text):
+    return hashlib.sha1(text.encode()).hexdigest()
 
 def cat_file(sha):
     foldername = sha[:2]
@@ -107,17 +110,20 @@ def update_index(file):
     entry_count = '1'
     
     if not os.path.exists('.git/index'):
-        with open('.git/index', 'wb') as index_file:
-            header = f'DIRC {version} {entry_count}\n'
-            index = header + entry
+        with open('.git/index', 'w') as index_file:
             
-            compressed_index = zlib.compress(index.encode())
-            index_file.write(compressed_index)
+            header = f'DIRC {version} {entry_count}\n'
+            content = header + entry
+            index_content_sha = get_sha1_hash_sum(content)
+            # SHA-1 over the content of the index file before this checksum
+            footer = f'<sha {index_content_sha}>'
+            
+            index = content + footer
+            index_file.write(index)
             
     else:
-        with open('.git/index', 'rb+') as index_file:
-            compressed_old_index = index_file.read()
-            old_index = zlib.decompress(compressed_old_index).decode('ascii')
+        with open('.git/index', 'r+') as index_file:
+            old_index = index_file.read()
             
             if not is_already_in_index(old_index, sha, file.name):
                 
@@ -133,14 +139,19 @@ def update_index(file):
                 
                 # DIRC 1.12 1\n
                 #              ^
-                insert_pos = new_index.find('\n') + 1
+                entry_start = new_index.find('\n') + 1
                 
                 # Add entry
-                new_index = new_index[:insert_pos] + entry + new_index[insert_pos:] 
+                new_index = new_index[:entry_start] + entry + new_index[entry_start:] 
                 
-                compressed_new_index = zlib.compress(new_index.encode())
+                # <sha 789c4bcac94f..
+                # ^
+                footer_start = new_index.find('<sha')
+                # Update footer sha
+                new_index = new_index[:footer_start] + f'<sha {get_sha1_hash_sum(new_index[:footer_start])}>'
+                
                 index_file.seek(0)
-                index_file.write(compressed_new_index)
+                index_file.write(new_index)
                 index_file.truncate()
                 
             else:
@@ -148,11 +159,12 @@ def update_index(file):
 
 
 def list_entries(index):
-    entries_beginings = re.finditer(f'<ctime', index)
+    """ Creates a list of plain text entries from mygit index file """
+    entry_start_list = re.finditer(f'<ctime', index)
     last_entry_end = index.rfind('>') + 2
     
     entry_positions = []
-    for i, entry_start in enumerate(entries_beginings):
+    for i, entry_start in enumerate(entry_start_list):
         # Position of the first <ctime> in the entry is entry start point
         if i % 2 == 0:
             entry_positions.append(entry_start.start())
@@ -167,8 +179,8 @@ def list_entries(index):
     return entries
 
 
-def is_already_in_index(index, new_sha, new_name):
-    
+def is_already_in_index(index, file_sha, file_name):
+    """ Checks wether or not file is already in the index """
     entries = list_entries(index)
     
     for entry in entries:
@@ -180,7 +192,7 @@ def is_already_in_index(index, new_sha, new_name):
         name_end = entry.find('>', name_start)
         name = entry[name_start:name_end]
         
-        if sha == new_sha and name == new_name:
+        if sha == file_sha and name == file_name:
             return True
     return False
     
