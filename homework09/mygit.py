@@ -24,12 +24,12 @@ def object_sha():
 
 def hash_object(file):
     content = file.read()
-    # `\0` is a null character, used to separate header and content
+    # `\0` or `\x00` is a null character, used to separate header and content
     header = f'blob {len(content)}\0'
     
     blob = header + content
     sha = hashlib.sha1(blob.encode()).hexdigest()
-    print(sha)
+    # print(sha) # UNCOMMENT ME ___________________________________________________________
     
     if '-w' in sys.argv:
         foldername = sha[:2]
@@ -98,67 +98,77 @@ def update_index(file):
         <size {stat.st_size}>
         <SHA {sha}>
         <flags {'gg'}>
-        <name {file.name}>''')
+        <name {file.name}>\n''')
     
-    version = '1.21.21'
+    version = '1.12' # TODO
     entry_count = '1'
     
     if not os.path.exists('.git/index'):
         with open('.git/index', 'w') as index_file:
-            print('CREATING')
-            
             header = f'DIRC {version} {entry_count}\n'
-            footer = f'\n{sha}'
             
-            index = header + entry + footer
+            index = header + entry
             index_file.write(index)
             
-            print(f'<SHA {sha}>', 'created')
-            print(f'<name {file.name}>', 'created')
+            # print(index)
             
     else:
         with open('.git/index', 'r+') as index_file:
-            print('UPDATING')
-            
             old_index = index_file.read()
             
-            if not is_in_index_already(old_index, sha, file.name):
+            if not is_already_in_index(old_index, sha, file.name):
+                
+                # print(f'ENTRY IS HERE:\n{entry}\n------------------------')
+                entry_count_end = old_index.find('\n')
+                entry_count_start = old_index.rfind(' ', 0, entry_count_end) + 1
+                # DIRC 1.21.21 1\n
+                #              ^
+                entry_count = str(int(old_index[entry_count_start:entry_count_end]) + 1)
+                
+                print('count:', entry_count)
+                
+                # Update entry count number
+                new_index = old_index[:entry_count_start] + entry_count + old_index[entry_count_end:]
+                print(f'OLD IS HERE:\n{old_index}\n------------------------')
+                print(f'INDEX IS HERE:\n{new_index}\n------------------------')
+                print(file.name)
                 # DIRC 1.21.21 1\n
                 #                 ^
-                insert_pos = old_index.find('\n') + 1
+                insert_pos = new_index.find('\n') + 1
                 
-                new_index = old_index[:insert_pos] + entry + old_index[insert_pos:]
+                # Add entry
+                new_index = new_index[:insert_pos] + entry + new_index[insert_pos:] 
                 
+                print(f'VERY NEW INDEX IS HERE:\n{new_index}\n------------------------')
+                               
+                index_file.seek(0)
                 index_file.write(new_index)
+                index_file.truncate()
             else:
                 print('No changes detected')
 
 
 def list_entries(index):
     entries_beginings = re.finditer(f'<ctime', index)
-    last_entry_end = index.rfind('>') + 1
+    last_entry_end = index.rfind('>') + 2
     
     entry_positions = []
-    
     for i, entry_start in enumerate(entries_beginings):
         # Only position of the first <ctime> in the entry
         if i % 2 == 0:
             entry_positions.append(entry_start.start())
     
     entry_positions.append(last_entry_end)
-    # print(entry_positions)
     
     entries = []
-    
     for i in range(len(entry_positions) - 1):
         entry = index[entry_positions[i]:entry_positions[i + 1]]
         entries.append(entry)
     
-    # print('len:', len(entries))
     return entries
 
 
-def is_in_index_already(index, new_sha, new_name):
+def is_already_in_index(index, new_sha, new_name):
     
     entries = list_entries(index)
     
@@ -167,12 +177,11 @@ def is_in_index_already(index, new_sha, new_name):
         sha_end = entry.find('>', sha_start)
         sha = entry[sha_start:sha_end]
         
-        
         name_start = entry.find('<name ') + 6
         name_end = entry.find('>', name_start)
         name = entry[name_start:name_end]
         
-        print(repr(sha), 'vs', repr(new_sha), '\n', repr(name), 'vs', repr(new_name))
+        # print(repr(sha), 'vs', repr(new_sha), '\n', repr(name), 'vs', repr(new_name))
         if sha == new_sha and name == new_name:
             return True
     return False
@@ -181,8 +190,6 @@ def is_in_index_already(index, new_sha, new_name):
 def ls_files():
     pass
             
-    
-        
     
 def is_init():
     if not os.path.exists('.git'):
