@@ -314,13 +314,14 @@ def has_changed(index, file_sha, file_name):
     
 
 def ls_files():
-    with open('.mygit/index', 'r') as index_file:
-        index = index_file.read()
-        entries = list_entries(index)
-        
-        for entry in entries:
-            name = get_entry_tag_value(entry, 'name')
-            print(name)
+    if os.path.exists('.mygit/index'):
+        with open('.mygit/index', 'r') as index_file:
+            index = index_file.read()
+            entries = list_entries(index)
+            
+            for entry in entries:
+                name = get_entry_tag_value(entry, 'name')
+                print(name)
         
     
 def is_init():

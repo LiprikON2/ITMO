@@ -20,7 +20,7 @@ python mygit.py hash-object <file>
 python mygit.py hash-object <file> -w
 ```
 
-### Catting file
+### Cat'ing file
 
 #### File content
 ```bash
@@ -38,11 +38,25 @@ python mygit.py cat-file <hash_sum> -s
 ### Updating index
 
 #### Update file in the index
+> Ignores new files
 ```bash
 python mygit.py update-index <file>
 ```
 
 #### Add file to the index
+> Doesn't ignore new files
 ```bash
 python mygit.py update-index <file> --add
+```
+
+#### Remove file to the index
+> Doesn't ignore new files
+```bash
+python mygit.py update-index <file> --remove
+```
+
+### ls'ing files
+
+```
+python mygit.py ls-files
 ```
