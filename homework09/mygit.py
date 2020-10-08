@@ -83,8 +83,8 @@ def cat_file(sha):
 
     except FileNotFoundError:
         print(f'Not a valid object name {sha}')
-            
-def update_index(file):
+        
+def get_entry_from_file(file):
     content = file.read()
     file.seek(0)
     
@@ -106,11 +106,19 @@ def update_index(file):
         <flags >
         <name {file.name}>\n''')
     
-    version = '1.12' # TODO
-    entry_count = '1'
+    return entry
+    
+def update_index(entry, file_name, version='1.12'):
+    
+    if entry:
+        sha = get_entry_tag_value(entry, 'SHA')
+    else:
+        sha = None
     
     if not os.path.exists('.git/index'):
         with open('.git/index', 'w') as index_file:
+            entry_count = '1'
+            
             header = f'DIRC {version} {entry_count}\n'
             content = header + entry
             index_content_sha = get_sha1_hash_sum(content)
@@ -118,35 +126,33 @@ def update_index(file):
             
             index = content + footer
             save_index_file(index_file, index)
-            print(f'Added {file.name}')
+            print(f'Added {file_name}')
             
     else:
         with open('.git/index', 'r+') as index_file:
             index = index_file.read()
             
-            if not is_in_index(index, file.name) and '--add' in sys.argv:
+            if not is_in_index(index, file_name) and '--add' in sys.argv:
                 new_index = add_index_entry(index, entry)
                 new_index = update_index_footer(new_index)
                 
                 save_index_file(index_file, new_index)
                 
-                print(f'Added {file.name}')
-            
+                print(f'Added {file_name}')
+                
             elif '--remove' in sys.argv:
-                new_index = remove_index_entry(index, entry, exact=False) 
+                new_index = remove_index_entry(index, file_name) 
                 new_index = update_index_footer(new_index)
                 
                 save_index_file(index_file, new_index)
-                
-                # print(f'Removed {file.name}')
             
-            elif has_changed(index, sha, file.name):
+            elif has_changed(index, sha, file_name):
                 new_index = update_index_entry(index, entry)
                 new_index = update_index_footer(new_index)
                 
                 save_index_file(index_file, new_index)
                 
-                print(f'Updated {file.name}')
+                print(f'Updated {file_name}')
                 
             else:
                 print('No changes detected')
@@ -167,34 +173,26 @@ def add_index_entry(index, entry):
     
     return new_index
 
-def remove_index_entry(index, entry, exact=True, printing=True):
+def remove_index_entry(index, name, printing=True):
     """ 
-    Return new index with removed mygit index entry
-    exact=True/False - specifes whether or not only name of the entry needs to match
+    Returns new mygit index with removed mygit index entry
     """
-    
-    name = get_entry_tag_value(entry, 'name')
     
     if not is_in_index(index, name):
         return index
     
-    if not exact:
-        name_1 = name
-        entries = list_entries(index)
-        for entry_2 in entries:
-            name_2 = get_entry_tag_value(entry_2, 'name')
-            if name_1 == name_2:
-                entry = entry_2
-                break
+    entries = list_entries(index)
+    for entry in entries:
+        name_2 = get_entry_tag_value(entry, 'name')
+        if name == name_2:
+            new_index = increment_index_entry_count(index, decrement=True)
+            entry_start = index.find(entry)
+            entry_end = entry_start + len(entry)
+            new_index = new_index[:entry_start] + new_index[entry_end:]
             
-    new_index = increment_index_entry_count(index, decrement=True)
-    
-    entry_start = index.find(entry)
-    entry_end = entry_start + len(entry)
-    new_index = new_index[:entry_start] + new_index[entry_end:]
-    
     if printing:
         print(f'Removed {name}')
+        
     return new_index
 
 def update_index_entry(index, new_entry):
@@ -207,7 +205,7 @@ def update_index_entry(index, new_entry):
     for entry in entries:
         name_2 = get_entry_tag_value(entry, 'name')
         if name_1 == name_2:
-            new_index = remove_index_entry(index, entry, printing=False)
+            new_index = remove_index_entry(index, name_1, printing=False)
             new_index = add_index_entry(new_index, new_entry)
     
     return new_index
@@ -301,7 +299,7 @@ def is_in_index(index, file_name):
     return False
 
 def has_changed(index, file_sha, file_name):
-    """ Checks whether or not file has not changed form the one in mygit index """
+    """ Checks whether or not file has changed from the one in mygit index """
     entries = list_entries(index)
     
     for entry in entries:
@@ -315,14 +313,13 @@ def has_changed(index, file_sha, file_name):
 
 def ls_files():
     with open('.git/index', 'r') as index_file:
-            index = index_file.read()
-            entries = list_entries(index)
-            
-            for entry in entries:
-                name = get_entry_tag_value(entry, 'name')
-                print(name)
-    
-            
+        index = index_file.read()
+        entries = list_entries(index)
+        
+        for entry in entries:
+            name = get_entry_tag_value(entry, 'name')
+            print(name)
+        
     
 def is_init():
     if not os.path.exists('.git'):
@@ -357,8 +354,13 @@ def main():
     elif command == 'update-index':
         if is_init():
             file_path = sys.argv[2]
-            with open(file_path, 'r') as f:
-                update_index(f)
+            try:
+                with open(file_path, 'r') as f:
+                    entry = get_entry_from_file(f)
+                    update_index(entry, file_path)
+                    
+            except FileNotFoundError:
+                update_index(None, file_path)
                 
     elif command == 'ls-files':
         if is_init():
