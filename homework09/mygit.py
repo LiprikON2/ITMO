@@ -193,7 +193,7 @@ def remove_index_entry(index, entry, exact=True, printing=True):
     entry_end = entry_start + len(entry)
     new_index = new_index[:entry_start] + new_index[entry_end:]
     
-    if print:
+    if printing:
         print(f'Removed {name}')
     return new_index
 
@@ -317,12 +317,10 @@ def ls_files():
     with open('.git/index', 'r') as index_file:
             index = index_file.read()
             entries = list_entries(index)
-            # names = []
+            
             for entry in entries:
                 name = get_entry_tag_value(entry, 'name')
                 print(name)
-                # names.append(name)
-    
     
             
     
