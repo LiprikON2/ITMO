@@ -35,7 +35,7 @@ def hash_object(file, printing=True):
     if '-w' in sys.argv:
         foldername = sha[:2]
         filename = sha[2:]
-        folder_path = f'.git/objects/{foldername}'
+        folder_path = f'.mygit/objects/{foldername}'
         
         os.makedirs(folder_path, exist_ok=True)
             
@@ -51,7 +51,7 @@ def get_sha1_hash_sum(text):
 def cat_file(sha):
     foldername = sha[:2]
     filename = sha[2:]
-    folder_path = f'.git/objects/{foldername}'
+    folder_path = f'.mygit/objects/{foldername}'
     
     try:
         with open(os.path.join(folder_path, filename), 'rb') as blob_file:
@@ -76,10 +76,12 @@ def cat_file(sha):
             
             if '-p' in sys.argv:
                 print(content)
-            if '-t' in sys.argv:
+            elif '-t' in sys.argv:
                 print(blob_type)
-            if '-s' in sys.argv:
+            elif '-s' in sys.argv:
                 print(content_len)
+            else:
+                print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
 
     except FileNotFoundError:
         print(f'Not a valid object name {sha}')
@@ -115,8 +117,8 @@ def update_index(entry, file_name, version='1.12'):
     else:
         sha = None
     
-    if not os.path.exists('.git/index'):
-        with open('.git/index', 'w') as index_file:
+    if not os.path.exists('.mygit/index'):
+        with open('.mygit/index', 'w') as index_file:
             entry_count = '1'
             
             header = f'DIRC {version} {entry_count}\n'
@@ -129,7 +131,7 @@ def update_index(entry, file_name, version='1.12'):
             print(f'Added {file_name}')
             
     else:
-        with open('.git/index', 'r+') as index_file:
+        with open('.mygit/index', 'r+') as index_file:
             index = index_file.read()
             
             if not is_in_index(index, file_name) and '--add' in sys.argv:
@@ -173,25 +175,25 @@ def add_index_entry(index, entry):
     
     return new_index
 
-def remove_index_entry(index, name, printing=True):
+def remove_index_entry(index, file_name, printing=True):
     """ 
     Returns new mygit index with removed mygit index entry
     """
     
-    if not is_in_index(index, name):
+    if not is_in_index(index, file_name):
         return index
     
     entries = list_entries(index)
     for entry in entries:
-        name_2 = get_entry_tag_value(entry, 'name')
-        if name == name_2:
+        index_name = get_entry_tag_value(entry, 'name')
+        if file_name == index_name:
             new_index = increment_index_entry_count(index, decrement=True)
             entry_start = index.find(entry)
             entry_end = entry_start + len(entry)
             new_index = new_index[:entry_start] + new_index[entry_end:]
             
     if printing:
-        print(f'Removed {name}')
+        print(f'Removed {file_name}')
         
     return new_index
 
@@ -312,7 +314,7 @@ def has_changed(index, file_sha, file_name):
     
 
 def ls_files():
-    with open('.git/index', 'r') as index_file:
+    with open('.mygit/index', 'r') as index_file:
         index = index_file.read()
         entries = list_entries(index)
         
@@ -322,8 +324,8 @@ def ls_files():
         
     
 def is_init():
-    if not os.path.exists('.git'):
-        print('git is not initialized in this directory')
+    if not os.path.exists('.mygit'):
+        print('mygit is not initialized in this directory')
         return False
     return True
 
@@ -331,10 +333,10 @@ def main():
     command = sys.argv[1]
     if command == 'init':
         try:
-            os.makedirs('.git/objects', exist_ok=True)
-            os.makedirs('.git/refs/heads', exist_ok=True)
-            os.makedirs('.git/refs/tags', exist_ok=True)
-            with open('.git/HEAD', 'w+') as f:
+            os.makedirs('.mygit/objects', exist_ok=True)
+            os.makedirs('.mygit/refs/heads', exist_ok=True)
+            os.makedirs('.mygit/refs/tags', exist_ok=True)
+            with open('.mygit/HEAD', 'w+') as f:
                 f.write('ref: refs/heads')
             print('Initialized git directory')
         except FileExistsError:
@@ -375,20 +377,4 @@ def main():
 
 
 if __name__ == '__main__':
-#     ss = '''<ctime 1601823978.2589989>
-# <ctime 0>
-# <mtime 1601823978.2589989>
-# <mtime 0>
-# <dev 3536801771>
-# <ino 5629499534466648>
-# <mode 33206>
-# <uid 0>
-# <gid 0>
-# <size 34>
-# <SHA 99b2b1991f5f5a572bf64d5ee6903ab7c5a8ff96>
-# <flags >
-# <name example.txt>'''
-#     s= get_entry_tag_value(ss, 'mtime', second_one=True)
-#     print(s)
-    
     main()
