@@ -22,14 +22,14 @@ def write_tree():
 def object_sha():
     pass
 
-def hash_object(file, print=True):
+def hash_object(file, printing=True):
     content = file.read()
     # `\0` or `\x00` is a null character, used to separate header and content
     header = f'blob {len(content)}\0'
     
     blob = header + content
     sha = get_sha1_hash_sum(blob)
-    if print:
+    if printing:
         print(sha)
     
     if '-w' in sys.argv:
@@ -89,7 +89,7 @@ def update_index(file):
     file.seek(0)
     
     stat = os.stat(file.name)
-    sha = hash_object(file, print=False)
+    sha = hash_object(file, printing=False)
     
     entry = textwrap.dedent(f'''\
         <ctime {stat.st_ctime}>
@@ -124,13 +124,21 @@ def update_index(file):
         with open('.git/index', 'r+') as index_file:
             index = index_file.read()
             
-            if is_not_in_index(index, file.name) and '--add' in sys.argv:
+            if not is_in_index(index, file.name) and '--add' in sys.argv:
                 new_index = add_index_entry(index, entry)
                 new_index = update_index_footer(new_index)
                 
                 save_index_file(index_file, new_index)
                 
                 print(f'Added {file.name}')
+            
+            elif '--remove' in sys.argv:
+                new_index = remove_index_entry(index, entry, exact=False) 
+                new_index = update_index_footer(new_index)
+                
+                save_index_file(index_file, new_index)
+                
+                # print(f'Removed {file.name}')
             
             elif has_changed(index, sha, file.name):
                 new_index = update_index_entry(index, entry)
@@ -159,15 +167,34 @@ def add_index_entry(index, entry):
     
     return new_index
 
-def remove_index_entry(index, entry):
-    """ Return new index with removed mygit index entry """
+def remove_index_entry(index, entry, exact=True, printing=True):
+    """ 
+    Return new index with removed mygit index entry
+    exact=True/False - specifes whether or not only name of the entry needs to match
+    """
+    
+    name = get_entry_tag_value(entry, 'name')
+    
+    if not is_in_index(index, name):
+        return index
+    
+    if not exact:
+        name_1 = name
+        entries = list_entries(index)
+        for entry_2 in entries:
+            name_2 = get_entry_tag_value(entry_2, 'name')
+            if name_1 == name_2:
+                entry = entry_2
+                break
+            
     new_index = increment_index_entry_count(index, decrement=True)
     
     entry_start = index.find(entry)
     entry_end = entry_start + len(entry)
-    
     new_index = new_index[:entry_start] + new_index[entry_end:]
     
+    if print:
+        print(f'Removed {name}')
     return new_index
 
 def update_index_entry(index, new_entry):
@@ -180,7 +207,7 @@ def update_index_entry(index, new_entry):
     for entry in entries:
         name_2 = get_entry_tag_value(entry, 'name')
         if name_1 == name_2:
-            new_index = remove_index_entry(index, entry)
+            new_index = remove_index_entry(index, entry, printing=False)
             new_index = add_index_entry(new_index, new_entry)
     
     return new_index
@@ -241,7 +268,7 @@ def get_entry_tag_value(entry, tag, second_one=False):
     Returns value of entry tag inside mygit index 
     
     Possible tags: 'ctime', 'mtime', 'dev', 'ino',
-    'mode', 'uid', 'gid', 'size', 'SHA', 'flags'.
+    'mode', 'uid', 'gid', 'size', 'SHA', 'flags', 'name.
     
     second_one=True/Flase - determines whether return value of second tag occurence or the first
     
@@ -260,18 +287,18 @@ def get_entry_tag_value(entry, tag, second_one=False):
     
     tag_val = entry[tag_val_start:tag_val_end]
     return tag_val
+    
 
-
-def is_not_in_index(index, file_name):
-    """ Checks whether or not same file is already in the mygit index """
+def is_in_index(index, file_name):
+    """ Checks whether or not file with same name is already in the mygit index """
     entries = list_entries(index)
     
     for entry in entries:
         name = get_entry_tag_value(entry, 'name')
         
         if name == file_name:
-            return False
-    return True
+            return True
+    return False
 
 def has_changed(index, file_sha, file_name):
     """ Checks whether or not file has not changed form the one in mygit index """
@@ -287,7 +314,16 @@ def has_changed(index, file_sha, file_name):
     
 
 def ls_files():
-    pass
+    with open('.git/index', 'r') as index_file:
+            index = index_file.read()
+            entries = list_entries(index)
+            # names = []
+            for entry in entries:
+                name = get_entry_tag_value(entry, 'name')
+                print(name)
+                # names.append(name)
+    
+    
             
     
 def is_init():
@@ -328,7 +364,7 @@ def main():
                 
     elif command == 'ls-files':
         if is_init():
-            pass
+            ls_files()
     
     elif command == 'is-tree':
         pass
