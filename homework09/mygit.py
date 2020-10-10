@@ -28,26 +28,29 @@ def ls_tree(sha, printing=True):
                 print('Not a tree object')
                 sys.exit(0)
             
-            entry_nulls_iter = re.finditer('\x00', content)
+            entries_nulls_iter = re.finditer('\x00', content)
             
             entry_positions = [0]
             content_len = len(content)
             content_len_left = content_len
             
-            for entry_null in entry_nulls_iter:
+            for entry_null in entries_nulls_iter:
                 entry_end = entry_null.start() + 41
                 entry_positions.append(entry_end)
                 
             entries = []
             for i in range(len(entry_positions) - 1):
                 entry = content[entry_positions[i]:entry_positions[i + 1]]
-                entries.append(entry)
+                mode_end = entry.find(' ')
+                mode = entry[:mode_end]
+                name_end = entry.find('\x00')
+                name = entry[mode_end + 1:name_end]
+                sha = entry[name_end + 1:]
                 
+                object_type = cat_file(sha, printing=False)
                 if printing:
-                    print(entry)
+                    print(f'{mode} {object_type} {sha}    {name}')
             
-            
-            return entries
             # if '-p' in sys.argv:
             #     if object_type == 'tree':
             #         ls_tree(tree_sha)
@@ -135,7 +138,7 @@ def hash_object(file, writing=False, printing=True):
         return sha
 
 
-def cat_file(sha):
+def cat_file(sha, printing=True):
     folder_name = sha[:2]
     file_name = sha[2:]
     folder_path = f'.mygit/objects/{folder_name}'
@@ -165,14 +168,20 @@ def cat_file(sha):
                 if object_type == 'tree':
                     ls_tree(sha)
                 else:
-                    print(content)
+                    if printing:
+                        print(content)
             elif '-t' in sys.argv:
-                print(object_type)
+                if printing:
+                    print(object_type)
             elif '-s' in sys.argv:
-                print(content_len)
+                if printing:
+                    print(content_len)
             else:
-                print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
-
+                if printing:
+                    print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
+            
+            return object_type
+            
     except FileNotFoundError:
         print(f'Not a valid object name {sha}')
         
@@ -404,17 +413,21 @@ def has_changed(index, file_sha, file_name):
     
 
 def ls_files():
+    """ 
+    ls-like print of files that are currently in mygit index
+    """
+    
     if os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r') as index_file:
             index = index_file.read()
             entries = list_entries(index)
             
             for entry in entries:
-                name = get_entry_tag_value(entry, 'name')
+                sha = get_entry_tag_value(entry, 'SHA')
                 if '-s' in sys.argv:
+                    name = get_entry_tag_value(entry, 'name')
                     mode = get_entry_tag_value(entry, 'mode')
-                    sha = get_entry_tag_value(entry, 'SHA')
-                    print(f'100644 {sha} 0    {name}')
+                    print(f'100644 {sha} 0    {name}') # TODO remove hardcoded values
                 else:
                     print(name)
         
