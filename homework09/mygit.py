@@ -93,14 +93,16 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
                 
                 folders, name = split_into_folders(name_with_folders)
                 
-                if folders:
+                if rec_level < len(folders):
                     mode = '040000'
-                    name = folders[rec_level]
+                    name = folders[rec_level] # not a path - single folder
                 
                 if tree_entry.find(f' {name}') == '-1':
+                    subfolders = index_subfolders(name, entries)
+                    sha = write_tree(rec_level=rec_level + 1)
+                    
                     tree_entry = f'{mode} {name}\0{sha}'
                     tree_entries += tree_entry
-                    write_tree(rec_level=rec_level + 1)
                 
             tree_header = f'tree {len(tree_entries)}\0'
             tree_object = tree_header + tree_entries
@@ -109,6 +111,9 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
                 print(tree_sha)
             
             save_object(tree_object, tree_sha)
+            
+            return object_sha('tree_sha+...') # TODO folder sha
+
 
 def index_subfolders(folder, entries):
     """ Returns subfolders - list of (name, sha) - of specified folder, that are in mygit index """
@@ -117,8 +122,10 @@ def index_subfolders(folder, entries):
         
         subfolders = []
         if Path(folder) in Path(name).parents:
-            sha = get_entry_tag_value(entry, 'SHA')
-            subfolders.append((name, sha))
+            # sha = get_entry_tag_value(entry, 'SHA')
+            # subfolders.append((name, sha))
+            subfolders.append(name)
+            
     return subfolders
 
 
