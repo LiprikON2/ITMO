@@ -10,8 +10,58 @@ import re
 def object_read():
     pass
 
-def ls_tree():
-    pass
+def ls_tree(sha, printing=True):
+    folder_name = sha[:2]
+    file_name = sha[2:]
+    folder_path = f'.mygit/objects/{folder_name}'
+    try:
+        with open(os.path.join(folder_path, file_name), 'rb') as object_file:
+            tree_object = zlib.decompress(object_file.read())
+            header_len = tree_object.find(b'\x00') + 1
+            
+            header = tree_object[:header_len]
+            content_len = int(header[tree_object.find(b' '):tree_object.find(b'\x00')].decode('ascii'))
+            content = tree_object[header_len:header_len + content_len].decode('ascii')
+            object_type = header[:tree_object.find(b' ')].decode('ascii')
+            
+            if not object_type == 'tree':
+                print('Not a tree object')
+                sys.exit(0)
+            
+            entry_nulls_iter = re.finditer('\x00', content)
+            
+            entry_positions = [0]
+            content_len = len(content)
+            content_len_left = content_len
+            
+            for entry_null in entry_nulls_iter:
+                entry_end = entry_null.start() + 41
+                entry_positions.append(entry_end)
+                
+            entries = []
+            for i in range(len(entry_positions) - 1):
+                entry = content[entry_positions[i]:entry_positions[i + 1]]
+                entries.append(entry)
+                
+                if printing:
+                    print(entry)
+            
+            
+            return entries
+            # if '-p' in sys.argv:
+            #     if object_type == 'tree':
+            #         ls_tree(tree_sha)
+            #     else:
+            #         print(content)
+            # elif '-t' in sys.argv:
+            #     print(object_type)
+            # elif '-s' in sys.argv:
+            #     print(content_len)
+            # else:
+            #     print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
+
+    except FileNotFoundError:
+        print(f'Not a valid object name {sha}')
 
 def tree_parse_one():
     pass
@@ -113,8 +163,7 @@ def cat_file(sha):
             
             if '-p' in sys.argv:
                 if object_type == 'tree':
-                    print('TODO: cat-file for tree')
-                    print(content)
+                    ls_tree(sha)
                 else:
                     print(content)
             elif '-t' in sys.argv:
@@ -128,7 +177,7 @@ def cat_file(sha):
         print(f'Not a valid object name {sha}')
         
 def get_entry_from_file(file):
-    """ Returns mygit index entry string """
+    """ Returns mygit index entry string from specified file """
     content = file.read()
     file.seek(0)
     stat = os.stat(file.name)
@@ -286,11 +335,11 @@ def update_index_footer(index, sha=''):
 
 def list_entries(index):
     """ Returns list of plain text entries from mygit index """
-    entry_start_list = re.finditer(f'<ctime', index)
+    entry_start_iter = re.finditer(f'<ctime', index)
     last_entry_end = index.rfind('>') + 2
     
     entry_positions = []
-    for i, entry_start in enumerate(entry_start_list):
+    for i, entry_start in enumerate(entry_start_iter):
         # Position of the first <ctime> in the entry is the entry starting point
         if i % 2 == 0:
             entry_positions.append(entry_start.start())
@@ -376,22 +425,6 @@ def is_init():
         return False
     return True
 
-def which(program):
-    import os
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
 
 def main():
     command = sys.argv[1]
@@ -442,8 +475,10 @@ def main():
         if is_init():
             write_tree()
     
-    elif command == 'is-tree':
-        pass
+    elif command == 'ls-tree':
+        if is_init():
+            tree_sha = sys.argv[2]
+            ls_tree(tree_sha)
     else:
         raise RuntimeError(f'Unknown command {command}')
 
