@@ -11,7 +11,7 @@ DIRC 1.12 2
 <size 34>
 <SHA 99b2b1991f5f5a572bf64d5ee6903ab7c5a8ff96>
 <flags >
-<name example.txt>
+<name folder/example.txt>
 <ctime 1601826007.56348>
 <ctime 0>
 <mtime 1601826007.56348>
@@ -25,4 +25,4 @@ DIRC 1.12 2
 <SHA 7e774cf533c51803125d4659f3488bd9dffc41a6>
 <flags >
 <name quote.txt>
-<sha 1e02c81a3685b52dd57e652ef76e2762bd27fb75>
+<sha 1896fff34a579713385f15999b3f3dfca7a93e41>

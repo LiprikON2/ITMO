@@ -1,11 +1,11 @@
 import hashlib
 import sys
 import os
-import pathlib
+import pathlib import Path # TODO remove unused imports
 import zlib
 import io
 import textwrap
-import re
+import re 
 
 def object_read():
     pass
@@ -50,8 +50,10 @@ def ls_tree(sha, printing=True):
                 object_type = cat_file(sha, printing=False)
                 if printing:
                     print(f'{mode} {object_type} {sha}    {name}')
+                if '-r' in sys.argv and object_type == 'tree':
+                    ls_tree(sha)
             
-            # if '-p' in sys.argv:
+            # if '-r' in sys.argv:
             #     if object_type == 'tree':
             #         ls_tree(tree_sha)
             #     else:
@@ -69,7 +71,7 @@ def ls_tree(sha, printing=True):
 def tree_parse_one():
     pass
 
-def write_tree(printing=True):
+def write_tree(rec_level=0, printing=True): # TODO deleted files handling
     if os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r') as index_file:
             index = index_file.read()
@@ -84,19 +86,21 @@ def write_tree(printing=True):
                 
                 tree_items.append((name, sha))
                 
-                with open(name, 'r') as f:
-                    hash_object(f, writing=True, printing=False)
-
-            
             tree_entries = ''
             for tree_item in tree_items:
-                name, sha = tree_item
-                if os.path.isdir(name):
-                    mode = '40000'
-                else:
-                    mode = '100644'
-                tree_entry = f'{mode} {name}\0{sha}'
-                tree_entries += tree_entry
+                mode = '100644'
+                name_with_folders, sha = tree_item
+                
+                folders, name = split_into_folders(name_with_folders)
+                
+                if folders:
+                    mode = '040000'
+                    name = folders[rec_level]
+                
+                if tree_entry.find(f' {name}') == '-1':
+                    tree_entry = f'{mode} {name}\0{sha}'
+                    tree_entries += tree_entry
+                    write_tree(rec_level=rec_level + 1)
                 
             tree_header = f'tree {len(tree_entries)}\0'
             tree_object = tree_header + tree_entries
@@ -105,7 +109,39 @@ def write_tree(printing=True):
                 print(tree_sha)
             
             save_object(tree_object, tree_sha)
-            
+
+def index_subfolders(folder, entries):
+    """ Returns subfolders - list of (name, sha) - of specified folder, that are in mygit index """
+    for entry in entries
+        name = get_entry_tag_value(entry, 'name')
+        
+        subfolders = []
+        if Path(folder) in Path(name).parents:
+            sha = get_entry_tag_value(entry, 'SHA')
+            subfolders.append((name, sha))
+    return subfolders
+
+
+def split_into_folders(path_and_file):
+    """
+    `folder/folder2/quote.txt` -> (['folder', 'folder2'], 'quote.txt')
+    """
+    path, file = os.path.split(path_and_file)
+    
+    folders = []
+    while True:
+        path, folder = os.path.split(path)
+
+        if folder != "":
+            folders.append(folder)
+        else:
+            if path != "":
+                folders.append(path)
+
+            break
+
+    folders.reverse()      
+    return folders, file
 
 def object_sha(text):
     return hashlib.sha1(text.encode()).hexdigest()
@@ -215,6 +251,9 @@ def update_index(entry, file_name, version='1.12'):
         sha = get_entry_tag_value(entry, 'SHA')
     else:
         sha = None
+        
+    with open(file_name, 'r') as f:
+        hash_object(f, writing=True, printing=False)
     
     if not os.path.exists('.mygit/index'):
         with open('.mygit/index', 'w') as index_file:
@@ -232,6 +271,7 @@ def update_index(entry, file_name, version='1.12'):
     else:
         with open('.mygit/index', 'r+') as index_file:
             index = index_file.read()
+            
             
             if not is_in_index(index, file_name) and '--add' in sys.argv:
                 new_index = add_index_entry(index, entry)
@@ -423,9 +463,9 @@ def ls_files():
             entries = list_entries(index)
             
             for entry in entries:
-                sha = get_entry_tag_value(entry, 'SHA')
+                name = get_entry_tag_value(entry, 'name')
                 if '-s' in sys.argv:
-                    name = get_entry_tag_value(entry, 'name')
+                    sha = get_entry_tag_value(entry, 'SHA')
                     mode = get_entry_tag_value(entry, 'mode')
                     print(f'100644 {sha} 0    {name}') # TODO remove hardcoded values
                 else:
