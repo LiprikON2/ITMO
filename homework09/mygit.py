@@ -10,74 +10,115 @@ import re
 def object_read():
     pass
 
-def is_tree():
+def ls_tree():
     pass
 
 def tree_parse_one():
     pass
 
-def write_tree():
-    pass
+def write_tree(printing=True):
+    if os.path.exists('.mygit/index'):
+        with open('.mygit/index', 'r') as index_file:
+            index = index_file.read()
+            entries = list_entries(index)
+            
+            tree_items = []
+            content_size = 0
+            for entry in entries:
+                name = get_entry_tag_value(entry, 'name')
+                sha = get_entry_tag_value(entry, 'SHA')
+                size = get_entry_tag_value(entry, 'size')
+                
+                tree_items.append((name, sha))
+                
+                with open(name, 'r') as f:
+                    hash_object(f, writing=True, printing=False)
 
-def object_sha():
-    pass
+            
+            tree_entries = ''
+            for tree_item in tree_items:
+                name, sha = tree_item
+                if os.path.isdir(name):
+                    mode = '40000'
+                else:
+                    mode = '100644'
+                tree_entry = f'{mode} {name}\0{sha}'
+                tree_entries += tree_entry
+                
+            tree_header = f'tree {len(tree_entries)}\0'
+            tree_object = tree_header + tree_entries
+            tree_sha = object_sha(tree_object)
+            if printing:
+                print(tree_sha)
+            
+            save_object(tree_object, tree_sha)
+            
 
-def hash_object(file, printing=True):
+def object_sha(text):
+    return hashlib.sha1(text.encode()).hexdigest()
+
+def save_object(object, sha):
+    folder_name = sha[:2]
+    file_name = sha[2:]
+    folder_path = f'.mygit/objects/{folder_name}'
+    
+    os.makedirs(folder_path, exist_ok=True)
+    
+    with open(os.path.join(folder_path, file_name), 'wb') as object_file:
+        compressed_object = zlib.compress(object.encode())
+        object_file.write(compressed_object)
+    
+
+def hash_object(file, writing=False, printing=True):
     content = file.read()
     # `\0` or `\x00` is a null character, used to separate header and content
     header = f'blob {len(content)}\0'
     
-    blob = header + content
-    sha = get_sha1_hash_sum(blob)
+    object = header + content
+    sha = object_sha(object)
     if printing:
         print(sha)
     
-    if '-w' in sys.argv:
-        foldername = sha[:2]
-        filename = sha[2:]
-        folder_path = f'.mygit/objects/{foldername}'
-        
-        os.makedirs(folder_path, exist_ok=True)
-            
-        with open(os.path.join(folder_path, filename), 'wb') as blob_file:
-            compressed_blob = zlib.compress(blob.encode())
-            blob_file.write(compressed_blob)
+    if writing:
+        save_object(object, sha)
     else:
         return sha
 
-def get_sha1_hash_sum(text):
-    return hashlib.sha1(text.encode()).hexdigest()
 
 def cat_file(sha):
-    foldername = sha[:2]
-    filename = sha[2:]
-    folder_path = f'.mygit/objects/{foldername}'
+    folder_name = sha[:2]
+    file_name = sha[2:]
+    folder_path = f'.mygit/objects/{folder_name}'
     
     try:
-        with open(os.path.join(folder_path, filename), 'rb') as blob_file:
-            blob = zlib.decompress(blob_file.read())
-            header_len = blob.find(b'\x00') + 1
+        with open(os.path.join(folder_path, file_name), 'rb') as object_file:
+            object = zlib.decompress(object_file.read())
+            header_len = object.find(b'\x00') + 1
             
             # blob 25\x00789c4bcac94f...
             # ^^^^^^^^^^^
-            header = blob[:header_len]
+            header = object[:header_len]
             
             # blob 25\x00789c4bcac94f...
             #      ^^
-            content_len = int(header[blob.find(b' '):blob.find(b'\x00')].decode('ascii'))
+            content_len = int(header[object.find(b' '):object.find(b'\x00')].decode('ascii'))
             
             # blob 25\x00789c4bcac94f...
             #            ^^^^^^^^^^^^^^^
-            content = blob[header_len:header_len + content_len].decode('ascii')
+            content = object[header_len:header_len + content_len].decode('ascii')
             
             # blob 25\x00789c4bcac94f...
             # ^^^^
-            blob_type = header[:blob.find(b' ')].decode('ascii')
+            object_type = header[:object.find(b' ')].decode('ascii')
             
             if '-p' in sys.argv:
-                print(content)
+                if object_type == 'tree':
+                    print('TODO: cat-file for tree')
+                    print(content)
+                else:
+                    print(content)
             elif '-t' in sys.argv:
-                print(blob_type)
+                print(object_type)
             elif '-s' in sys.argv:
                 print(content_len)
             else:
@@ -87,9 +128,9 @@ def cat_file(sha):
         print(f'Not a valid object name {sha}')
         
 def get_entry_from_file(file):
+    """ Returns mygit index entry string """
     content = file.read()
     file.seek(0)
-    
     stat = os.stat(file.name)
     sha = hash_object(file, printing=False)
     
@@ -123,7 +164,7 @@ def update_index(entry, file_name, version='1.12'):
             
             header = f'DIRC {version} {entry_count}\n'
             content = header + entry
-            index_content_sha = get_sha1_hash_sum(content)
+            index_content_sha = object_sha(content)
             footer = f'<sha {index_content_sha}>'
             
             index = content + footer
@@ -238,7 +279,7 @@ def update_index_footer(index, sha=''):
     footer_start = index.find('<sha')
     
     if not sha:
-        sha = get_sha1_hash_sum(index[:footer_start])
+        sha = object_sha(index[:footer_start])
         
     return index[:footer_start] + f'<sha {sha}>'
 
@@ -268,7 +309,7 @@ def get_entry_tag_value(entry, tag, second_one=False):
     Returns value of entry tag inside mygit index 
     
     Possible tags: 'ctime', 'mtime', 'dev', 'ino',
-    'mode', 'uid', 'gid', 'size', 'SHA', 'flags', 'name.
+    'mode', 'uid', 'gid', 'size', 'SHA', 'flags', 'name'.
     
     second_one=True/Flase - determines whether return value of second tag occurence or the first
     
@@ -321,7 +362,12 @@ def ls_files():
             
             for entry in entries:
                 name = get_entry_tag_value(entry, 'name')
-                print(name)
+                if '-s' in sys.argv:
+                    mode = get_entry_tag_value(entry, 'mode')
+                    sha = get_entry_tag_value(entry, 'SHA')
+                    print(f'100644 {sha} 0    {name}')
+                else:
+                    print(name)
         
     
 def is_init():
@@ -329,6 +375,23 @@ def is_init():
         print('mygit is not initialized in this directory')
         return False
     return True
+
+def which(program):
+    import os
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
 
 def main():
     command = sys.argv[1]
@@ -352,7 +415,10 @@ def main():
         if is_init():
             file_path = sys.argv[2]
             with open(file_path, 'r') as f:
-                hash_object(f)
+                if '-w' in sys.argv:
+                    hash_object(f, writing=True)
+                else:
+                    hash_object(f)
     
     elif command == 'update-index':
         if is_init():
@@ -361,17 +427,22 @@ def main():
                 with open(file_path, 'r') as f:
                     entry = get_entry_from_file(f)
                     update_index(entry, file_path)
-                    
+            # In case of a deleted file
             except FileNotFoundError:
                 update_index(None, file_path)
-                
+            # In case of a folder
+            except PermissionError:
+                print(f'Unable to process path {file_path}')
+            
     elif command == 'ls-files':
         if is_init():
             ls_files()
     
-    elif command == 'is-tree':
-        pass
     elif command == 'write-tree':
+        if is_init():
+            write_tree()
+    
+    elif command == 'is-tree':
         pass
     else:
         raise RuntimeError(f'Unknown command {command}')
