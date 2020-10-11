@@ -1,7 +1,7 @@
 import hashlib
 import sys
 import os
-import pathlib import Path # TODO remove unused imports
+from pathlib import Path # TODO remove unused imports
 import zlib
 import io
 import textwrap
@@ -77,47 +77,49 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
             index = index_file.read()
             entries = list_entries(index)
             
-            tree_items = []
-            content_size = 0
+            tree_entries = ''
             for entry in entries:
-                name = get_entry_tag_value(entry, 'name')
+                name_with_folders = get_entry_tag_value(entry, 'name')
                 sha = get_entry_tag_value(entry, 'SHA')
                 size = get_entry_tag_value(entry, 'size')
                 
-                tree_items.append((name, sha))
-                
-            tree_entries = ''
-            for tree_item in tree_items:
-                mode = '100644'
-                name_with_folders, sha = tree_item
-                
                 folders, name = split_into_folders(name_with_folders)
                 
+                # If it is a folder, recursion is needed
                 if rec_level < len(folders):
                     mode = '040000'
-                    name = folders[rec_level] # not a path - single folder
-                
-                if tree_entry.find(f' {name}') == '-1':
-                    subfolders = index_subfolders(name, entries)
-                    sha = write_tree(rec_level=rec_level + 1)
+                    name = os.path.join(*folders[:rec_level + 1])
                     
-                    tree_entry = f'{mode} {name}\0{sha}'
+                    if tree_entries.find(f' {name}') == -1:
+                        print('  '*rec_level, 'FOLDER:', name)
+                        subfolders = index_subfolders(name, entries)
+                        sha = write_tree(rec_level=rec_level + 1)
+                        
+                        tree_entry = f'{mode} {name}\0{sha}'
+                        tree_entries += tree_entry
+                        
+                else:
+                    print('  '*rec_level, 'FILE  :', name_with_folders)
+                    mode = '100644'
+                    tree_entry = f'{mode} {name_with_folders}\0{sha}'
                     tree_entries += tree_entry
-                
-            tree_header = f'tree {len(tree_entries)}\0'
-            tree_object = tree_header + tree_entries
-            tree_sha = object_sha(tree_object)
-            if printing:
-                print(tree_sha)
             
-            save_object(tree_object, tree_sha)
+            if rec_level == 0:
+                tree_header = f'tree {len(tree_entries)}\0'
+                tree_object = tree_header + tree_entries
+                tree_sha = object_sha(tree_object)
+                if printing:
+                    print(tree_sha)
+                
+                print('\nThis is it ― saving...\n', tree_object, sep='')
+                save_object(tree_object, tree_sha)
             
             return object_sha('tree_sha+...') # TODO folder sha
 
 
 def index_subfolders(folder, entries):
     """ Returns subfolders - list of (name, sha) - of specified folder, that are in mygit index """
-    for entry in entries
+    for entry in entries:
         name = get_entry_tag_value(entry, 'name')
         
         subfolders = []
@@ -422,7 +424,7 @@ def get_entry_tag_value(entry, tag, second_one=False):
     find_query = f'<{tag} '
     tag_start = entry.find(find_query)
     # Return empty string if tag not found
-    if tag_start == '-1':
+    if tag_start == -1:
         return ''
     
     tag_val_start = tag_start + len(find_query)

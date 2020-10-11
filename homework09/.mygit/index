@@ -1,4 +1,17 @@
-DIRC 1.12 2
+DIRC 1.12 3
+<ctime 1602412246.6361105>
+<ctime 0>
+<mtime 1602412246.6361105>
+<mtime 0>
+<dev 3536801771>
+<ino 5629499534343028>
+<mode 33206>
+<uid 0>
+<gid 0>
+<size 9>
+<SHA 5dd38a909e596203e45b58f5c47d6347362166a2>
+<flags >
+<name folder/folder2/dummy.txt>
 <ctime 1601823978.2589989>
 <ctime 0>
 <mtime 1601823978.2589989>
@@ -25,4 +38,4 @@ DIRC 1.12 2
 <SHA 7e774cf533c51803125d4659f3488bd9dffc41a6>
 <flags >
 <name quote.txt>
-<sha 1896fff34a579713385f15999b3f3dfca7a93e41>
+<sha f64cba13ecca6c0b136522d7eeb49b938aa899ac>
