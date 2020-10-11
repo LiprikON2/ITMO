@@ -66,7 +66,7 @@ def ls_tree(sha, printing=True):
             #     print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
 
     except FileNotFoundError:
-        print(f'Not a valid object name {sha}')
+        print(f'Not a valid object name {sha}') 
 
 def tree_parse_one():
     pass
@@ -78,6 +78,7 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
             entries = list_entries(index)
             
             tree_entries = ''
+            sha_name_list = []
             for entry in entries:
                 name_with_folders = get_entry_tag_value(entry, 'name')
                 sha = get_entry_tag_value(entry, 'SHA')
@@ -85,50 +86,64 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
                 
                 folders, name = split_into_folders(name_with_folders)
                 
-                # If it is a folder, recursion is needed
+                # If it's a folder on target recursion level, process it
                 if rec_level < len(folders):
                     mode = '040000'
-                    name = os.path.join(*folders[:rec_level + 1])
+                    # Joins a path with recursion level in mind
+                    rec_name = os.path.join(*folders[:rec_level + 1]).replace('\\', '/')
                     
-                    if tree_entries.find(f' {name}') == -1:
-                        print('  '*rec_level, 'FOLDER:', name)
-                        subfolders = index_subfolders(name, entries)
+                    if tree_entries.find(f' {rec_name}') == -1:
+                        print('  '*rec_level, 'FOLDER:', rec_name)
+                        # subfolders = index_subfolders(rec_name, entries)
                         sha = write_tree(rec_level=rec_level + 1)
                         
-                        tree_entry = f'{mode} {name}\0{sha}'
+                        tree_entry = f'{mode} {folders[rec_level]}\0{sha}'
+                        # print(tree_entry)
                         tree_entries += tree_entry
                         
-                else:
+                        sha_name_list.append((name, sha))
+                    else:
+                        continue
+                # If it's a file on target recursion level, process it
+                elif rec_level == len(folders):
                     print('  '*rec_level, 'FILE  :', name_with_folders)
                     mode = '100644'
-                    tree_entry = f'{mode} {name_with_folders}\0{sha}'
+                    tree_entry = f'{mode} {name}\0{sha}'
                     tree_entries += tree_entry
+                    sha_name_list.append((name, sha))
+                else:
+                    continue
+                    
             
-            if rec_level == 0:
-                tree_header = f'tree {len(tree_entries)}\0'
-                tree_object = tree_header + tree_entries
-                tree_sha = object_sha(tree_object)
-                if printing:
-                    print(tree_sha)
-                
-                print('\nThis is it ― saving...\n', tree_object, sep='')
-                save_object(tree_object, tree_sha)
+            tree_header = f'tree {len(tree_entries)}\0'
+            tree_object = tree_header + tree_entries
+            tree_sha = object_sha(tree_object) # TODO sha is wrong; cant ls/cat it
+            if printing and rec_level == 0:
+                print(tree_sha)
             
-            return object_sha('tree_sha+...') # TODO folder sha
+            # print('\nThis is it ― saving...\n', tree_object, sep='')
+            save_object(tree_object, tree_sha) 
+            
+            return calc_tree_sha(sha_name_list)
 
+def calc_tree_sha(sha_name_list):
+    data = [''.join(sha_name) for sha_name in sha_name_list]
+    data = ''.join(data)
+    return object_sha(data)
 
-def index_subfolders(folder, entries):
-    """ Returns subfolders - list of (name, sha) - of specified folder, that are in mygit index """
-    for entry in entries:
-        name = get_entry_tag_value(entry, 'name')
+# def index_subfolders(folder, entries):
+#     """ Returns subfolders - list of (name, sha) - of specified folder, that are in mygit index """
+#     subfolders = []
+#     for entry in entries:
+#         name = get_entry_tag_value(entry, 'name')
         
-        subfolders = []
-        if Path(folder) in Path(name).parents:
-            # sha = get_entry_tag_value(entry, 'SHA')
-            # subfolders.append((name, sha))
-            subfolders.append(name)
+#         print(Path(folder), 'is parent of', Path(name), Path(folder) in Path(name).parents)
+#         if Path(folder) in Path(name).parents:
+#             # sha = get_entry_tag_value(entry, 'SHA')
+#             # subfolders.append((name, sha))
+#             subfolders.append(name)
             
-    return subfolders
+#     return subfolders
 
 
 def split_into_folders(path_and_file):
@@ -228,7 +243,8 @@ def cat_file(sha, printing=True):
             return object_type
             
     except FileNotFoundError:
-        print(f'Not a valid object name {sha}')
+        # print(f'Not a valid object name {sha}') # TODO uncomment
+        pass
         
 def get_entry_from_file(file):
     """ Returns mygit index entry string from specified file """
