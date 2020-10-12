@@ -10,60 +10,67 @@ import re
 def object_read():
     pass
 
-def ls_tree(sha, printing=True):
+def ls_tree(sha, rec_path='', printing=True):
+    """
+    ls-like print of tree object with optional recursion
+    
+    rec_path - parent path, passed from previous recursion level
+    """
     folder_name = sha[:2]
     file_name = sha[2:]
     folder_path = f'.mygit/objects/{folder_name}'
     try:
         with open(os.path.join(folder_path, file_name), 'rb') as object_file:
             tree_object = zlib.decompress(object_file.read())
-            header_len = tree_object.find(b'\x00') + 1
             
+            header_len = tree_object.find(b'\x00') + 1
             header = tree_object[:header_len]
+            
             content_len = int(header[tree_object.find(b' '):tree_object.find(b'\x00')].decode('ascii'))
             content = tree_object[header_len:header_len + content_len].decode('ascii')
+            
             object_type = header[:tree_object.find(b' ')].decode('ascii')
             
             if not object_type == 'tree':
                 print('Not a tree object')
                 sys.exit(0)
             
-            entries_nulls_iter = re.finditer('\x00', content)
+            # NULL symbol is before the SHA in each entry
+            content_nulls_iter = re.finditer('\x00', content)
             
-            entry_positions = [0]
             content_len = len(content)
             content_len_left = content_len
             
-            for entry_null in entries_nulls_iter:
-                entry_end = entry_null.start() + 41
+            # Because every's entry start is another entry's end (except the first - `0`)
+            # we can get all start/end points by finding entry's ends
+            entry_positions = [0]
+            # Iter over all NULLs in tree content
+            for entry_null in content_nulls_iter:
+                # 40 - is length of the SHA
+                entry_end = entry_null.start() + 40 + 1
                 entry_positions.append(entry_end)
                 
+            # Process tree content entries, knowing their positions
             entries = []
             for i in range(len(entry_positions) - 1):
                 entry = content[entry_positions[i]:entry_positions[i + 1]]
+                
                 mode_end = entry.find(' ')
                 mode = entry[:mode_end]
+                
                 name_end = entry.find('\x00')
                 name = entry[mode_end + 1:name_end]
+                
                 sha = entry[name_end + 1:]
                 
                 object_type = cat_file(sha, printing=False)
                 if printing:
-                    print(f'{mode} {object_type} {sha}    {name}')
+                    print(f'{mode} {object_type} {sha}    {rec_path + name}')
+                
+                # Recurse into tree, passing parent path
                 if '-r' in sys.argv and object_type == 'tree':
-                    ls_tree(sha)
-            
-            # if '-r' in sys.argv:
-            #     if object_type == 'tree':
-            #         ls_tree(tree_sha)
-            #     else:
-            #         print(content)
-            # elif '-t' in sys.argv:
-            #     print(object_type)
-            # elif '-s' in sys.argv:
-            #     print(content_len)
-            # else:
-            #     print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
+                    parent_path = rec_path + f'{name}/'
+                    ls_tree(sha, rec_path=parent_path)
 
     except FileNotFoundError:
         print(f'Not a valid object name {sha}') 
@@ -77,8 +84,9 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
             index = index_file.read()
             entries = list_entries(index)
             
-            tree_entries = ''
-            sha_name_list = []
+            tree_content = ''
+            # (sha, name) tuple of subfolders and subfiles, used to calculate this tree's SHA
+            entry_sha_name_list = []
             for entry in entries:
                 name_with_folders = get_entry_tag_value(entry, 'name')
                 sha = get_entry_tag_value(entry, 'SHA')
@@ -86,65 +94,55 @@ def write_tree(rec_level=0, printing=True): # TODO deleted files handling
                 
                 folders, name = split_into_folders(name_with_folders)
                 
-                # If it's a folder on target recursion level, process it
+                # If it's a folder on current recursion level, then process it by recursing inside
                 if rec_level < len(folders):
+                    # Permissions for folders
                     mode = '040000'
-                    # Joins a path with recursion level in mind
+                    # Joins a path to the current recursion level
                     rec_name = os.path.join(*folders[:rec_level + 1]).replace('\\', '/')
                     
-                    if tree_entries.find(f' {rec_name}') == -1:
-                        print('  '*rec_level, 'FOLDER:', rec_name)
-                        # subfolders = index_subfolders(rec_name, entries)
+                    # Ensure the folder isn't already processed
+                    if tree_content.find(f' {rec_name}') == -1:
+                        print(rec_level, '  '*rec_level, 'FOLDER:', rec_name)
+                        
+                        # Recursing inside
                         sha = write_tree(rec_level=rec_level + 1)
                         
+                        # Format: [mode] [file/folder name]\0[SHA-1 of referencing blob or tree]
                         tree_entry = f'{mode} {folders[rec_level]}\0{sha}'
-                        # print(tree_entry)
-                        tree_entries += tree_entry
+                        tree_content += tree_entry
                         
-                        sha_name_list.append((name, sha))
+                        entry_sha_name_list.append((name, sha))
                     else:
                         continue
-                # If it's a file on target recursion level, process it
+                # If it's a file on current recursion level, process it
                 elif rec_level == len(folders):
-                    print('  '*rec_level, 'FILE  :', name_with_folders)
+                    print(rec_level, '  '*rec_level, 'FILE:', name_with_folders)
                     mode = '100644'
                     tree_entry = f'{mode} {name}\0{sha}'
-                    tree_entries += tree_entry
-                    sha_name_list.append((name, sha))
+                    tree_content += tree_entry
+                    entry_sha_name_list.append((name, sha))
                 else:
                     continue
                     
             
-            tree_header = f'tree {len(tree_entries)}\0'
-            tree_object = tree_header + tree_entries
-            tree_sha = object_sha(tree_object) # TODO sha is wrong; cant ls/cat it
+            tree_header = f'tree {len(tree_content)}\0'
+            # Format: tree [content size]\0[Entries (content) having references to other trees and blobs]
+            tree_object = tree_header + tree_content
+            
+            tree_sha = calc_tree_sha(entry_sha_name_list)
             if printing and rec_level == 0:
                 print(tree_sha)
+                print(tree_object)
             
-            # print('\nThis is it ― saving...\n', tree_object, sep='')
             save_object(tree_object, tree_sha) 
-            
-            return calc_tree_sha(sha_name_list)
+            return tree_sha
+
 
 def calc_tree_sha(sha_name_list):
     data = [''.join(sha_name) for sha_name in sha_name_list]
     data = ''.join(data)
     return object_sha(data)
-
-# def index_subfolders(folder, entries):
-#     """ Returns subfolders - list of (name, sha) - of specified folder, that are in mygit index """
-#     subfolders = []
-#     for entry in entries:
-#         name = get_entry_tag_value(entry, 'name')
-        
-#         print(Path(folder), 'is parent of', Path(name), Path(folder) in Path(name).parents)
-#         if Path(folder) in Path(name).parents:
-#             # sha = get_entry_tag_value(entry, 'SHA')
-#             # subfolders.append((name, sha))
-#             subfolders.append(name)
-            
-#     return subfolders
-
 
 def split_into_folders(path_and_file):
     """
@@ -224,26 +222,23 @@ def cat_file(sha, printing=True):
             # ^^^^
             object_type = header[:object.find(b' ')].decode('ascii')
             
-            if '-p' in sys.argv:
-                if object_type == 'tree':
-                    ls_tree(sha)
-                else:
-                    if printing:
+            if printing:
+                if '-p' in sys.argv:
+                    if object_type == 'tree':
+                        ls_tree(sha)
+                    else:
                         print(content)
-            elif '-t' in sys.argv:
-                if printing:
+                elif '-t' in sys.argv:
                     print(object_type)
-            elif '-s' in sys.argv:
-                if printing:
+                elif '-s' in sys.argv:
                     print(content_len)
-            else:
-                if printing:
+                else:
                     print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
-            
-            return object_type
+            else:
+                return object_type
             
     except FileNotFoundError:
-        # print(f'Not a valid object name {sha}') # TODO uncomment
+        print(f'Not a valid object name {sha}') # TODO uncomment
         pass
         
 def get_entry_from_file(file):
