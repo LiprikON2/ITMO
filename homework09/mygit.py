@@ -1,142 +1,198 @@
 import hashlib
 import sys
 import os
-from pathlib import Path # TODO remove unused imports
 import zlib
-import io
 import textwrap
 import re 
+import time
+from pathlib import Path
 
 def object_read():
     pass
 
-def ls_tree(sha, rec_path='', printing=True):
+def config(tag):
     """
-    ls-like print of tree object with optional recursion
+    .mygit/config file reader
     
-    rec_path - parent path, passed from previous recursion level
+    avaliable tags: 'name', 'email'
     """
+    if os.path.exists('.mygit/config'):
+        with open('.mygit/config', 'r') as config_file:
+            config = config_file.read()
+            
+            if config.find(tag) == -1:
+                return ''
+            
+            value_start = config.find(tag) + len(tag) + 1
+            value_end = config.find('\n', value_start)
+            
+            return config[value_start:value_end]
+
+def commit_tree(tree_sha, message, parent_sha='', printing=True):
+    
+    author_name = committer_name =  config('name')
+    author_email = committer_email = config('email')
+    author_date_seconds = committer_date_seconds = int(time.time())
+    author_date_timezone = committer_date_timezone = time.strftime("%z", time.gmtime())
+    
+    if parent_sha:
+        parent = f'parent {parent_sha}'
+    else:
+        parent = ''
+    
+    commit_content = textwrap.dedent(f'''\
+       tree {tree_sha}
+       {parent}
+       author {author_name} <{author_email}> {author_date_seconds} {author_date_timezone}
+       committer {committer_name} <{committer_email}> {committer_date_seconds} {committer_date_timezone}
+       
+       {message}''')
+    
+    commit_header = f'commit {len(commit_content)}\0'
+    commit_object = commit_header + commit_content
+    
+    commit_sha = object_sha(commit_object)
+    if printing:
+        print(commit_sha)
+        
+    save_object(commit_object, commit_sha)
+
+def log(commit_sha):
+    commit_object = read_blob(commit_sha)
+    print(commit_object)
+
+def read_blob(sha):
     folder_name = sha[:2]
     file_name = sha[2:]
     folder_path = f'.mygit/objects/{folder_name}'
     try:
         with open(os.path.join(folder_path, file_name), 'rb') as object_file:
-            tree_object = zlib.decompress(object_file.read())
-            
-            header_len = tree_object.find(b'\x00') + 1
-            header = tree_object[:header_len]
-            
-            content_len = int(header[tree_object.find(b' '):tree_object.find(b'\x00')].decode('ascii'))
-            content = tree_object[header_len:header_len + content_len].decode('ascii')
-            
-            object_type = header[:tree_object.find(b' ')].decode('ascii')
-            
-            if not object_type == 'tree':
-                print('Not a tree object')
-                sys.exit(0)
-            
-            # NULL symbol is before the SHA in each entry
-            content_nulls_iter = re.finditer('\x00', content)
-            
-            content_len = len(content)
-            content_len_left = content_len
-            
-            # Because every's entry start is another entry's end (except the first - `0`)
-            # we can get all start/end points by finding entry's ends
-            entry_positions = [0]
-            # Iter over all NULLs in tree content
-            for entry_null in content_nulls_iter:
-                # 40 - is length of the SHA
-                entry_end = entry_null.start() + 40 + 1
-                entry_positions.append(entry_end)
-                
-            # Process tree content entries, knowing their positions
-            entries = []
-            for i in range(len(entry_positions) - 1):
-                entry = content[entry_positions[i]:entry_positions[i + 1]]
-                
-                mode_end = entry.find(' ')
-                mode = entry[:mode_end]
-                
-                name_end = entry.find('\x00')
-                name = entry[mode_end + 1:name_end]
-                
-                sha = entry[name_end + 1:]
-                
-                object_type = cat_file(sha, printing=False)
-                if printing:
-                    print(f'{mode} {object_type} {sha}    {rec_path + name}')
-                
-                # Recurse into tree, passing parent path
-                if '-r' in sys.argv and object_type == 'tree':
-                    parent_path = rec_path + f'{name}/'
-                    ls_tree(sha, rec_path=parent_path)
-
+            return zlib.decompress(object_file.read())
     except FileNotFoundError:
         print(f'Not a valid object name {sha}') 
+    
+def ls_tree(sha, passed_rec_path='', printing=True): # TODO check if by changing file content tree SHA changes
+    """
+    ls-like print of tree object with optional recursion
+
+    passed_rec_path - parent path, passed from previous recursion level
+    """
+    tree_object = read_blob(sha)
+    
+    header_len = tree_object.find(b'\x00') + 1
+    header = tree_object[:header_len]
+    
+    content_len = int(header[tree_object.find(b' '):tree_object.find(b'\x00')].decode('ascii'))
+    content = tree_object[header_len:header_len + content_len].decode('ascii')
+    
+    object_type = header[:tree_object.find(b' ')].decode('ascii')
+    
+    if not object_type == 'tree':
+        print('Not a tree object')
+        sys.exit(0)
+    
+    # NULL symbol is before the SHA in each entry
+    content_nulls_iter = re.finditer('\x00', content)
+    
+    content_len = len(content)
+    content_len_left = content_len
+    
+    # Because every's entry start is another entry's end (except the first - `0`)
+    # we can get all start/end points by finding entry's ends
+    entry_positions = [0]
+    # Iter over all NULLs in tree content
+    for entry_null in content_nulls_iter:
+        # 40 - is length of the SHA
+        entry_end = entry_null.start() + 40 + 1
+        entry_positions.append(entry_end)
+        
+    # Process tree content entries, knowing their positions
+    entries = []
+    for i in range(len(entry_positions) - 1):
+        entry = content[entry_positions[i]:entry_positions[i + 1]]
+        
+        mode_end = entry.find(' ')
+        mode = entry[:mode_end]
+        
+        name_end = entry.find('\x00')
+        name = entry[mode_end + 1:name_end]
+        
+        sha = entry[name_end + 1:]
+        
+        object_type = cat_file(sha, printing=False)
+        if printing:
+            print(f'{mode} {object_type} {sha}    {passed_rec_path + name}')
+        
+        # Recurse into tree, passing parent path
+        if '-r' in sys.argv and object_type == 'tree':
+            parent_path = passed_rec_path + f'{name}/'
+            ls_tree(sha, passed_rec_path=parent_path)
 
 def tree_parse_one():
     pass
 
-def write_tree(rec_level=0, printing=True): # TODO deleted files handling
+def read_index():
     if os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r') as index_file:
-            index = index_file.read()
-            entries = list_entries(index)
+            return index_file.read()
+    
+
+def write_tree(rec_level=0, printing=True): # TODO deleted files handling
+    index = read_index()
+    entries = list_entries(index)
+    
+    tree_content = ''
+    # (sha, name) tuple of subfolders and subfiles, used to calculate this tree's SHA
+    entry_sha_name_list = []
+    for entry in entries:
+        name_with_folders = get_entry_tag_value(entry, 'name')
+        sha = get_entry_tag_value(entry, 'SHA')
+        size = get_entry_tag_value(entry, 'size')
+        
+        folders, name = split_into_folders(name_with_folders)
+        
+        # If it's a folder on current recursion level, then process it by recursing inside
+        if rec_level < len(folders):
+            # Permissions for folders
+            mode = '040000'
+            # Joins a path to the current recursion level
+            rec_name = os.path.join(*folders[:rec_level + 1]).replace('\\', '/')
             
-            tree_content = ''
-            # (sha, name) tuple of subfolders and subfiles, used to calculate this tree's SHA
-            entry_sha_name_list = []
-            for entry in entries:
-                name_with_folders = get_entry_tag_value(entry, 'name')
-                sha = get_entry_tag_value(entry, 'SHA')
-                size = get_entry_tag_value(entry, 'size')
+            # Ensure the folder isn't already processed
+            if tree_content.find(f' {rec_name}') == -1:
+                # print(rec_level, '  '*rec_level, 'FOLDER:', rec_name)
                 
-                folders, name = split_into_folders(name_with_folders)
+                # Recursing inside
+                sha = write_tree(rec_level=rec_level + 1)
                 
-                # If it's a folder on current recursion level, then process it by recursing inside
-                if rec_level < len(folders):
-                    # Permissions for folders
-                    mode = '040000'
-                    # Joins a path to the current recursion level
-                    rec_name = os.path.join(*folders[:rec_level + 1]).replace('\\', '/')
-                    
-                    # Ensure the folder isn't already processed
-                    if tree_content.find(f' {rec_name}') == -1:
-                        print(rec_level, '  '*rec_level, 'FOLDER:', rec_name)
-                        
-                        # Recursing inside
-                        sha = write_tree(rec_level=rec_level + 1)
-                        
-                        # Format: [mode] [file/folder name]\0[SHA-1 of referencing blob or tree]
-                        tree_entry = f'{mode} {folders[rec_level]}\0{sha}'
-                        tree_content += tree_entry
-                        
-                        entry_sha_name_list.append((name, sha))
-                    else:
-                        continue
-                # If it's a file on current recursion level, process it
-                elif rec_level == len(folders):
-                    print(rec_level, '  '*rec_level, 'FILE:', name_with_folders)
-                    mode = '100644'
-                    tree_entry = f'{mode} {name}\0{sha}'
-                    tree_content += tree_entry
-                    entry_sha_name_list.append((name, sha))
-                else:
-                    continue
-                    
+                # Format: [mode] [file/folder name]\0[SHA-1 of referencing blob or tree]
+                tree_entry = f'{mode} {folders[rec_level]}\0{sha}'
+                tree_content += tree_entry
+                
+                entry_sha_name_list.append((name, sha))
+            else:
+                continue
+        # If it's a file on current recursion level, process it
+        elif rec_level == len(folders):
+            # print(rec_level, '  '*rec_level, 'FILE:', name_with_folders)
+            mode = '100644'
+            tree_entry = f'{mode} {name}\0{sha}'
+            tree_content += tree_entry
+            entry_sha_name_list.append((name, sha))
+        else:
+            continue
             
-            tree_header = f'tree {len(tree_content)}\0'
-            # Format: tree [content size]\0[Entries (content) having references to other trees and blobs]
-            tree_object = tree_header + tree_content
-            
-            tree_sha = calc_tree_sha(entry_sha_name_list)
-            if printing and rec_level == 0:
-                print(tree_sha)
-                print(tree_object)
-            
-            save_object(tree_object, tree_sha) 
-            return tree_sha
+    
+    tree_header = f'tree {len(tree_content)}\0'
+    # Format: tree [content size]\0[Entries (content) having references to other trees and blobs]
+    tree_object = tree_header + tree_content
+    
+    tree_sha = calc_tree_sha(entry_sha_name_list)
+    if printing and rec_level == 0:
+        print(tree_sha)
+    
+    save_object(tree_object, tree_sha) 
+    return tree_sha
 
 
 def calc_tree_sha(sha_name_list):
@@ -169,6 +225,10 @@ def object_sha(text):
     return hashlib.sha1(text.encode()).hexdigest()
 
 def save_object(object, sha):
+    """ 
+    Saves an object in a way such that first 2 symbols of SHA 
+    of the object - is folder name, the rest is file name
+    """
     folder_name = sha[:2]
     file_name = sha[2:]
     folder_path = f'.mygit/objects/{folder_name}'
@@ -180,7 +240,7 @@ def save_object(object, sha):
         object_file.write(compressed_object)
     
 
-def hash_object(file, writing=False, printing=True):
+def hash_object(file, writing=False, printing=True): # More like hash file if I'm being honest
     content = file.read()
     # `\0` or `\x00` is a null character, used to separate header and content
     header = f'blob {len(content)}\0'
@@ -201,46 +261,41 @@ def cat_file(sha, printing=True):
     file_name = sha[2:]
     folder_path = f'.mygit/objects/{folder_name}'
     
-    try:
-        with open(os.path.join(folder_path, file_name), 'rb') as object_file:
-            object = zlib.decompress(object_file.read())
-            header_len = object.find(b'\x00') + 1
-            
-            # blob 25\x00789c4bcac94f...
-            # ^^^^^^^^^^^
-            header = object[:header_len]
-            
-            # blob 25\x00789c4bcac94f...
-            #      ^^
-            content_len = int(header[object.find(b' '):object.find(b'\x00')].decode('ascii'))
-            
-            # blob 25\x00789c4bcac94f...
-            #            ^^^^^^^^^^^^^^^
-            content = object[header_len:header_len + content_len].decode('ascii')
-            
-            # blob 25\x00789c4bcac94f...
-            # ^^^^
-            object_type = header[:object.find(b' ')].decode('ascii')
-            
-            if printing:
-                if '-p' in sys.argv:
-                    if object_type == 'tree':
-                        ls_tree(sha)
-                    else:
-                        print(content)
-                elif '-t' in sys.argv:
-                    print(object_type)
-                elif '-s' in sys.argv:
-                    print(content_len)
-                else:
-                    print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
+    object = read_blob(sha)
+    header_len = object.find(b'\x00') + 1
+    
+    # blob 25\x00789c4bcac94f...
+    # ^^^^^^^^^^^
+    header = object[:header_len]
+    # blob 25\x00789c4bcac94f...
+    #      ^^
+    content_len = int(header[object.find(b' '):object.find(b'\x00')].decode('ascii'))
+    
+    # blob 25\x00789c4bcac94f...
+    #            ^^^^^^^^^^^^^^^
+    content = object[header_len:header_len + content_len].decode('ascii')
+    
+    # blob 25\x00789c4bcac94f...
+    # ^^^^
+    object_type = header[:object.find(b' ')].decode('ascii')
+    
+    if printing:
+        if '-p' in sys.argv:
+            if object_type == 'tree':
+                ls_tree(sha)
+            elif object_type == 'commit':
+                log(sha)
             else:
-                return object_type
+                print(content)
+        elif '-t' in sys.argv:
+            print(object_type)
+        elif '-s' in sys.argv:
+            print(content_len)
+        else:
+            print('Available parametrs: \n-t - show object type\n-s - show object size\n-p - pretty-print object\'s content')
+    else:
+        return object_type
             
-    except FileNotFoundError:
-        print(f'Not a valid object name {sha}') # TODO uncomment
-        pass
-        
 def get_entry_from_file(file):
     """ Returns mygit index entry string from specified file """
     content = file.read()
@@ -281,8 +336,8 @@ def update_index(entry, file_name, version='1.12'):
             
             header = f'DIRC {version} {entry_count}\n'
             content = header + entry
-            index_content_sha = object_sha(content)
-            footer = f'<sha {index_content_sha}>'
+            content_sha = object_sha(content)
+            footer = f'<sha {content_sha}>'
             
             index = content + footer
             save_index_file(index_file, index)
@@ -391,7 +446,7 @@ def increment_index_entry_count(index, decrement=False):
     
 def update_index_footer(index, sha=''):
     """ 
-    Return new index with updated mygit index footer - SHA-1 
+    Returns new index with updated mygit index footer - SHA-1 
     over the content of the index file before this checksum 
     """
     footer_start = index.find('<sha')
@@ -477,19 +532,17 @@ def ls_files():
     ls-like print of files that are currently in mygit index
     """
     
-    if os.path.exists('.mygit/index'):
-        with open('.mygit/index', 'r') as index_file:
-            index = index_file.read()
-            entries = list_entries(index)
-            
-            for entry in entries:
-                name = get_entry_tag_value(entry, 'name')
-                if '-s' in sys.argv:
-                    sha = get_entry_tag_value(entry, 'SHA')
-                    mode = get_entry_tag_value(entry, 'mode')
-                    print(f'100644 {sha} 0    {name}') # TODO remove hardcoded values
-                else:
-                    print(name)
+    index = read_index()
+    entries = list_entries(index)
+    
+    for entry in entries:
+        name = get_entry_tag_value(entry, 'name')
+        if '-s' in sys.argv:
+            sha = get_entry_tag_value(entry, 'SHA')
+            mode = get_entry_tag_value(entry, 'mode')
+            print(f'100644 {sha} 0    {name}') # TODO remove hardcoded values
+        else:
+            print(name)
         
     
 def is_init():
@@ -498,19 +551,29 @@ def is_init():
         return False
     return True
 
+def create_repo():
+    os.makedirs('.mygit/objects', exist_ok=True)
+    os.makedirs('.mygit/refs/heads', exist_ok=True)
+    os.makedirs('.mygit/refs/tags', exist_ok=True)
+    with open('.mygit/HEAD', 'w+') as f:
+        f.write('ref: refs/heads/master\n')
+    
+    while True:
+        name = input('Your name: ')
+        if name:
+            break
+    while True:
+        email = input('Your email: ')
+        if email:
+            break
+    with open('.mygit/config', 'w+') as f:
+        f.write(f'name={name}\nemail={email}\n')
+    print('Initialized git directory')
 
 def main():
-    command = sys.argv[1]
+    command = sys.argv[1] # TODO: catch
     if command == 'init':
-        try:
-            os.makedirs('.mygit/objects', exist_ok=True)
-            os.makedirs('.mygit/refs/heads', exist_ok=True)
-            os.makedirs('.mygit/refs/tags', exist_ok=True)
-            with open('.mygit/HEAD', 'w+') as f:
-                f.write('ref: refs/heads')
-            print('Initialized git directory')
-        except FileExistsError:
-            pass
+        create_repo()
         
     elif command == 'cat-file':
         if is_init():
@@ -552,6 +615,27 @@ def main():
         if is_init():
             tree_sha = sys.argv[2]
             ls_tree(tree_sha)
+            
+    elif command == 'commit-tree':
+        if is_init():
+            tree_sha = sys.argv[2]
+            if '-m':
+                message = sys.argv[4]
+                if '-p' in sys.argv and len(sys.argv) == 6:
+                    parent_sha = sys.argv[6] 
+                    commit_tree(tree_sha, message, parent_sha=parent_sha)
+                else:
+                    commit_tree(tree_sha, message)
+            else:
+                print('Provide a message with -m')
+                
+            
+            
+    elif command == 'log':
+        if is_init():
+            commit_sha = sys.argv[2]
+            log(commit_sha)
+        
     else:
         raise RuntimeError(f'Unknown command {command}')
 
