@@ -55,8 +55,29 @@ python mygit.py update-index <file> --add
 python mygit.py update-index <file> --remove
 ```
 
-### ls'ing files
+### ls'ing what's in the index
 
-```
+```bash
 python mygit.py ls-files
+```
+
+### Writing a tree
+> Writes tree with files that are currently in index
+```bash
+python mygit.py write-tree
+```
+
+### ls'ing what's in the tree
+
+```bash
+python mygit.py ls-tree <hash_sum>
+```
+or
+```bash
+python mygit.py cat-file <hash_sum> -p
+```
+
+#### Showing subfolders recrusivly
+```bash
+python mygit.py ls-tree <hash_sum> -r
 ```
