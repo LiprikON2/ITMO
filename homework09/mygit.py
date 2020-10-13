@@ -8,6 +8,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from bcolors import bcolors
+
 
 def config(tag):
     """
@@ -30,12 +32,19 @@ def config(tag):
 
 def commit_tree(tree_sha, message, parent_sha='', printing=True):
 
+    if not cat_file(tree_sha, printing=False) == 'tree':
+        print('Provided tree SHA doesn\'t correspond to the tree object.')
+        sys.exit(0)
+    
     author_name = committer_name = config('name')
     author_email = committer_email = config('email')
     author_date_seconds = committer_date_seconds = int(time.time())
     author_date_timezone = committer_date_timezone = time.strftime("%z", time.gmtime())
 
     if parent_sha:
+        if not cat_file(parent_sha, printing=False) == 'commit':
+            print('Provided parent commit SHA doesn\'t correspond to the commit object.')
+            sys.exit(0)
         parents = f'parent {parent_sha}\n'
     else:
         parents = ''
@@ -60,6 +69,10 @@ def log(commit_sha):
     """
     Prints content of a commit by its SHA
     """
+    if not cat_file(commit_sha, printing=False) == 'commit':
+        print('Provided commit SHA doesn\'t correspond to the commit object.')
+        sys.exit(0)
+    
     commit_object = read_object(commit_sha)
     header_len = commit_object.find(b'\x00') + 1
     
@@ -168,6 +181,9 @@ def read_index():
     if os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r') as index_file:
             return index_file.read()
+    else:
+        print('Index haven\'t been created yet. Create it with `update-index <path_to_file> --add`.')
+        sys.exit(0)
 
 
 def write_tree(rec_level=0, printing=True):  # TODO deleted files handling
@@ -272,7 +288,7 @@ def read_object(sha):
         with open(os.path.join(folder_path, file_name), 'rb') as object_file:
             return zlib.decompress(object_file.read())
     except FileNotFoundError:
-        print(f'Not a valid object name {sha}')
+        print(f'Not a valid object name \'{sha}\'')
         sys.exit(0)
 
 
@@ -392,7 +408,7 @@ def update_index(entry, file_name, version='1.12'):
             with open(file_name, 'r') as f:
                 hash_object(f, writing=True, printing=False)
                 
-            print(f'Added {file_name}')
+            print(f'Added \'{file_name}\'')
     elif os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r+') as index_file:
             index = index_file.read()
@@ -406,7 +422,7 @@ def update_index(entry, file_name, version='1.12'):
                 with open(file_name, 'r') as f:
                     hash_object(f, writing=True, printing=False)
 
-                print(f'Added {file_name}')
+                print(f'Added \'{file_name}\'')
 
             elif '--remove' in sys.argv:
                 new_index = remove_index_entry(index, file_name)
@@ -423,7 +439,7 @@ def update_index(entry, file_name, version='1.12'):
                 with open(file_name, 'r') as f:
                     hash_object(f, writing=True, printing=False)
                 
-                print(f'Updated {file_name}')
+                print(f'Updated \'{file_name}\'')
 
             elif '--add' not in sys.argv:
                 print('No changes detected. Maybe missing --add option?')
@@ -470,7 +486,7 @@ def remove_index_entry(index, file_name, printing=True):
             new_index = increment_index_entry_count(new_index, decrement=True)
 
     if printing:
-        print(f'Removed {file_name}')
+        print(f'Removed \'{file_name}\'')
     
     return new_index
 
@@ -604,7 +620,7 @@ def ls_files():
     """
     ls-like print of files that are currently in mygit index
     """
-
+    
     index = read_index()
     entries = list_entries(index)
 
@@ -649,21 +665,49 @@ def create_repo():
 def main():
     
     if len(sys.argv) < 2:
-        print('Provide a command.\nPossible commands: init, cat-file, hash-object, update-index, ls-files, commit-tree, log.')
+        print('Provide a command.\nAvailable commands: init, hash-object, cat-file, update-index, ls-files, write-tree, commit-tree, log.')
         sys.exit(0)
     
     command = sys.argv[1]
     if command == 'init':
         create_repo()
+    
+    elif '-h' in sys.argv:
+        print_message = textwrap.dedent(f'''\
+            Available commands:
+              `{bcolors.OKGREEN}init{bcolors.ENDC}` - initialize git directory
+              
+              `{bcolors.OKGREEN}hash-object <path-to-file> [-w]{bcolors.ENDC}` - show SHA-1 hash sum of the file
+                OPTIONAL `{bcolors.OKGREEN}-w{bcolors.ENDC}` - write file to mygit objects
+                
+              `{bcolors.OKGREEN}cat-file <hash-sum> -p/-t/-s{bcolors.ENDC}` - looks up file in mygit objects by its hash
+                CHOOSE `{bcolors.OKGREEN}-p{bcolors.ENDC}` - print content of hashed mygit object
+                CHOOSE `{bcolors.OKGREEN}-t{bcolors.ENDC}` - show type of hashed mygit object
+                CHOOSE `{bcolors.OKGREEN}-s{bcolors.ENDC}` - show hashed mygit object
+                
+              `{bcolors.OKGREEN}update-index <path-to-file> [--add] [--remove]{bcolors.ENDC}` - update file metadata in mygit index
+                OPTIONAL `{bcolors.OKGREEN}--add{bcolors.ENDC}` - add file metadata to mygit index
+                OPTIONAL `{bcolors.OKGREEN}--remove{bcolors.ENDC}` - remove file metadata from mygit index
+                
+              `{bcolors.OKGREEN}ls-files{bcolors.ENDC}` - show files that are currently in mygit index
+              
+              `{bcolors.OKGREEN}write-tree{bcolors.ENDC}` - write tree directories that are included in paths to files in mygit index
+            
+              `{bcolors.OKGREEN}commit-tree <tree-hash-sum> -m <message> [-p <commit-hash-sum>]{bcolors.ENDC}`
+                MANDATORY `{bcolors.OKGREEN}-m <message>{bcolors.ENDC}` - commit message
+                OPTIONAL `{bcolors.OKGREEN}-p <commit-hash-sum>{bcolors.ENDC}` - parent commit SHA-1 hash sum
+                
+              `{bcolors.OKGREEN}log <commit-hash-sum>{bcolors.ENDC}` - shows commit log''')
+        print(print_message)
         
     elif command == 'hash-object':
         if is_init():
             
             if len(sys.argv) < 3:
-                print('Provide an argument.\nPossible arguments: <path_to_file>, <path_to_file> -w.')
+                print('Provide an argument.\nPossible arguments: <path-to-file>, <path-to-file> -w.')
                 sys.exit(0)
-                
             file_path = sys.argv[2]
+            
             try:
                 with open(file_path, 'r') as f:
                     if '-w' in sys.argv:
@@ -672,6 +716,8 @@ def main():
                         hash_object(f)
             except FileNotFoundError:
                 print(f'No such file \'{file_path}\'')
+            except PermissionError:
+                print(f'Cannot open \'{file_path}\': Permission denied. (Can only hash file, not a folder)')
 
     elif command == 'cat-file':
         if is_init():
@@ -679,8 +725,8 @@ def main():
             if len(sys.argv) < 3:
                 print('Provide an argument.\nPossible arguments: <hash-sum> -p, <hash-sum> -t, <hash-sum> -s.')
                 sys.exit(0)
-                
             sha = sys.argv[2]
+            
             cat_file(sha)
 
     elif command == 'update-index':
@@ -695,7 +741,7 @@ def main():
                 update_index(None, file_path)
             # In case of a folder
             except PermissionError:
-                print(f'Unable to process path "{file_path}""')
+                print(f'Unable to process path \'{file_path}\'')
 
     elif command == 'ls-files':
         if is_init():
@@ -707,41 +753,40 @@ def main():
 
     elif command == 'ls-tree':
         if is_init():
+            
+            if len(sys.argv) < 3:
+                print('Provide an argument.\nPossible arguments: <hash-sum>, <hash-sum> -r')
+                sys.exit(0)
             tree_sha = sys.argv[2]
+            
             ls_tree(tree_sha)
 
     elif command == 'commit-tree':
         if is_init():
-            try:
-                tree_sha = sys.argv[2]
-
-                if sys.argv[3] == '-m':
-                    message = sys.argv[4]
-                else:
-                    raise IndexError
-
-                if '-p' in sys.argv and len(sys.argv) == 7:
-                    parent_sha = sys.argv[6]
-                    commit_tree(tree_sha, message, parent_sha=parent_sha)
-                elif '-p' in sys.argv:
-                    raise IndexError
-                else:
-                    commit_tree(tree_sha, message)
-
-            except IndexError:
-                if ('-m' in sys.argv or len(sys.argv) < 4) and ('-p' not in sys.argv or len(sys.argv) < 7):
-                    print('Provide a message with -m (e.g. ... -m "init commit")')
-                else:
-                    print(
-                        'Commit parent is provided with -p after message (e.g. ... -m "init commit" -p SHAshaSHA123...)')
-
+            
+            if '-m' not in sys.argv or len(sys.argv) < 3 or len(sys.argv) == 4 or len(sys.argv) == 6:
+                print('Provide arguments.\nPossible arguments: <tree-hash-sum> -m <message>, <tree-hash-sum> -m <message> -p <commit-hash-sum>.')
+                sys.exit(0)
+            tree_sha = sys.argv[2]
+            message = sys.argv[4]
+            
+            if '-p' in sys.argv and len(sys.argv) > 6:
+                parent_sha = sys.argv[6]
+                commit_tree(tree_sha, message, parent_sha=parent_sha)
+            else:
+                commit_tree(tree_sha, message)
+                
     elif command == 'log':
         if is_init():
+            if len(sys.argv) < 3:
+                print('Provide an argument.\nPossible arguments: <commit-hash-sum>.')
+                sys.exit(0)
             commit_sha = sys.argv[2]
+            
             log(commit_sha)
 
     else:
-        print(f'Unknown command {command}')
+        print(f'Unknown command \'{command}\'')
         
 
 if __name__ == '__main__':
