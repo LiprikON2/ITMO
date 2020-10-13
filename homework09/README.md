@@ -70,14 +70,32 @@ python mygit.py write-tree
 ### ls'ing what's in the tree
 
 ```bash
-python mygit.py ls-tree <hash_sum>
+python mygit.py ls-tree <tree_hash_sum>
 ```
 or
 ```bash
-python mygit.py cat-file <hash_sum> -p
+python mygit.py cat-file <tree_hash_sum> -p
 ```
 
-#### Showing subfolders recrusivly
+#### Showing subfolders recursively
+
 ```bash
-python mygit.py ls-tree <hash_sum> -r
+python mygit.py ls-tree <tree_hash_sum> -r
+```
+
+### Commiting a tree
+
+```bash
+python mygit.py commit-tree <tree_hash_sum> -m 'init commit'
+```
+
+#### Specifying commit parent
+```bash
+python mygit.py commit-tree <tree_hash_sum> -m 'init' -p <another_tree_hash_sum>
+```
+
+### Commit logs
+> Recursively shows commits and its commit parents
+```bash
+python mygit.py ls-tree <commit_hash_sum>
 ```
