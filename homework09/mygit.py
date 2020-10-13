@@ -5,6 +5,7 @@ import zlib
 import textwrap
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 
@@ -32,8 +33,7 @@ def commit_tree(tree_sha, message, parent_sha='', printing=True):
     author_name = committer_name = config('name')
     author_email = committer_email = config('email')
     author_date_seconds = committer_date_seconds = int(time.time())
-    author_date_timezone = committer_date_timezone = time.strftime(
-        "%z", time.gmtime())
+    author_date_timezone = committer_date_timezone = time.strftime("%z", time.gmtime())
 
     if parent_sha:
         parents = f'parent {parent_sha}\n'
@@ -68,18 +68,42 @@ def log(commit_sha):
     content_len = int(header[commit_object.find(b' '):commit_object.find(b'\x00')].decode('ascii'))
     content = commit_object[header_len:header_len + content_len].decode('ascii')
     
-    author_start = content.find('author ') + len('author ')
-    author_end = content.find(' ', author_start)
-    author = content[author_start:author_end]
+    author_name_start = content.find('author ') + len('author ')
+    author_name_end = content.find(' ', author_name_start)
+    author_name = content[author_name_start:author_name_end]
     
-    email_start = content.find('<') 
-    email_end = content.find('>') + 1
-    email = content[email_start:email_end]
+    author_email_start = content.find('<')
+    author_email_end = content.find('>') + 1
+    author_email = content[author_email_start:author_email_end]
     
-    times
-    # print(header)
-    # print(content_len)
-
+    author_date_seconds_start = content.find('>') + 2
+    author_date_seconds_end = author_date_seconds_start + 10
+    author_date_seconds = content[author_date_seconds_start:author_date_seconds_end]
+    author_date_object = datetime.fromtimestamp(int(author_date_seconds))
+    author_date = author_date_object.strftime('%a %b %d %H:%M:%S %Y')
+    
+    author_timezone_start = content.find(author_date_seconds) + len(author_date_seconds) + 1
+    author_timezone_end = author_timezone_start + 5
+    author_timezone = content[author_timezone_start:author_timezone_end]
+    
+    message_start = content.find('\n\n') + 2
+    message = content[message_start:]
+    
+    print_message = textwrap.dedent(f'''\
+        commit {commit_sha}
+        Author: {author_name} {author_email}
+        Date:   {author_date} {author_timezone}\n
+           {message}''')
+    print(print_message)
+    
+    parent_iter = re.finditer('parent ', content)
+    for parrent_pos in parent_iter:
+        parent_start = parrent_pos.start() + len('parent ')
+        parent_end = content.find('\n', parent_start)
+        parent = content[parent_start:parent_end]
+        print('')
+        log(parent)
+    
 
 # TODO check if by changing file content tree SHA changes
 def ls_tree(sha, passed_rec_path='', printing=True):
