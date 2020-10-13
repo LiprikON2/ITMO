@@ -164,10 +164,6 @@ def ls_tree(sha, passed_rec_path='', printing=True):
             ls_tree(sha, passed_rec_path=parent_path)
 
 
-def tree_parse_one():
-    pass
-
-
 def read_index():
     if os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r') as index_file:
@@ -277,6 +273,7 @@ def read_object(sha):
             return zlib.decompress(object_file.read())
     except FileNotFoundError:
         print(f'Not a valid object name {sha}')
+        sys.exit(0)
 
 
 def write_object(object, sha):
@@ -380,10 +377,7 @@ def update_index(entry, file_name, version='1.12'):
     else:
         sha = None
 
-    with open(file_name, 'r') as f:
-        hash_object(f, writing=True, printing=False)
-
-    if not os.path.exists('.mygit/index'):
+    if not os.path.exists('.mygit/index') and '--add' in sys.argv:
         with open('.mygit/index', 'w') as index_file:
             entry_count = '1'
 
@@ -394,9 +388,12 @@ def update_index(entry, file_name, version='1.12'):
 
             index = content + footer
             save_index_file(index_file, index)
+            
+            with open(file_name, 'r') as f:
+                hash_object(f, writing=True, printing=False)
+                
             print(f'Added {file_name}')
-
-    else:
+    elif os.path.exists('.mygit/index'):
         with open('.mygit/index', 'r+') as index_file:
             index = index_file.read()
 
@@ -405,6 +402,9 @@ def update_index(entry, file_name, version='1.12'):
                 new_index = update_index_footer(new_index)
 
                 save_index_file(index_file, new_index)
+                
+                with open(file_name, 'r') as f:
+                    hash_object(f, writing=True, printing=False)
 
                 print(f'Added {file_name}')
 
@@ -419,11 +419,16 @@ def update_index(entry, file_name, version='1.12'):
                 new_index = update_index_footer(new_index)
 
                 save_index_file(index_file, new_index)
-
+                
+                with open(file_name, 'r') as f:
+                    hash_object(f, writing=True, printing=False)
+                
                 print(f'Updated {file_name}')
 
+            elif '--add' not in sys.argv:
+                print('No changes detected. Maybe missing --add option?')
             else:
-                print('No changes detected')
+                print('No changes detected.')
 
 
 def save_index_file(file, index):
@@ -454,17 +459,19 @@ def remove_index_entry(index, file_name, printing=True):
 
     entries = list_entries(index)
     for entry in entries:
+        
         index_name = get_entry_tag_value(entry, 'name')
         if file_name == index_name:
-            new_index = increment_index_entry_count(index, decrement=True)
             
             entry_start = index.find(entry)
             entry_end = entry_start + len(entry)
-            new_index = new_index[:entry_start] + new_index[entry_end:]
+            
+            new_index = index[:entry_start] + index[entry_end:]
+            new_index = increment_index_entry_count(new_index, decrement=True)
 
     if printing:
         print(f'Removed {file_name}')
-
+    
     return new_index
 
 
@@ -492,7 +499,7 @@ def increment_index_entry_count(index, decrement=False):
     # DIRC 1.12 1\n
     #            ^
     entry_count = index[entry_count_start:entry_count_end]
-
+    
     if not decrement:
         entry_count = str(int(entry_count) + 1)
     else:
@@ -507,17 +514,24 @@ def update_index_footer(index, sha=''):
     over the content of the index file before this checksum
     """
     footer_start = index.find('<sha')
-
+    
+    if footer_start == -1:
+        print('SHA over mygit index is not found.')
+        sys.exit(0)
+    
     if not sha:
         sha = object_sha(index[:footer_start])
 
-    return index[:footer_start] + f'<sha {sha}>'
+    if index:
+        return index[:footer_start] + f'<sha {sha}>'
+    else:
+        return index[:footer_start] + f'<sha {sha}>'
 
 
 def list_entries(index):
     """ Returns list of plain text entries from mygit index """
     entry_start_iter = re.finditer(f'<ctime', index)
-    last_entry_end = index.rfind('>') + 2
+    last_entry_end = index.rfind('>', 0, index.rfind('>')) + 2
 
     entry_positions = []
     for i, entry_start in enumerate(entry_start_iter):
@@ -605,10 +619,11 @@ def ls_files():
 
 
 def is_init():
-    if not os.path.exists('.mygit'):
+    if os.path.exists('.mygit'):
+        return True
+    else:
         print('mygit is not initialized in this directory')
         return False
-    return True
 
 
 def create_repo():
@@ -632,23 +647,41 @@ def create_repo():
 
 
 def main():
-    command = sys.argv[1]  # TODO: catch
+    
+    if len(sys.argv) < 2:
+        print('Provide a command.\nPossible commands: init, cat-file, hash-object, update-index, ls-files, commit-tree, log.')
+        sys.exit(0)
+    
+    command = sys.argv[1]
     if command == 'init':
         create_repo()
+        
+    elif command == 'hash-object':
+        if is_init():
+            
+            if len(sys.argv) < 3:
+                print('Provide an argument.\nPossible arguments: <path_to_file>, <path_to_file> -w.')
+                sys.exit(0)
+                
+            file_path = sys.argv[2]
+            try:
+                with open(file_path, 'r') as f:
+                    if '-w' in sys.argv:
+                        hash_object(f, writing=True)
+                    else:
+                        hash_object(f)
+            except FileNotFoundError:
+                print(f'No such file \'{file_path}\'')
 
     elif command == 'cat-file':
         if is_init():
+            
+            if len(sys.argv) < 3:
+                print('Provide an argument.\nPossible arguments: <hash-sum> -p, <hash-sum> -t, <hash-sum> -s.')
+                sys.exit(0)
+                
             sha = sys.argv[2]
             cat_file(sha)
-
-    elif command == 'hash-object':
-        if is_init():
-            file_path = sys.argv[2]
-            with open(file_path, 'r') as f:
-                if '-w' in sys.argv:
-                    hash_object(f, writing=True)
-                else:
-                    hash_object(f)
 
     elif command == 'update-index':
         if is_init():
@@ -662,7 +695,7 @@ def main():
                 update_index(None, file_path)
             # In case of a folder
             except PermissionError:
-                print(f'Unable to process path {file_path}')
+                print(f'Unable to process path "{file_path}""')
 
     elif command == 'ls-files':
         if is_init():
@@ -708,8 +741,8 @@ def main():
             log(commit_sha)
 
     else:
-        raise RuntimeError(f'Unknown command {command}')
-
+        print(f'Unknown command {command}')
+        
 
 if __name__ == '__main__':
     main()
