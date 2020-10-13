@@ -103,7 +103,7 @@ def log(commit_sha):
     message = content[message_start:]
     
     print_message = textwrap.dedent(f'''\
-        commit {commit_sha}
+        {bcolors.WARNING}commit {commit_sha}{bcolors.ENDC}
         Author: {author_name} {author_email}
         Date:   {author_date} {author_timezone}\n
            {message}''')
